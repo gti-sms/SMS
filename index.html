@@ -642,94 +642,150 @@
     </div>
 
     <script>
-    /***********************************************
-     * Data & Auth Services - VERSÃO RÁPIDA
-     ***********************************************/
+    // =============================================
+    // DATA SERVICE - VERSÃO SIMPLIFICADA E FUNCIONAL
+    // =============================================
     const DataService = {
-        useRemote: false,
-        remoteBase: '/api',
         githubToken: '',
         repoOwner: 'gti-sms',
-        repoName: 'SMS',
+        repoName: 'SMS', 
         filePath: 'data/units.json',
-        autoSync: false,
 
-        async getUnits(){
-            if(this.useRemote){
-                const res = await fetch(`${this.remoteBase}/unidades`);
-                return res.ok ? await res.json() : [];
+        // Carregar unidades do localStorage
+        getUnits() {
+            try {
+                const units = localStorage.getItem('units');
+                return units ? JSON.parse(units) : [];
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+                return [];
             }
-            
-            const raw = localStorage.getItem('units');
-            if(raw) {
-                try {
-                    return JSON.parse(raw);
-                } catch(e) {
-                    console.error('Erro ao carregar unidades:', e);
-                    return [];
-                }
-            }
-            // Se não existir dados, inicializar com array vazio
-            localStorage.setItem('units', JSON.stringify([]));
-            return [];
         },
 
-        async saveUnit(unit){
-            console.log('Salvando unidade:', unit);
-            
-            if(this.useRemote){
-                const method = unit.id ? 'PUT' : 'POST';
-                const url = unit.id ? `${this.remoteBase}/unidades/${unit.id}` : `${this.remoteBase}/unidades`;
-                const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(unit)});
-                return res.ok ? await res.json() : null;
+        // Salvar unidades no localStorage
+        saveUnits(units) {
+            try {
+                localStorage.setItem('units', JSON.stringify(units));
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar unidades:', error);
+                return false;
             }
+        },
+
+        // Adicionar/editar unidade
+        saveUnit(unit) {
+            const units = this.getUnits();
             
-            const units = await this.getUnits();
-            
-            if(unit.id){
-                const idx = units.findIndex(u=>u.id===unit.id);
-                if(idx > -1) {
-                    units[idx] = unit;
+            if (unit.id) {
+                // Editar unidade existente
+                const index = units.findIndex(u => u.id === unit.id);
+                if (index !== -1) {
+                    units[index] = unit;
                 }
             } else {
-                unit.id = (units.length ? Math.max(...units.map(u=>u.id)) : 0) + 1;
+                // Nova unidade
+                unit.id = units.length > 0 ? Math.max(...units.map(u => u.id)) + 1 : 1;
                 units.push(unit);
             }
             
-            localStorage.setItem('units', JSON.stringify(units));
-            return unit;
+            return this.saveUnits(units) ? unit : null;
         },
 
-        async deleteUnit(id){
-            if(this.useRemote){
-                await fetch(`${this.remoteBase}/unidades/${id}`, {method:'DELETE'});
-                return;
-            }
-            
-            let units = await this.getUnits();
-            units = units.filter(u=>u.id!==id);
-            localStorage.setItem('units', JSON.stringify(units));
+        // Excluir unidade
+        deleteUnit(id) {
+            const units = this.getUnits().filter(unit => unit.id !== id);
+            return this.saveUnits(units);
         },
 
-        /***********************************************
-         * GitHub Sync Functions (Opcional)
-         ***********************************************/
-        async syncWithGitHub() {
+        // ========== GITHUB SYNC ==========
+        
+        // Testar conexão com GitHub
+        async testGitHubConnection() {
             if (!this.githubToken) {
-                return { success: false, message: 'Token do GitHub não configurado.' };
+                return { success: false, message: 'Token do GitHub não configurado' };
             }
-            
+
             try {
-                const localUnits = await this.getUnits();
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(localUnits, null, 2))));
-                
-                const existingFile = await this.getGitHubFile();
-                let sha = null;
-                
-                if (existingFile && !existingFile.message) {
-                    sha = existingFile.sha;
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    return { success: true, message: 'Conexão com GitHub estabelecida!' };
+                } else {
+                    const error = await response.json();
+                    return { success: false, message: error.message || 'Erro na conexão' };
                 }
+            } catch (error) {
+                return { success: false, message: 'Erro de rede: ' + error.message };
+            }
+        },
+
+        // Buscar arquivo do GitHub
+        async getGitHubFile() {
+            if (!this.githubToken) return null;
+
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+
+                if (response.status === 404) {
+                    return { exists: false, message: 'Arquivo não encontrado' };
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return { exists: true, data: data };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro ao buscar arquivo:', error);
+                return null;
+            }
+        },
+
+        // Sincronizar para GitHub
+        async syncToGitHub() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado' };
+            }
+
+            try {
+                const units = this.getUnits();
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(units, null, 2))));
                 
+                // Verificar se arquivo já existe
+                const fileInfo = await this.getGitHubFile();
+                let sha = null;
+
+                if (fileInfo && fileInfo.exists) {
+                    sha = fileInfo.data.sha;
+                }
+
+                const payload = {
+                    message: `Sync: ${new Date().toLocaleString('pt-BR')}`,
+                    content: content
+                };
+
+                if (sha) {
+                    payload.sha = sha;
+                }
+
                 const response = await fetch(
                     `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
                     {
@@ -737,308 +793,372 @@
                         headers: {
                             'Authorization': `Bearer ${this.githubToken}`,
                             'Content-Type': 'application/json',
+                            'Accept': 'application/vnd.github.v3+json'
                         },
-                        body: JSON.stringify({
-                            message: `Sync: ${new Date().toLocaleString('pt-BR')}`,
-                            content: content,
-                            sha: sha
-                        })
+                        body: JSON.stringify(payload)
                     }
                 );
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
-                    return { success: true, message: 'Sincronizado com sucesso!' };
+                    return { 
+                        success: true, 
+                        message: sha ? 'Dados sincronizados com sucesso!' : 'Arquivo criado e sincronizado!'
+                    };
                 } else {
-                    return { success: false, message: result.message || 'Erro na sincronização' };
+                    return { 
+                        success: false, 
+                        message: result.message || 'Erro na sincronização' 
+                    };
                 }
             } catch (error) {
-                console.error('Erro ao sincronizar com GitHub:', error);
-                return { success: false, message: 'Erro de conexão: ' + error.message };
+                console.error('Erro ao sincronizar:', error);
+                return { 
+                    success: false, 
+                    message: 'Erro de rede: ' + error.message 
+                };
             }
         },
-        
-        async getGitHubFile() {
-            if (!this.githubToken) return null;
-            
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${this.githubToken}`,
-                        }
-                    }
-                );
-                
-                if (response.ok) {
-                    return await response.json();
-                }
-                return null;
-            } catch (error) {
-                console.error('Erro ao buscar arquivo do GitHub:', error);
-                return null;
-            }
-        },
-        
+
+        // Puxar do GitHub
         async pullFromGitHub() {
-            try {
-                const file = await this.getGitHubFile();
-                if (file && file.content && !file.message) {
-                    const content = JSON.parse(decodeURIComponent(escape(atob(file.content))));
-                    localStorage.setItem('units', JSON.stringify(content));
-                    return content;
-                }
-                return null;
-            } catch (error) {
-                console.error('Erro ao puxar do GitHub:', error);
-                return null;
-            }
-        },
-        
-        async testGitHubConnection() {
             if (!this.githubToken) {
                 return { success: false, message: 'Token do GitHub não configurado' };
             }
-            
+
             try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${this.githubToken}`,
-                        }
-                    }
-                );
+                const fileInfo = await this.getGitHubFile();
+
+                if (!fileInfo || !fileInfo.exists) {
+                    return { success: false, message: 'Arquivo não encontrado no GitHub' };
+                }
+
+                const content = JSON.parse(decodeURIComponent(escape(atob(fileInfo.data.content))));
                 
-                if (response.ok) {
-                    return { success: true, message: 'Conexão com GitHub estabelecida com sucesso!' };
+                // Salvar no localStorage
+                if (this.saveUnits(content)) {
+                    return { 
+                        success: true, 
+                        message: `Dados carregados! ${content.length} unidades.`,
+                        data: content
+                    };
                 } else {
-                    const error = await response.json();
-                    return { success: false, message: error.message || 'Erro na conexão' };
+                    return { success: false, message: 'Erro ao salvar dados localmente' };
                 }
             } catch (error) {
-                return { success: false, message: 'Erro de conexão: ' + error.message };
+                console.error('Erro ao puxar dados:', error);
+                return { 
+                    success: false, 
+                    message: 'Erro ao carregar dados: ' + error.message 
+                };
             }
         }
     };
 
+    // =============================================
+    // AUTH SERVICE
+    // =============================================
     const AuthService = {
         adminUser: 'admin',
         adminPass: 'ZXqwas123@',
-        async login(username, password){
-            if(username === this.adminUser && password === this.adminPass){
+        
+        login(username, password) {
+            if (username === this.adminUser && password === this.adminPass) {
                 localStorage.setItem('telefonia_isLogged', 'true');
                 return { success: true };
             }
             return { success: false, message: 'Usuário ou senha incorretos' };
         },
-        logout(){
+
+        logout() {
             localStorage.removeItem('telefonia_isLogged');
         },
-        isLogged(){
+
+        isLogged() {
             return localStorage.getItem('telefonia_isLogged') === 'true';
         }
     };
 
-    /***********************************************
-     * UI & App
-     ***********************************************/
+    // =============================================
+    // UI CONTROLLER
+    // =============================================
     const UI = {
         elements: {},
-        async cache(){
-            this.elements = {
-                loginModal: document.getElementById('loginModal'),
-                loginForm: document.getElementById('loginForm'),
-                loginUsername: document.getElementById('loginUsername'),
-                loginPassword: document.getElementById('loginPassword'),
-                adminPanel: document.getElementById('adminPanel'),
-                adminToggle: document.getElementById('adminToggle'),
-                closeAdmin: document.getElementById('closeAdmin'),
-                logoutBtn: document.getElementById('logoutBtn'),
-                themeToggle: document.getElementById('themeToggle'),
-                searchInput: document.getElementById('searchInput'),
-                searchBtn: document.getElementById('searchBtn'),
-                filterBtns: document.querySelectorAll('.filter-btn'),
-                tabs: document.querySelectorAll('.tab'),
-                adminTabs: document.querySelectorAll('.admin-tab'),
-                allContacts: document.getElementById('all-contacts'),
-                favoritesContacts: document.getElementById('favorites-contacts'),
-                unitsListAdmin: document.getElementById('unitsList'),
-                formUnit: document.getElementById('unitForm'),
-                submitBtn: document.getElementById('submitBtn'),
-                cancelEditBtn: document.getElementById('cancelEdit'),
-                formTitle: document.getElementById('formTitle'),
-                allCount: document.getElementById('all-count'),
-                favoritesCount: document.getElementById('favorites-count'),
-                backupBtn: document.getElementById('backupData'),
-                restoreInput: document.getElementById('restoreData'),
-                clearAllBtn: document.getElementById('clearAll'),
-                unitType: document.getElementById('unitType'),
-                responsibleField: document.getElementById('responsibleFieldContainer'),
-                enfermeiroField: document.getElementById('enfermeiroField'),
-                gerenteField: document.getElementById('gerenteField'),
-                vacinaField: document.getElementById('vacinaField'),
-                odontoField: document.getElementById('odontoField'),
-                farmaciaField: document.getElementById('farmaciaField'),
-                // GitHub elements
-                githubToken: document.getElementById('githubToken'),
-                repoOwner: document.getElementById('repoOwner'),
-                repoName: document.getElementById('repoName'),
-                filePath: document.getElementById('filePath'),
-                saveGitHubConfig: document.getElementById('saveGitHubConfig'),
-                syncToGitHub: document.getElementById('syncToGitHub'),
-                pullFromGitHub: document.getElementById('pullFromGitHub'),
-                testConnection: document.getElementById('testConnection'),
-                syncStatus: document.getElementById('syncStatus')
-            };
+
+        init() {
+            this.cacheElements();
+            this.loadTheme();
+            this.bindEvents();
+            this.setupConditionalFormLogic();
+            
+            // Verificar se está logado
+            if (AuthService.isLogged()) {
+                this.elements.logoutBtn.style.display = 'inline-flex';
+            }
+
+            // Carregar configuração do GitHub
+            this.loadGitHubConfig();
+        },
+
+        cacheElements() {
+            // Modal de login
+            this.elements.loginModal = document.getElementById('loginModal');
+            this.elements.loginForm = document.getElementById('loginForm');
+            this.elements.loginUsername = document.getElementById('loginUsername');
+            this.elements.loginPassword = document.getElementById('loginPassword');
+
+            // Header
+            this.elements.adminToggle = document.getElementById('adminToggle');
+            this.elements.themeToggle = document.getElementById('themeToggle');
+
+            // Painel administrativo
+            this.elements.adminPanel = document.getElementById('adminPanel');
+            this.elements.closeAdmin = document.getElementById('closeAdmin');
+            this.elements.logoutBtn = document.getElementById('logoutBtn');
+            this.elements.adminTabs = document.querySelectorAll('.admin-tab');
+            
+            // Conteúdo
+            this.elements.allContacts = document.getElementById('all-contacts');
+            this.elements.favoritesContacts = document.getElementById('favorites-contacts');
+            this.elements.unitsList = document.getElementById('unitsList');
+            this.elements.allCount = document.getElementById('all-count');
+            this.elements.favoritesCount = document.getElementById('favorites-count');
+
+            // Formulário de unidade
+            this.elements.unitForm = document.getElementById('unitForm');
+            this.elements.submitBtn = document.getElementById('submitBtn');
+            this.elements.cancelEdit = document.getElementById('cancelEdit');
+            this.elements.formTitle = document.getElementById('formTitle');
+
+            // Busca e filtros
+            this.elements.searchInput = document.getElementById('searchInput');
+            this.elements.searchBtn = document.getElementById('searchBtn');
+            this.elements.filterBtns = document.querySelectorAll('.filter-btn');
+            this.elements.tabs = document.querySelectorAll('.tab');
+
+            // GitHub Sync
+            this.elements.githubToken = document.getElementById('githubToken');
+            this.elements.repoOwner = document.getElementById('repoOwner');
+            this.elements.repoName = document.getElementById('repoName');
+            this.elements.filePath = document.getElementById('filePath');
+            this.elements.saveGitHubConfig = document.getElementById('saveGitHubConfig');
+            this.elements.syncToGitHub = document.getElementById('syncToGitHub');
+            this.elements.pullFromGitHub = document.getElementById('pullFromGitHub');
+            this.elements.testConnection = document.getElementById('testConnection');
+            this.elements.syncStatus = document.getElementById('syncStatus');
+
+            // Configurações
+            this.elements.backupBtn = document.getElementById('backupData');
+            this.elements.restoreInput = document.getElementById('restoreData');
+            this.elements.clearAllBtn = document.getElementById('clearAll');
+
+            // Campos condicionais
+            this.elements.unitType = document.getElementById('unitType');
+            this.elements.responsibleField = document.getElementById('responsibleFieldContainer');
+            this.elements.enfermeiroField = document.getElementById('enfermeiroField');
+            this.elements.gerenteField = document.getElementById('gerenteField');
+            this.elements.vacinaField = document.getElementById('vacinaField');
+            this.elements.odontoField = document.getElementById('odontoField');
+            this.elements.farmaciaField = document.getElementById('farmaciaField');
         },
 
         setupConditionalFormLogic() {
-            const unitTypeSelect = this.elements.unitType;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             
-            function checkConditionalFields() {
-                const selectedType = unitTypeSelect.value;
-                
-                if (conditionalTypes.includes(selectedType)) {
-                    UI.elements.enfermeiroField.classList.add('hidden');
-                    UI.elements.gerenteField.classList.add('hidden');
-                    UI.elements.vacinaField.classList.add('hidden');
-                    UI.elements.odontoField.classList.add('hidden');
-                    UI.elements.farmaciaField.classList.add('hidden');
-                    
-                    UI.elements.responsibleField.classList.remove('hidden');
-                    document.getElementById('unitResponsavel').required = true;
-                } else {
-                    UI.elements.enfermeiroField.classList.remove('hidden');
-                    UI.elements.gerenteField.classList.remove('hidden');
-                    UI.elements.vacinaField.classList.remove('hidden');
-                    UI.elements.odontoField.classList.remove('hidden');
-                    UI.elements.farmaciaField.classList.remove('hidden');
-                    
-                    UI.elements.responsibleField.classList.add('hidden');
-                    document.getElementById('unitResponsavel').required = false;
-                }
-            }
-            
-            unitTypeSelect.addEventListener('change', checkConditionalFields);
-            checkConditionalFields();
-        },
+            const checkFields = () => {
+                const type = this.elements.unitType.value;
+                const isConditional = conditionalTypes.includes(type);
 
-        getTypeLabel(type){
-            const map = { 
-                'promocao':'Promoção',
-                'recuperacao':'Recuperação',
-                'administrativo':'Administrativo',
-                'vigilancia':'Vigilância',
-                'capne':'Capne',
-                'outros':'Outros' 
+                // Mostrar/ocultar campos baseado no tipo
+                this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
+                this.elements.gerenteField.classList.toggle('hidden', isConditional);
+                this.elements.vacinaField.classList.toggle('hidden', isConditional);
+                this.elements.odontoField.classList.toggle('hidden', isConditional);
+                this.elements.farmaciaField.classList.toggle('hidden', isConditional);
+                this.elements.responsibleField.classList.toggle('hidden', !isConditional);
+
+                // Definir required
+                document.getElementById('unitResponsavel').required = isConditional;
             };
-            return map[type] || type;
+
+            this.elements.unitType.addEventListener('change', checkFields);
+            checkFields(); // Verificar estado inicial
         },
 
-        shouldShowServices(type) {
-            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
-            return !conditionalTypes.includes(type);
-        },
-
-        renderContacts(contacts, container){
-            const root = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
-            root.innerHTML = '';
-            if(!contacts || contacts.length===0){
-                root.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>Nenhum contato encontrado</h3><p>Tente ajustar seus filtros ou termos de busca</p></div>`;
-                return;
-            }
-            contacts.forEach(c=>{
-                const card = document.createElement('div');
-                card.className = 'contact-card';
-                
-                const phoneClean = c.phone.replace(/\D/g, '');
-                const telLink = `tel:+55${phoneClean}`;
-                const whatsappLink = `https://wa.me/55${phoneClean}`;
-                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + ', ' + c.bairro + ', Passo Fundo, RS')}`;
-                
-                const showServices = this.shouldShowServices(c.type);
-                
-                card.innerHTML = `
-                    <button class="favorite-btn ${c.favorite? 'active':''}" data-id="${c.id}" title="Favoritar"><i class="fas fa-star"></i></button>
-                    <div class="contact-header"><div><h3 class="contact-name">${c.name}</h3><span class="contact-type">${this.getTypeLabel(c.type)}</span></div></div>
-                    <div class="contact-info">
-                        <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${c.address}, ${c.bairro}</span></div>
-                        <div class="contact-item"><i class="fas fa-phone"></i><span>${c.phone}</span></div>
-                        ${c.email?`<div class="contact-item"><i class="fas fa-envelope"></i><span>${c.email}</span></div>`:''}
-                        ${c.enfermeiro?`<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${c.enfermeiro}</span></div>`:''}
-                        ${c.gerente?`<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${c.gerente}</span></div>`:''}
-                        ${c.responsavel?`<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${c.responsavel}</span></div>`:''}
-                    </div>
-                    ${showServices ? `
-                    <div class="contact-services">
-                        <div class="service ${c.vacina==='Sim'? 'available':'unavailable'}"><i class="fas fa-syringe"></i><span class="service-label">Vacina</span></div>
-                        <div class="service ${c.odonto==='Sim'? 'available':'unavailable'}"><i class="fas fa-tooth"></i><span class="service-label">Odonto</span></div>
-                        <div class="service ${c.farmacia==='Sim'? 'available':'unavailable'}"><i class="fas fa-pills"></i><span class="service-label">Farmácia</span></div>
-                    </div>
-                    ` : ''}
-                    <div class="contact-actions">
-                        <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
-                        <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                        <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
-                    </div>
-                `;
-                root.appendChild(card);
+        bindEvents() {
+            // Toggle do painel admin
+            this.elements.adminToggle.addEventListener('click', () => {
+                if (AuthService.isLogged()) {
+                    this.openAdmin();
+                } else {
+                    this.showLogin();
+                }
             });
-            this.attachContactListeners();
-        },
 
-        attachContactListeners(){
-            document.querySelectorAll('.favorite-btn').forEach(btn=>{
-                btn.onclick = async (e) => {
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    await App.toggleFavorite(id);
-                };
+            // Fechar painel admin
+            this.elements.closeAdmin.addEventListener('click', () => this.closeAdmin());
+
+            // Logout
+            this.elements.logoutBtn.addEventListener('click', () => {
+                AuthService.logout();
+                this.elements.logoutBtn.style.display = 'none';
+                this.closeAdmin();
+                alert('Desconectado do painel administrativo');
             });
-        },
 
-        renderUnitsList(units){
-            this.elements.unitsListAdmin.innerHTML = '';
-            units.forEach(u=>{
-                const item = document.createElement('div');
-                item.className = 'unit-item';
-                item.innerHTML = `
-                    <div class="unit-info"><h4>${u.name}</h4><p>${this.getTypeLabel(u.type)} - ${u.phone}</p></div>
-                    <div class="unit-actions">
-                        <button class="btn btn-warning edit-unit" data-id="${u.id}"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn btn-danger delete-unit" data-id="${u.id}"><i class="fas fa-trash"></i> Excluir</button>
-                    </div>
-                `;
-                this.elements.unitsListAdmin.appendChild(item);
+            // Login
+            this.elements.loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = this.elements.loginUsername.value.trim();
+                const password = this.elements.loginPassword.value;
+
+                const result = AuthService.login(username, password);
+                if (result.success) {
+                    this.hideLogin();
+                    this.openAdmin();
+                    this.elements.logoutBtn.style.display = 'inline-flex';
+                    App.refreshAll();
+                } else {
+                    alert(result.message);
+                }
             });
-            document.querySelectorAll('.edit-unit').forEach(btn=> btn.onclick = ()=> App.editUnit(parseInt(btn.dataset.id)));
-            document.querySelectorAll('.delete-unit').forEach(btn=> btn.onclick = ()=> App.deleteUnit(parseInt(btn.dataset.id)));
+
+            // Toggle tema
+            this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+
+            // Busca
+            this.elements.searchBtn.addEventListener('click', () => App.performSearch());
+            this.elements.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') App.performSearch();
+            });
+
+            // Filtros
+            this.elements.filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    UI.elements.filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    App.filterContacts(this.dataset.filter);
+                });
+            });
+
+            // Toggle serviços
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const value = this.classList.contains('active') ? 'Sim' : '';
+                    this.setAttribute('data-value', value);
+                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
+                });
+            });
+
+            // Tabs principais
+            this.elements.tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    UI.elements.tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                });
+            });
+
+            // Tabs do admin
+            this.elements.adminTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    UI.elements.adminTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                });
+            });
+
+            // Formulário de unidade
+            this.elements.unitForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                App.saveUnitFromForm();
+            });
+
+            this.elements.cancelEdit.addEventListener('click', () => {
+                this.elements.unitForm.reset();
+                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                this.elements.cancelEdit.style.display = 'none';
+                this.elements.unitForm.removeAttribute('data-edit-id');
+                this.setupConditionalFormLogic();
+            });
+
+            // GitHub Sync
+            this.elements.saveGitHubConfig.addEventListener('click', () => App.saveGitHubConfig());
+            this.elements.syncToGitHub.addEventListener('click', () => App.syncToGitHub());
+            this.elements.pullFromGitHub.addEventListener('click', () => App.pullFromGitHub());
+            this.elements.testConnection.addEventListener('click', () => App.testGitHubConnection());
+
+            // Configurações
+            this.elements.backupBtn.addEventListener('click', () => App.backupData());
+            this.elements.restoreInput.addEventListener('change', (e) => App.restoreData(e.target.files[0]));
+            this.elements.clearAllBtn.addEventListener('click', () => App.clearAllData());
         },
 
-        showLogin(){ this.elements.loginModal.classList.add('active'); this.elements.loginModal.setAttribute('aria-hidden','false'); this.elements.loginUsername.focus(); },
-        hideLogin(){ this.elements.loginModal.classList.remove('active'); this.elements.loginModal.setAttribute('aria-hidden','true'); this.elements.loginForm.reset(); },
+        // Métodos de UI
+        showLogin() {
+            this.elements.loginModal.classList.add('active');
+            this.elements.loginModal.setAttribute('aria-hidden', 'false');
+            this.elements.loginUsername.focus();
+        },
 
-        openAdmin(){ this.elements.adminPanel.classList.add('active'); this.elements.adminPanel.setAttribute('aria-hidden','false'); this.elements.logoutBtn.style.display = 'inline-flex'; },
-        closeAdmin(){ this.elements.adminPanel.classList.remove('active'); this.elements.adminPanel.setAttribute('aria-hidden','true'); },
+        hideLogin() {
+            this.elements.loginModal.classList.remove('active');
+            this.elements.loginModal.setAttribute('aria-hidden', 'true');
+            this.elements.loginForm.reset();
+        },
 
-        toggleTheme(){
+        openAdmin() {
+            this.elements.adminPanel.classList.add('active');
+            this.elements.adminPanel.setAttribute('aria-hidden', 'false');
+        },
+
+        closeAdmin() {
+            this.elements.adminPanel.classList.remove('active');
+            this.elements.adminPanel.setAttribute('aria-hidden', 'true');
+        },
+
+        toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const icon = this.elements.themeToggle.querySelector('i');
-            if(document.body.classList.contains('dark-mode')){ icon.className = 'fas fa-sun'; localStorage.setItem('telefonia_theme','dark'); }
-            else { icon.className = 'fas fa-moon'; localStorage.setItem('telefonia_theme','light'); }
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('telefonia_theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('telefonia_theme', 'light');
+            }
         },
 
-        loadTheme(){
-            const t = localStorage.getItem('telefonia_theme');
-            if(t === 'dark'){ document.body.classList.add('dark-mode'); this.elements.themeToggle.querySelector('i').className = 'fas fa-sun'; }
+        loadTheme() {
+            const theme = localStorage.getItem('telefonia_theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-sun';
+            }
         },
 
-        setCounts(all, favorites){
-            this.elements.allCount.textContent = `Mostrando ${all} contatos`;
-            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
+        loadGitHubConfig() {
+            const config = localStorage.getItem('github_config');
+            if (config) {
+                const { token, owner, repo, filePath } = JSON.parse(config);
+                DataService.githubToken = token;
+                DataService.repoOwner = owner;
+                DataService.repoName = repo;
+                DataService.filePath = filePath;
+
+                this.elements.repoOwner.value = owner;
+                this.elements.repoName.value = repo;
+                this.elements.filePath.value = filePath;
+
+                if (token) {
+                    this.elements.githubToken.placeholder = '•••••••••• (já configurado)';
+                }
+            }
         },
 
         showSyncStatus(message, type = 'info') {
@@ -1046,195 +1166,284 @@
             statusEl.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
             
             if (type === 'success') {
-                setTimeout(() => {
-                    statusEl.innerHTML = '';
-                }, 5000);
+                setTimeout(() => statusEl.innerHTML = '', 5000);
             }
         },
 
-        bindUIActions(){
-            this.elements.adminToggle.onclick = ()=> {
-                if(AuthService.isLogged()){
-                    this.openAdmin();
-                } else {
-                    this.showLogin();
-                }
-            };
-            this.elements.closeAdmin.onclick = ()=> this.closeAdmin();
-            this.elements.logoutBtn.onclick = ()=> {
-                AuthService.logout();
-                this.elements.logoutBtn.style.display = 'none';
-                this.closeAdmin();
-                alert('Desconectado do painel administrativo');
-            };
+        // Renderização
+        renderContacts(contacts, container) {
+            const target = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+            target.innerHTML = '';
 
-            this.elements.loginForm.onsubmit = async (e)=>{
-                e.preventDefault();
-                const u = this.elements.loginUsername.value.trim();
-                const p = this.elements.loginPassword.value;
-                const res = await AuthService.login(u,p);
-                if(res.success){
-                    this.hideLogin();
-                    this.openAdmin();
-                    App.refreshAll();
-                } else {
-                    alert(res.message || 'Falha no login');
-                }
-            };
+            if (!contacts || contacts.length === 0) {
+                target.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>Nenhum contato encontrado</h3>
+                        <p>Tente ajustar seus filtros ou termos de busca</p>
+                    </div>
+                `;
+                return;
+            }
 
-            this.elements.themeToggle.onclick = ()=> this.toggleTheme();
-
-            this.elements.searchBtn.onclick = ()=> App.performSearch();
-            this.elements.searchInput.onkeypress = (e)=> { if(e.key==='Enter') App.performSearch(); };
-
-            this.elements.filterBtns.forEach(b=> b.onclick = function(){
-                UI.elements.filterBtns.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                App.filterContacts(this.dataset.filter);
+            contacts.forEach(contact => {
+                const card = this.createContactCard(contact);
+                target.appendChild(card);
             });
 
-            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
-                btn.onclick = function() {
-                    this.classList.toggle('active');
-                    const newValue = this.classList.contains('active') ? 'Sim' : '';
-                    this.setAttribute('data-value', newValue);
-                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
-                };
+            this.attachFavoriteListeners();
+        },
+
+        createContactCard(contact) {
+            const phoneClean = contact.phone.replace(/\D/g, '');
+            const telLink = `tel:+55${phoneClean}`;
+            const whatsappLink = `https://wa.me/55${phoneClean}`;
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address + ', ' + contact.bairro + ', Passo Fundo, RS')}`;
+            
+            const showServices = !['administrativo', 'vigilancia', 'capne', 'outros'].includes(contact.type);
+            const typeLabel = this.getTypeLabel(contact.type);
+
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.innerHTML = `
+                <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar">
+                    <i class="fas fa-star"></i>
+                </button>
+                <div class="contact-header">
+                    <div>
+                        <h3 class="contact-name">${contact.name}</h3>
+                        <span class="contact-type">${typeLabel}</span>
+                    </div>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${contact.address}, ${contact.bairro}</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${contact.phone}</span>
+                    </div>
+                    ${contact.email ? `
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>${contact.email}</span>
+                    </div>` : ''}
+                    ${contact.enfermeiro ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-nurse"></i>
+                        <span>Enf. ${contact.enfermeiro}</span>
+                    </div>` : ''}
+                    ${contact.gerente ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Gerente: ${contact.gerente}</span>
+                    </div>` : ''}
+                    ${contact.responsavel ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user"></i>
+                        <span>Responsável: ${contact.responsavel}</span>
+                    </div>` : ''}
+                </div>
+                ${showServices ? `
+                <div class="contact-services">
+                    <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-syringe"></i>
+                        <span class="service-label">Vacina</span>
+                    </div>
+                    <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-tooth"></i>
+                        <span class="service-label">Odonto</span>
+                    </div>
+                    <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-pills"></i>
+                        <span class="service-label">Farmácia</span>
+                    </div>
+                </div>` : ''}
+                <div class="contact-actions">
+                    <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')">
+                        <i class="fas fa-phone"></i> Ligar
+                    </button>
+                    <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')">
+                        <i class="fas fa-map"></i> Localização
+                    </button>
+                </div>
+            `;
+
+            return card;
+        },
+
+        attachFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    await App.toggleFavorite(id);
+                });
+            });
+        },
+
+        renderUnitsList(units) {
+            this.elements.unitsList.innerHTML = '';
+
+            units.forEach(unit => {
+                const item = document.createElement('div');
+                item.className = 'unit-item';
+                item.innerHTML = `
+                    <div class="unit-info">
+                        <h4>${unit.name}</h4>
+                        <p>${this.getTypeLabel(unit.type)} - ${unit.phone}</p>
+                    </div>
+                    <div class="unit-actions">
+                        <button class="btn btn-warning edit-unit" data-id="${unit.id}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger delete-unit" data-id="${unit.id}">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                `;
+                this.elements.unitsList.appendChild(item);
             });
 
-            this.elements.tabs.forEach(t=> t.onclick = function(){
-                UI.elements.tabs.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.content').forEach(c=> c.classList.remove('active'));
-                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+            // Adicionar event listeners para editar/excluir
+            document.querySelectorAll('.edit-unit').forEach(btn => {
+                btn.addEventListener('click', () => App.editUnit(parseInt(btn.dataset.id)));
             });
 
-            this.elements.adminTabs.forEach(t=> t.onclick = function(){
-                UI.elements.adminTabs.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
-                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+            document.querySelectorAll('.delete-unit').forEach(btn => {
+                btn.addEventListener('click', () => App.deleteUnit(parseInt(btn.dataset.id)));
             });
+        },
 
-            this.elements.formUnit.onsubmit = async (e)=>{
-                e.preventDefault();
-                await App.saveUnitFromForm();
+        getTypeLabel(type) {
+            const types = {
+                'promocao': 'Promoção',
+                'recuperacao': 'Recuperação', 
+                'administrativo': 'Administrativo',
+                'vigilancia': 'Vigilância',
+                'capne': 'Capne',
+                'outros': 'Outros'
             };
-            this.elements.cancelEditBtn.onclick = ()=> {
-                this.elements.formUnit.reset();
-                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                this.elements.cancelEditBtn.style.display = 'none';
-                this.elements.formUnit.removeAttribute('data-edit-id');
-                this.setupConditionalFormLogic();
-            };
+            return types[type] || type;
+        },
 
-            this.elements.backupBtn.onclick = ()=> App.backupData();
-            this.elements.restoreInput.onchange = (e)=> App.restoreData(e.target.files[0]);
-            this.elements.clearAllBtn.onclick = ()=> App.clearAllData();
-
-            // GitHub Actions
-            this.elements.saveGitHubConfig.onclick = () => App.saveGitHubConfig();
-            this.elements.syncToGitHub.onclick = () => App.syncToGitHub();
-            this.elements.pullFromGitHub.onclick = () => App.pullFromGitHub();
-            this.elements.testConnection.onclick = () => App.testGitHubConnection();
-
-            this.setupConditionalFormLogic();
+        setCounts(allCount, favoritesCount) {
+            this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
+            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
         }
     };
 
+    // =============================================
+    // MAIN APPLICATION
+    // =============================================
     const App = {
         units: [],
         favorites: [],
 
-        async init(){
-            await UI.cache();
-            UI.loadTheme();
-            UI.bindUIActions();
-            if(AuthService.isLogged()){
-                UI.elements.logoutBtn.style.display = 'inline-flex';
-            } else {
-                UI.elements.logoutBtn.style.display = 'none';
-            }
-            
-            // Carregar favoritos
-            const favs = localStorage.getItem('telefonia_favorites');
-            if(favs) this.favorites = JSON.parse(favs);
-            
-            await this.refreshAll();
-            
-            // Carregar configuração do GitHub
-            this.loadGitHubConfig();
+        init() {
+            UI.init();
+            this.loadFavorites();
+            this.refreshAll();
         },
 
-        async refreshAll(){
-            this.units = await DataService.getUnits();
+        loadFavorites() {
+            const favs = localStorage.getItem('telefonia_favorites');
+            this.favorites = favs ? JSON.parse(favs) : [];
+        },
+
+        async refreshAll() {
+            this.units = DataService.getUnits();
             
-            // Atualizar favoritos
-            this.units.forEach(u=> u.favorite = this.favorites.includes(u.id));
-            
+            // Atualizar favoritos nas unidades
+            this.units.forEach(unit => {
+                unit.favorite = this.favorites.includes(unit.id);
+            });
+
             UI.renderContacts(this.units, 'all');
-            UI.renderContacts(this.units.filter(u=> this.favorites.includes(u.id)), 'favorites');
+            UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
             UI.renderUnitsList(this.units);
             UI.setCounts(this.units.length, this.favorites.length);
         },
 
-        async toggleFavorite(unitId){
-            const idx = this.units.findIndex(u=>u.id===unitId);
-            if(idx===-1) return;
-            this.units[idx].favorite = !this.units[idx].favorite;
-            if(this.units[idx].favorite){
-                if(!this.favorites.includes(unitId)) this.favorites.push(unitId);
+        async toggleFavorite(unitId) {
+            const index = this.favorites.indexOf(unitId);
+            
+            if (index === -1) {
+                this.favorites.push(unitId);
             } else {
-                const pos = this.favorites.indexOf(unitId);
-                if(pos>-1) this.favorites.splice(pos,1);
+                this.favorites.splice(index, 1);
             }
+
             localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            await DataService.saveUnit(this.units[idx]);
-            await this.refreshAll();
+            
+            // Atualizar a unidade
+            const unitIndex = this.units.findIndex(u => u.id === unitId);
+            if (unitIndex !== -1) {
+                this.units[unitIndex].favorite = !this.units[unitIndex].favorite;
+                DataService.saveUnit(this.units[unitIndex]);
+            }
+
+            this.refreshAll();
         },
 
-        async filterContacts(filter){
-            let filtered = this.units.slice();
-            if(filter && filter !== 'all') filtered = filtered.filter(u=> u.type === filter);
+        async filterContacts(filter) {
+            let filtered = [...this.units];
             
-            const vaccineBtn = document.querySelector('.service-toggle-btn[data-service="vaccine"]');
-            const dentalBtn = document.querySelector('.service-toggle-btn[data-service="dental"]');
-            const pharmacyBtn = document.querySelector('.service-toggle-btn[data-service="pharmacy"]');
-            
-            const vaccine = vaccineBtn.getAttribute('data-value');
-            const dental = dentalBtn.getAttribute('data-value');
-            const pharmacy = pharmacyBtn.getAttribute('data-value');
-            
-            if(vaccine) filtered = filtered.filter(u=> u.vacina === vaccine);
-            if(dental) filtered = filtered.filter(u=> u.odonto === dental);
-            if(pharmacy) filtered = filtered.filter(u=> u.farmacia === pharmacy);
-            
-            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
-            if(term) filtered = filtered.filter(u=> {
-                return (u.name||'').toLowerCase().includes(term) ||
-                       (u.phone||'').includes(term) ||
-                       (u.address||'').toLowerCase().includes(term) ||
-                       (u.bairro||'').toLowerCase().includes(term) ||
-                       (u.enfermeiro||'').toLowerCase().includes(term) ||
-                       (u.gerente||'').toLowerCase().includes(term) ||
-                       (u.responsavel||'').toLowerCase().includes(term);
-            });
-            
-            UI.renderContacts(filtered,'all');
+            if (filter && filter !== 'all') {
+                filtered = filtered.filter(unit => unit.type === filter);
+            }
+
+            // Aplicar filtros de serviços
+            const vaccineFilter = document.querySelector('.service-toggle-btn[data-service="vaccine"]').getAttribute('data-value');
+            const dentalFilter = document.querySelector('.service-toggle-btn[data-service="dental"]').getAttribute('data-value');
+            const pharmacyFilter = document.querySelector('.service-toggle-btn[data-service="pharmacy"]').getAttribute('data-value');
+
+            if (vaccineFilter) {
+                filtered = filtered.filter(unit => unit.vacina === vaccineFilter);
+            }
+            if (dentalFilter) {
+                filtered = filtered.filter(unit => unit.odonto === dentalFilter);
+            }
+            if (pharmacyFilter) {
+                filtered = filtered.filter(unit => unit.farmacia === pharmacyFilter);
+            }
+
+            // Aplicar busca por texto
+            const searchTerm = UI.elements.searchInput.value.toLowerCase().trim();
+            if (searchTerm) {
+                filtered = filtered.filter(unit => 
+                    unit.name.toLowerCase().includes(searchTerm) ||
+                    unit.phone.includes(searchTerm) ||
+                    unit.address.toLowerCase().includes(searchTerm) ||
+                    unit.bairro.toLowerCase().includes(searchTerm) ||
+                    (unit.enfermeiro && unit.enfermeiro.toLowerCase().includes(searchTerm)) ||
+                    (unit.gerente && unit.gerente.toLowerCase().includes(searchTerm)) ||
+                    (unit.responsavel && unit.responsavel.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            UI.renderContacts(filtered, 'all');
             UI.setCounts(filtered.length, this.favorites.length);
         },
 
-        async performSearch(){
-            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
+        performSearch() {
             const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-            await this.filterContacts(activeFilter);
+            this.filterContacts(activeFilter);
         },
 
-        async editUnit(id){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            const unit = this.units.find(u=>u.id===id);
-            if(!unit) return;
+        editUnit(id) {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
+                return;
+            }
+
+            const unit = this.units.find(u => u.id === id);
+            if (!unit) return;
+
+            // Preencher formulário
             document.getElementById('unitName').value = unit.name;
             document.getElementById('unitType').value = unit.type;
             document.getElementById('unitAddress').value = unit.address;
@@ -1247,46 +1456,61 @@
             document.getElementById('unitOdonto').value = unit.odonto || 'Não';
             document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
             document.getElementById('unitResponsavel').value = unit.responsavel || '';
-            
+
             UI.elements.formTitle.textContent = 'Editar Unidade';
             UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
-            UI.elements.cancelEditBtn.style.display = 'inline-flex';
-            UI.elements.formUnit.setAttribute('data-edit-id', id);
-            
-            setTimeout(() => {
-                UI.setupConditionalFormLogic();
-            }, 100);
-            
-            UI.elements.adminTabs.forEach(t=> t.classList.remove('active'));
+            UI.elements.cancelEdit.style.display = 'inline-flex';
+            UI.elements.unitForm.setAttribute('data-edit-id', id);
+
+            // Atualizar campos condicionais
+            setTimeout(() => UI.setupConditionalFormLogic(), 100);
+
+            // Mudar para aba de adicionar/editar
+            UI.elements.adminTabs.forEach(tab => tab.classList.remove('active'));
             document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
-            document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
+            document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
             document.getElementById('add-content').classList.add('active');
+
             UI.openAdmin();
         },
 
-        async deleteUnit(id){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            if(!confirm('Tem certeza que deseja excluir esta unidade?')) return;
-            await DataService.deleteUnit(id);
-            this.favorites = this.favorites.filter(f=>f!==id);
-            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            await this.refreshAll();
-            alert('Unidade excluída com sucesso!');
+        async deleteUnit(id) {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
+                return;
+            }
+
+            if (!confirm('Tem certeza que deseja excluir esta unidade?')) {
+                return;
+            }
+
+            if (DataService.deleteUnit(id)) {
+                this.favorites = this.favorites.filter(favId => favId !== id);
+                localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+                this.refreshAll();
+                alert('Unidade excluída com sucesso!');
+            } else {
+                alert('Erro ao excluir unidade!');
+            }
         },
 
-        async saveUnitFromForm(){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            const editId = UI.elements.formUnit.getAttribute('data-edit-id');
-            
+        async saveUnitFromForm() {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
+                return;
+            }
+
+            const editId = UI.elements.unitForm.getAttribute('data-edit-id');
             const responsibleField = document.getElementById('unitResponsavel');
             const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
-            
+
+            // Validar campo responsável se visível
             if (isResponsibleVisible && !responsibleField.value.trim()) {
                 alert('Por favor, preencha o campo Responsável!');
                 responsibleField.focus();
                 return;
             }
-            
+
             const unitData = {
                 id: editId ? parseInt(editId) : undefined,
                 name: document.getElementById('unitName').value,
@@ -1301,126 +1525,58 @@
                 odonto: document.getElementById('unitOdonto').value,
                 farmacia: document.getElementById('unitFarmacia').value,
                 responsavel: document.getElementById('unitResponsavel').value,
-                favorite: editId ? (this.units.find(u=>u.id===parseInt(editId))?.favorite || false) : false
+                favorite: editId ? (this.units.find(u => u.id === parseInt(editId))?.favorite || false) : false
             };
-            
-            const savedUnit = await DataService.saveUnit(unitData);
-            
-            await this.refreshAll();
-            UI.elements.formUnit.reset();
-            UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-            UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-            UI.elements.cancelEditBtn.style.display = 'none';
-            UI.elements.formUnit.removeAttribute('data-edit-id');
-            
-            UI.setupConditionalFormLogic();
-            
-            alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
-        },
 
-        backupData(){
-            const data = { units:this.units };
-            const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'backup-telefonia-' + new Date().toISOString().split('T')[0] + '.json';
-            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-            alert('Backup realizado com sucesso!');
-        },
+            const savedUnit = DataService.saveUnit(unitData);
+            if (savedUnit) {
+                this.refreshAll();
+                UI.elements.unitForm.reset();
+                UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                UI.elements.cancelEdit.style.display = 'none';
+                UI.elements.unitForm.removeAttribute('data-edit-id');
+                UI.setupConditionalFormLogic();
 
-        restoreData(file){
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e)=> {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if(data.units){
-                        if(confirm('Isso substituirá todos os dados atuais. Continuar?')){
-                            localStorage.setItem('units', JSON.stringify(data.units));
-                            await this.refreshAll();
-                            alert('Dados restaurados com sucesso!');
-                        }
-                    } else alert('Arquivo de backup inválido!');
-                } catch(err){
-                    alert('Erro ao ler arquivo: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-            UI.elements.restoreInput.value = '';
-        },
-
-        clearAllData(){
-            if(!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) return;
-            localStorage.removeItem('units');
-            localStorage.removeItem('telefonia_favorites');
-            localStorage.removeItem('telefonia_isLogged');
-            this.units = []; this.favorites = [];
-            this.refreshAll();
-            alert('Todos os dados foram apagados!');
-        },
-
-        /***********************************************
-         * GitHub Sync Functions
-         ***********************************************/
-        loadGitHubConfig() {
-            const config = localStorage.getItem('github_config');
-            if (config) {
-                const { token, owner, repo, filePath, autoSync } = JSON.parse(config);
-                DataService.githubToken = token;
-                DataService.repoOwner = owner;
-                DataService.repoName = repo;
-                DataService.filePath = filePath;
-                DataService.autoSync = autoSync !== false;
-                
-                UI.elements.repoOwner.value = owner;
-                UI.elements.repoName.value = repo;
-                UI.elements.filePath.value = filePath;
-                
-                if (token) {
-                    UI.elements.githubToken.placeholder = '•••••••••• (já configurado)';
-                }
+                alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
+            } else {
+                alert('Erro ao salvar unidade!');
             }
         },
-        
+
+        // GitHub Sync
         saveGitHubConfig() {
             const token = UI.elements.githubToken.value.trim();
             const owner = UI.elements.repoOwner.value.trim();
             const repo = UI.elements.repoName.value.trim();
             const filePath = UI.elements.filePath.value.trim();
-            
+
             if (!token || !owner || !repo || !filePath) {
                 alert('Preencha todos os campos!');
                 return;
             }
-            
+
             DataService.githubToken = token;
             DataService.repoOwner = owner;
             DataService.repoName = repo;
             DataService.filePath = filePath;
-            
-            localStorage.setItem('github_config', JSON.stringify({ 
-                token, 
+
+            localStorage.setItem('github_config', JSON.stringify({
+                token,
                 owner, 
-                repo, 
-                filePath,
-                autoSync: DataService.autoSync 
+                repo,
+                filePath
             }));
-            
+
             UI.elements.githubToken.value = '';
             UI.elements.githubToken.placeholder = '•••••••••• (configurado com sucesso)';
-            
             UI.showSyncStatus('Configuração do GitHub salva com sucesso!', 'success');
         },
-        
+
         async syncToGitHub() {
-            if (!DataService.githubToken) {
-                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
-                return;
-            }
-            
             UI.showSyncStatus('<div class="loading"></div> Sincronizando com GitHub...', 'loading');
             
-            const result = await DataService.syncWithGitHub();
+            const result = await DataService.syncToGitHub();
             
             if (result.success) {
                 UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
@@ -1428,37 +1584,27 @@
                 UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
             }
         },
-        
+
         async pullFromGitHub() {
-            if (!DataService.githubToken) {
-                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
-                return;
-            }
-            
             if (!confirm('Isso substituirá os dados locais pelos do GitHub. Continuar?')) {
                 return;
             }
-            
+
             UI.showSyncStatus('<div class="loading"></div> Buscando dados do GitHub...', 'loading');
             
-            const units = await DataService.pullFromGitHub();
+            const result = await DataService.pullFromGitHub();
             
-            if (units) {
-                this.units = units;
-                await this.refreshAll();
-                UI.showSyncStatus('<i class="fas fa-check"></i> Dados atualizados do GitHub com sucesso!', 'success');
+            if (result.success) {
+                this.units = result.data;
+                this.refreshAll();
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
             } else {
-                UI.showSyncStatus('<i class="fas fa-times"></i> Erro ao buscar dados do GitHub', 'error');
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
             }
         },
-        
+
         async testGitHubConnection() {
-            if (!DataService.githubToken) {
-                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
-                return;
-            }
-            
-            UI.showSyncStatus('<div class="loading"></div> Testando conexão com GitHub...', 'loading');
+            UI.showSyncStatus('<div class="loading"></div> Testando conexão...', 'loading');
             
             const result = await DataService.testGitHubConnection();
             
@@ -1467,15 +1613,86 @@
             } else {
                 UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
             }
+        },
+
+        // Backup e restore
+        backupData() {
+            const data = {
+                units: this.units,
+                favorites: this.favorites,
+                timestamp: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-telefonia-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('Backup realizado com sucesso!');
+        },
+
+        restoreData(file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.units) {
+                        alert('Arquivo de backup inválido!');
+                        return;
+                    }
+
+                    if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
+                        DataService.saveUnits(data.units);
+                        
+                        if (data.favorites) {
+                            this.favorites = data.favorites;
+                            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+                        }
+
+                        this.refreshAll();
+                        alert('Dados restaurados com sucesso!');
+                    }
+                } catch (error) {
+                    alert('Erro ao ler arquivo: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            UI.elements.restoreInput.value = '';
+        },
+
+        clearAllData() {
+            if (!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) {
+                return;
+            }
+
+            localStorage.removeItem('units');
+            localStorage.removeItem('telefonia_favorites');
+            localStorage.removeItem('telefonia_isLogged');
+            localStorage.removeItem('github_config');
+            
+            this.units = [];
+            this.favorites = [];
+            this.refreshAll();
+            
+            alert('Todos os dados foram apagados!');
         }
     };
 
-    document.addEventListener('DOMContentLoaded', ()=> App.init());
+    // Inicializar aplicação quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => App.init());
 
+    // Expor para debugging
     window.App = App;
     window.UI = UI;
     window.DataService = DataService;
-    window.AuthService = AuthService;
     </script>
 </body>
 </html>
