@@ -304,6 +304,29 @@
             display: none !important;
         }
         
+        /* GitHub Sync Status */
+        .sync-status {
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin: 10px 0;
+            text-align: center;
+        }
+        .sync-success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+        .sync-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        .sync-loading {
+            background: rgba(44, 106, 160, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
         /* Enhanced Responsive Design */
         @media (max-width:1200px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
@@ -436,6 +459,7 @@
                 <div class="admin-tabs" role="tablist">
                     <div class="admin-tab active" data-tab="units" role="tab">Gerenciar Unidades</div>
                     <div class="admin-tab" data-tab="add" role="tab">Adicionar Unidade</div>
+                    <div class="admin-tab" data-tab="github" role="tab">GitHub Sync</div>
                     <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
                 </div>
 
@@ -485,6 +509,65 @@
                             <button type="submit" class="btn btn-success" id="submitBtn"><i class="fas fa-plus"></i> Adicionar Unidade</button>
                         </div>
                     </form>
+                </div>
+
+                <!-- GITHUB SYNC -->
+                <div class="admin-content" id="github-content">
+                    <h3><i class="fab fa-github"></i> Sincronização com GitHub</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="githubToken">Token do GitHub *</label>
+                            <input type="password" id="githubToken" class="form-control" 
+                                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                            <small class="form-text">
+                                <a href="https://github.com/settings/tokens" target="_blank">Gerar token</a> 
+                                (precisa das permissões: repo)
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="repoOwner">Proprietário do Repositório</label>
+                            <input type="text" id="repoOwner" class="form-control" 
+                                   placeholder="seu-usuario" value="gti-sms">
+                        </div>
+                        <div class="form-group">
+                            <label for="repoName">Nome do Repositório</label>
+                            <input type="text" id="repoName" class="form-control" 
+                                   placeholder="telefonia-sms" value="SMS">
+                        </div>
+                        <div class="form-group">
+                            <label for="filePath">Caminho do Arquivo</label>
+                            <input type="text" id="filePath" class="form-control" 
+                                   placeholder="data/units.json" value="data/units.json">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="saveGitHubConfig">
+                            <i class="fas fa-save"></i> Salvar Configuração
+                        </button>
+                        <button type="button" class="btn btn-success" id="syncToGitHub">
+                            <i class="fas fa-cloud-upload-alt"></i> Sincronizar para GitHub
+                        </button>
+                        <button type="button" class="btn btn-warning" id="pullFromGitHub">
+                            <i class="fas fa-cloud-download-alt"></i> Puxar do GitHub
+                        </button>
+                        <button type="button" class="btn btn-info" id="testConnection">
+                            <i class="fas fa-plug"></i> Testar Conexão
+                        </button>
+                    </div>
+                    <div id="syncStatus" style="margin-top: 20px;"></div>
+                    
+                    <!-- Instruções de configuração -->
+                    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: var(--radius-sm);">
+                        <h4><i class="fas fa-info-circle"></i> Instruções de Configuração:</h4>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Vá para <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings > Tokens</a></li>
+                            <li>Clique em "Generate new token"</li>
+                            <li>Dê um nome descritivo (ex: "Telefonia SMS")</li>
+                            <li>Selecione a permissão <strong>"repo"</strong></li>
+                            <li>Clique em "Generate token"</li>
+                            <li>Cole o token no campo acima e clique em "Salvar Configuração"</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <!-- CONFIG -->
@@ -560,15 +643,20 @@
 
     <script>
     /***********************************************
-     * Data & Auth Services (simulam API local)
+     * Data & Auth Services
      ***********************************************/
     const sampleData = {
-        units: [] // REMOVIDOS TODOS OS CONTATOS
+        units: []
     };
 
     const DataService = {
         useRemote: false,
         remoteBase: '/api',
+        githubToken: '', // Token será configurado pelo usuário
+        repoOwner: 'gti-sms',
+        repoName: 'SMS',
+        filePath: 'data/units.json',
+        autoSync: true,
 
         async _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); },
 
@@ -601,6 +689,12 @@
                 units.push(unit);
             }
             localStorage.setItem('units', JSON.stringify(units));
+            
+            // Sincronizar com GitHub se configurado
+            if (this.autoSync && this.githubToken) {
+                setTimeout(() => this.syncWithGitHub(), 1000);
+            }
+            
             return unit;
         },
 
@@ -613,6 +707,125 @@
             let units = await this.getUnits();
             units = units.filter(u=>u.id!==id);
             localStorage.setItem('units', JSON.stringify(units));
+            
+            // Sincronizar com GitHub se configurado
+            if (this.autoSync && this.githubToken) {
+                setTimeout(() => this.syncWithGitHub(), 1000);
+            }
+        },
+
+        /***********************************************
+         * GitHub Sync Functions
+         ***********************************************/
+        async syncWithGitHub() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado. Configure na aba GitHub Sync.' };
+            }
+            
+            try {
+                const localUnits = await this.getUnits();
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(localUnits, null, 2))));
+                
+                // Verificar se o arquivo já existe
+                const existingFile = await this.getGitHubFile();
+                let sha = null;
+                
+                if (existingFile && !existingFile.message) {
+                    sha = existingFile.sha;
+                }
+                
+                // Fazer commit
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: `Sync: ${new Date().toLocaleString('pt-BR')}`,
+                            content: content,
+                            sha: sha
+                        })
+                    }
+                );
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    return { success: true, message: 'Sincronizado com sucesso!' };
+                } else {
+                    return { success: false, message: result.message || 'Erro na sincronização' };
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar com GitHub:', error);
+                return { success: false, message: 'Erro de conexão: ' + error.message };
+            }
+        },
+        
+        async getGitHubFile() {
+            if (!this.githubToken) return null;
+            
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    return await response.json();
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro ao buscar arquivo do GitHub:', error);
+                return null;
+            }
+        },
+        
+        async pullFromGitHub() {
+            try {
+                const file = await this.getGitHubFile();
+                if (file && file.content && !file.message) {
+                    const content = JSON.parse(decodeURIComponent(escape(atob(file.content))));
+                    localStorage.setItem('units', JSON.stringify(content));
+                    return content;
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro ao puxar do GitHub:', error);
+                return null;
+            }
+        },
+        
+        async testGitHubConnection() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado' };
+            }
+            
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    return { success: true, message: 'Conexão com GitHub estabelecida com sucesso!' };
+                } else {
+                    const error = await response.json();
+                    return { success: false, message: error.message || 'Erro na conexão' };
+                }
+            } catch (error) {
+                return { success: false, message: 'Erro de conexão: ' + error.message };
+            }
         }
     };
 
@@ -674,7 +887,17 @@
                 gerenteField: document.getElementById('gerenteField'),
                 vacinaField: document.getElementById('vacinaField'),
                 odontoField: document.getElementById('odontoField'),
-                farmaciaField: document.getElementById('farmaciaField')
+                farmaciaField: document.getElementById('farmaciaField'),
+                // GitHub elements
+                githubToken: document.getElementById('githubToken'),
+                repoOwner: document.getElementById('repoOwner'),
+                repoName: document.getElementById('repoName'),
+                filePath: document.getElementById('filePath'),
+                saveGitHubConfig: document.getElementById('saveGitHubConfig'),
+                syncToGitHub: document.getElementById('syncToGitHub'),
+                pullFromGitHub: document.getElementById('pullFromGitHub'),
+                testConnection: document.getElementById('testConnection'),
+                syncStatus: document.getElementById('syncStatus')
             };
         },
 
@@ -824,6 +1047,18 @@
             this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
         },
 
+        showSyncStatus(message, type = 'info') {
+            const statusEl = this.elements.syncStatus;
+            statusEl.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
+            
+            // Auto-hide after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.innerHTML = '';
+                }, 5000);
+            }
+        },
+
         bindUIActions(){
             this.elements.adminToggle.onclick = ()=> {
                 if(AuthService.isLogged()){
@@ -905,25 +1140,33 @@
             this.elements.restoreInput.onchange = (e)=> App.restoreData(e.target.files[0]);
             this.elements.clearAllBtn.onclick = ()=> App.clearAllData();
 
+            // GitHub Actions
+            this.elements.saveGitHubConfig.onclick = () => App.saveGitHubConfig();
+            this.elements.syncToGitHub.onclick = () => App.syncToGitHub();
+            this.elements.pullFromGitHub.onclick = () => App.pullFromGitHub();
+            this.elements.testConnection.onclick = () => App.testGitHubConnection();
+
             this.setupConditionalFormLogic();
         }
     };
 
     const App = {
         units: [],
-        favorites: [], // REMOVIDOS TODOS OS FAVORITOS
+        favorites: [],
 
         async init(){
             await UI.cache();
             UI.loadTheme();
             UI.bindUIActions();
             if(AuthService.isLogged()){
-                // UI.openAdmin(); // REMOVIDA ABERTURA AUTOMÁTICA - AGORA SÓ ABRE QUANDO CLICAR NO BOTÃO
                 UI.elements.logoutBtn.style.display = 'inline-flex';
             } else {
                 UI.elements.logoutBtn.style.display = 'none';
             }
             await this.refreshAll();
+            
+            // Carregar configuração do GitHub
+            this.loadGitHubConfig();
         },
 
         async refreshAll(){
@@ -1112,6 +1355,119 @@
             this.units = []; this.favorites = [];
             this.refreshAll();
             alert('Todos os dados foram apagados!');
+        },
+
+        /***********************************************
+         * GitHub Sync Functions
+         ***********************************************/
+        loadGitHubConfig() {
+            const config = localStorage.getItem('github_config');
+            if (config) {
+                const { token, owner, repo, filePath, autoSync } = JSON.parse(config);
+                DataService.githubToken = token;
+                DataService.repoOwner = owner;
+                DataService.repoName = repo;
+                DataService.filePath = filePath;
+                DataService.autoSync = autoSync !== false;
+                
+                // Preencher formulário (não preenche o token por segurança)
+                UI.elements.repoOwner.value = owner;
+                UI.elements.repoName.value = repo;
+                UI.elements.filePath.value = filePath;
+                
+                // Mostrar indicador que o token está configurado
+                if (token) {
+                    UI.elements.githubToken.placeholder = '•••••••••• (já configurado)';
+                }
+            }
+        },
+        
+        saveGitHubConfig() {
+            const token = UI.elements.githubToken.value.trim();
+            const owner = UI.elements.repoOwner.value.trim();
+            const repo = UI.elements.repoName.value.trim();
+            const filePath = UI.elements.filePath.value.trim();
+            
+            if (!token || !owner || !repo || !filePath) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+            
+            DataService.githubToken = token;
+            DataService.repoOwner = owner;
+            DataService.repoName = repo;
+            DataService.filePath = filePath;
+            
+            localStorage.setItem('github_config', JSON.stringify({ 
+                token, 
+                owner, 
+                repo, 
+                filePath,
+                autoSync: DataService.autoSync 
+            }));
+            
+            // Limpar o campo do token por segurança
+            UI.elements.githubToken.value = '';
+            UI.elements.githubToken.placeholder = '•••••••••• (configurado com sucesso)';
+            
+            UI.showSyncStatus('Configuração do GitHub salva com sucesso!', 'success');
+        },
+        
+        async syncToGitHub() {
+            if (!DataService.githubToken) {
+                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
+                return;
+            }
+            
+            UI.showSyncStatus('<div class="loading"></div> Sincronizando com GitHub...', 'loading');
+            
+            const result = await DataService.syncWithGitHub();
+            
+            if (result.success) {
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
+            } else {
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
+            }
+        },
+        
+        async pullFromGitHub() {
+            if (!DataService.githubToken) {
+                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
+                return;
+            }
+            
+            if (!confirm('Isso substituirá os dados locais pelos do GitHub. Continuar?')) {
+                return;
+            }
+            
+            UI.showSyncStatus('<div class="loading"></div> Buscando dados do GitHub...', 'loading');
+            
+            const units = await DataService.pullFromGitHub();
+            
+            if (units) {
+                this.units = units;
+                await this.refreshAll();
+                UI.showSyncStatus('<i class="fas fa-check"></i> Dados atualizados do GitHub com sucesso!', 'success');
+            } else {
+                UI.showSyncStatus('<i class="fas fa-times"></i> Erro ao buscar dados do GitHub', 'error');
+            }
+        },
+        
+        async testGitHubConnection() {
+            if (!DataService.githubToken) {
+                UI.showSyncStatus('<i class="fas fa-exclamation-triangle"></i> Configure o token do GitHub primeiro', 'error');
+                return;
+            }
+            
+            UI.showSyncStatus('<div class="loading"></div> Testando conexão com GitHub...', 'loading');
+            
+            const result = await DataService.testGitHubConnection();
+            
+            if (result.success) {
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
+            } else {
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
+            }
         }
     };
 
