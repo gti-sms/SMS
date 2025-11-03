@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Telefonia - Secretaria Municipal de Saúde PMPF</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ====== VARS & RESET ====== */
+        :root{
+            --primary:#2c6aa0;--primary-dark:#1e4a73;--secondary:#4caf50;
+            --danger:#e74c3c;--warning:#f39c12;--light:#f8f9fa;
+            --dark:#343a40;--gray:#6c757d;--border:#dee2e6;
+            --shadow:0 4px 12px rgba(0,0,0,.1);--transition:all .3s ease;
+            --radius:12px;--radius-sm:8px;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+        html,body{width:100%;height:100%;background:#f5f7fa;color:var(--dark);line-height:1.6;overflow-x:hidden}
+        
+        /* Container & Layout */
+        .container{max-width:1400px;margin:0 auto;padding:0 20px;width:100%}
+        
+        /* Header Improvements */
+        header{
+            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color:#fff;padding:15px 0;box-shadow:var(--shadow);
+            position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px);
+        }
+        .header-content{display:flex;justify-content:space-between;align-items:center;width:100%}
+        .logo{display:flex;align-items:center;gap:15px}
+        .logo i{font-size:2.2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+        .logo h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.5px}
+        .header-actions{display:flex;gap:12px;align-items:center}
+        .theme-toggle,.admin-toggle{
+            background:rgba(255,255,255,.25);border:0;color:#fff;
+            width:44px;height:44px;border-radius:50%;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;
+            transition:var(--transition);backdrop-filter:blur(10px);
+        }
+        .theme-toggle:hover,.admin-toggle:hover{
+            background:rgba(255,255,255,.4);transform:scale(1.05);
+        }
+        
+        /* Modal Improvements */
+        .login-modal{
+            display:none;position:fixed;inset:0;
+            background:rgba(0,0,0,.6);z-index:2000;
+            align-items:center;justify-content:center;backdrop-filter:blur(5px);
+        }
+        .login-modal.active{display:flex}
+        .login-form{
+            background:#fff;padding:35px;border-radius:var(--radius);
+            box-shadow:0 20px 40px rgba(0,0,0,.3);width:100%;
+            max-width:420px;transform:translateY(-20px);animation:slideUp .3s ease forwards;
+        }
+        @keyframes slideUp{to{transform:translateY(0)}}
+        .login-form h2{margin-bottom:25px;color:var(--primary-dark);text-align:center;font-weight:600}
+        
+        /* Form Improvements */
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--dark)}
+        .form-control{
+            width:100%;padding:12px 16px;border:2px solid var(--border);
+            border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);
+            background:#fff;
+        }
+        .form-control:focus{
+            outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);
+            transform:translateY(-1px);
+        }
+        .btn{
+            padding:12px 24px;border:0;border-radius:var(--radius-sm);cursor:pointer;
+            font-weight:600;transition:var(--transition);display:flex;
+            align-items:center;gap:10px;font-size:0.95rem;
+        }
+        .btn-primary{background:var(--primary);color:#fff}
+        .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.3)}
+        .btn-secondary{background:var(--gray);color:#fff}
+        .btn-success{background:var(--secondary);color:#fff}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,.3)}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn-warning{background:var(--warning);color:#fff}
+        
+        /* Admin Panel Improvements */
+        .admin-panel{
+            display:none;background:#fff;border-radius:var(--radius);
+            padding:30px;margin:30px 0;box-shadow:var(--shadow);width:100%;
+            border:1px solid rgba(0,0,0,.05);
+        }
+        .admin-panel.active{display:block;animation:fadeIn .3s ease}
+        @keyframes fadeIn{from{opacity:0} to{opacity:1}}
+        .admin-header{
+            display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:25px;padding-bottom:20px;
+            border-bottom:3px solid var(--primary);
+        }
+        .admin-title{font-size:1.6rem;font-weight:700;color:var(--primary-dark)}
+        .admin-tabs{
+            display:flex;gap:5px;margin-bottom:25px;border-bottom:2px solid var(--border);
+            background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);
+        }
+        .admin-tab{
+            padding:12px 24px;cursor:pointer;border-radius:var(--radius-sm);
+            transition:var(--transition);font-weight:500;flex:1;text-align:center;
+        }
+        .admin-tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+        .admin-content{display:none}
+        .admin-content.active{display:block;animation:slideIn .3s ease}
+        @keyframes slideIn{from{transform:translateX(10px);opacity:0} to{transform:translateX(0);opacity:1}}
+        .form-grid{
+            display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+            gap:25px;margin-bottom:25px;
+        }
+        .form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:30px}
+        .units-list{display:flex;flex-direction:column;gap:15px;max-height:500px;overflow-y:auto;padding:5px}
+        .unit-item{
+            background:var(--light);border-radius:var(--radius-sm);padding:20px;
+            border-left:5px solid var(--primary);display:flex;
+            justify-content:space-between;align-items:center;transition:var(--transition);
+        }
+        .unit-item:hover{transform:translateX(5px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+        .unit-actions{display:flex;gap:10px}
+        
+        /* Search & Cards Improvements */
+        .search-container{
+            background:#fff;border-radius:var(--radius);padding:30px;
+            margin:30px 0;box-shadow:var(--shadow);width:100%;
+            border:1px solid rgba(0,0,0,.05);
+        }
+        .search-box{display:flex;gap:12px;margin-bottom:25px;width:100%}
+        .search-input{
+            flex:1;padding:16px 20px;border:2px solid var(--border);
+            border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);
+            background:#fff;
+        }
+        .search-input:focus{
+            border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);
+            transform:translateY(-1px);
+        }
+        .search-btn{
+            background:var(--primary);color:#fff;border:0;
+            border-radius:var(--radius-sm);padding:0 30px;cursor:pointer;
+            transition:var(--transition);font-weight:600;font-size:1rem;
+        }
+        .search-btn:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.3)}
+        .filter-options{display:flex;gap:12px;flex-wrap:wrap;width:100%}
+        .filter-btn{
+            background:#fff;border:2px solid var(--border);border-radius:25px;
+            padding:10px 20px;cursor:pointer;display:flex;align-items:center;
+            gap:8px;transition:var(--transition);font-weight:500;font-size:0.9rem;
+        }
+        .filter-btn.active{
+            background:var(--primary);color:#fff;border-color:var(--primary);
+            transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
+        }
+        .filter-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
+        .service-filters{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;width:100%}
+        
+        /* Service Toggle Buttons */
+        .service-toggle-btn{
+            background:#fff;border:2px solid var(--border);border-radius:25px;
+            padding:12px 20px;cursor:pointer;display:flex;align-items:center;
+            gap:10px;transition:var(--transition);font-size:0.9rem;color:var(--gray);
+            font-weight:500;
+        }
+        .service-toggle-btn.active{
+            background:var(--primary);color:#fff;border-color:var(--primary);
+            transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
+        }
+        .service-toggle-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
+        .service-toggle-btn i{font-size:1rem}
+        
+        /* Tabs & Content */
+        .tabs{
+            display:flex;border-bottom:2px solid var(--border);margin-bottom:25px;
+            flex-wrap:wrap;background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);
+        }
+        .tab{
+            padding:14px 28px;cursor:pointer;border-radius:var(--radius-sm);
+            transition:var(--transition);font-weight:600;flex:1;text-align:center;
+        }
+        .tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+        .content{display:none;width:100%}
+        .content.active{display:block;animation:fadeIn .4s ease}
+        .results-count{
+            margin-bottom:20px;color:var(--gray);font-size:.95rem;width:100%;
+            padding:12px 0;font-weight:500;
+        }
+        
+        /* Contact Cards Improvements */
+        .contact-grid{
+            display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+            gap:25px;width:100%;
+        }
+        .contact-card{
+            background:#fff;border-radius:var(--radius);padding:25px;
+            box-shadow:var(--shadow);transition:var(--transition);
+            border-left:5px solid var(--primary);display:flex;flex-direction:column;
+            min-height:420px;position:relative;border:1px solid rgba(0,0,0,.05);
+        }
+        .contact-card:hover{
+            transform:translateY(-5px);box-shadow:0 12px 24px rgba(0,0,0,.15);
+        }
+        .favorite-btn{
+            position:absolute;top:20px;right:20px;background:none;border:0;
+            font-size:1.4rem;color:var(--gray);cursor:pointer;z-index:10;
+            transition:var(--transition);
+        }
+        .favorite-btn:hover{transform:scale(1.2)}
+        .favorite-btn.active{color:var(--warning)}
+        .contact-header{
+            display:flex;justify-content:space-between;align-items:flex-start;
+            margin-bottom:20px;width:100%;
+        }
+        .contact-name{font-size:1.3rem;font-weight:700;color:var(--primary-dark);line-height:1.3}
+        .contact-type{
+            background:rgba(44,106,160,.1);color:var(--primary);padding:6px 14px;
+            border-radius:20px;font-size:.85rem;font-weight:600;
+        }
+        .contact-info{
+            display:flex;flex-direction:column;gap:14px;width:100%;flex-grow:1;
+        }
+        .contact-item{
+            display:flex;align-items:flex-start;gap:12px;width:100%;
+            padding:8px 0;
+        }
+        .contact-item i{width:20px;color:var(--primary);margin-top:2px;font-size:1.1rem}
+        .contact-services{
+            display:flex;justify-content:space-between;margin-top:20px;
+            padding-top:20px;border-top:2px solid var(--border);width:100%;
+        }
+        .service{
+            display:flex;flex-direction:column;align-items:center;text-align:center;
+            transition:var(--transition);
+        }
+        .service i{font-size:1.4rem;margin-bottom:.4rem;transition:var(--transition)}
+        .service.available{color:var(--secondary)}
+        .service.available i{transform:scale(1.1)}
+        .service.unavailable{color:var(--gray);opacity:.6}
+        .service-label{font-size:.75rem;margin-top:.3rem;font-weight:600}
+        .contact-actions{
+            display:flex;gap:12px;margin-top:20px;width:100%;
+        }
+        .action-btn{
+            flex:1;padding:12px;border:0;border-radius:var(--radius-sm);
+            cursor:pointer;font-weight:600;display:flex;align-items:center;
+            justify-content:center;gap:8px;transition:var(--transition);
+            font-size:0.9rem;
+        }
+        .action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+        .call-btn{background:var(--secondary);color:#fff}
+        .whatsapp-btn{background:#25D366;color:#fff}
+        .location-btn{background:transparent;border:2px solid var(--border);color:var(--gray)}
+        .location-btn:hover{background:var(--border);color:var(--dark)}
+        
+        .no-results{
+            text-align:center;padding:50px;color:var(--gray);width:100%;
+            background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+        }
+        .no-results i{font-size:3rem;margin-bottom:20px;color:var(--primary);opacity:.5}
+        
+        /* Footer */
+        .footer{
+            background:var(--dark);color:#fff;text-align:center;padding:25px 0;
+            position:fixed;bottom:0;left:0;width:100%;z-index:100;
+            backdrop-filter:blur(10px);background:rgba(52,58,64,.95);
+        }
+        
+        /* Dark Mode */
+        body.dark-mode{
+            background:#1a1d23;color:#e9ecef;
+        }
+        body.dark-mode .search-container,
+        body.dark-mode .contact-card,
+        body.dark-mode .filter-btn,
+        body.dark-mode .service-toggle-btn,
+        body.dark-mode .admin-panel,
+        body.dark-mode .unit-item,
+        body.dark-mode .login-form{
+            background:#2d3239;color:#e9ecef;border-color:#3d434b;
+        }
+        body.dark-mode .search-input,
+        body.dark-mode .filter-btn,
+        body.dark-mode .service-toggle-btn,
+        body.dark-mode .form-control{
+            background:#343a40;border-color:#495057;color:#e9ecef;
+        }
+        body.dark-mode .search-input:focus,
+        body.dark-mode .form-control:focus{
+            border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
+        }
+        body.dark-mode .service-toggle-btn{
+            background:#343a40;border-color:#495057;color:#e9ecef;
+        }
+        body.dark-mode .service-toggle-btn.active{
+            background:var(--primary);color:#fff;border-color:var(--primary);
+        }
+        body.dark-mode .service-toggle-btn:hover:not(.active){
+            border-color:var(--primary);
+        }
+        
+        /* CLASSES PARA LÓGICA CONDICIONAL */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Enhanced Responsive Design */
+        @media (max-width:1200px){
+            .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
+            .form-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+        }
+        
+        @media (max-width:992px){
+            .contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+            .admin-tabs,.tabs{flex-wrap:wrap}
+            .admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}
+        }
+        
+        @media (max-width:768px){
+            .header-content{flex-direction:column;gap:15px;text-align:center}
+            .contact-grid,.ramais-container{grid-template-columns:1fr}
+            .search-box{flex-direction:column}
+            .filter-options,.service-filters{justify-content:center}
+            .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
+            .form-grid{grid-template-columns:1fr}
+            .unit-item{flex-direction:column;align-items:flex-start;gap:15px}
+            .unit-actions{width:100%;justify-content:flex-end}
+            .admin-tabs,.tabs{padding:3px}
+            .admin-tab,.tab{padding:10px 16px;font-size:0.9rem}
+            .contact-card{min-height:380px;padding:20px}
+            .contact-actions{flex-direction:column}
+            .action-btn{width:100%}
+            .form-actions{flex-direction:column}
+            .btn{width:100%;justify-content:center}
+        }
+        
+        @media (max-width:480px){
+            .logo h1{font-size:1.5rem}
+            .logo i{font-size:1.8rem}
+            .tab{padding:10px 12px;font-size:.85rem}
+            .service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
+            .filter-btn{padding:8px 15px;font-size:0.8rem}
+            .search-input{padding:14px 16px}
+            .contact-grid{gap:15px}
+            .container{padding:0 15px}
+            .search-container,.admin-panel{padding:20px}
+            .contact-card{padding:18px;min-height:360px}
+            .contact-name{font-size:1.2rem}
+            .contact-item{gap:10px;padding:6px 0}
+            .contact-services{margin-top:15px;padding-top:15px}
+        }
+        
+        @media (max-width:360px){
+            .contact-grid{grid-template-columns:1fr}
+            .admin-tab,.tab{flex:1 1 100%;min-width:100%}
+            .filter-options,.service-filters{gap:8px}
+            .filter-btn,.service-toggle-btn{padding:8px 12px;font-size:0.75rem}
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Selection Color */
+        ::selection {
+            background: rgba(44,106,160,.2);
+            color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN MODAL -->
+    <div class="login-modal" id="loginModal" aria-hidden="true">
+        <div class="login-form" role="dialog" aria-labelledby="loginTitle">
+            <h2 id="loginTitle"><i class="fas fa-lock"></i> Acesso Administrativo</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Usuário:</label>
+                    <input type="text" id="loginUsername" class="form-control" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Senha:</label>
+                    <input type="password" id="loginPassword" class="form-control" required autocomplete="current-password">
+                </div>
+                <div class="form-actions" style="justify-content:center;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="telefonia-container">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-phone-alt"></i>
+                        <div>
+                            <h1>Telefonia - SMS</h1>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="admin-toggle" id="adminToggle" title="Painel Administrativo"><i class="fas fa-cogs"></i></button>
+                        <button class="theme-toggle" id="themeToggle" title="Alternar tema"><i class="fas fa-moon"></i></button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ADMIN PANEL -->
+        <div class="admin-panel" id="adminPanel" aria-hidden="true">
+            <div class="container">
+                <div class="admin-header">
+                    <h2 class="admin-title">Painel Administrativo</h2>
+                    <div>
+                        <button class="btn btn-secondary" id="closeAdmin"><i class="fas fa-times"></i> Fechar</button>
+                        <button class="btn btn-danger" id="logoutBtn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
+                    </div>
+                </div>
+
+                <div class="admin-tabs" role="tablist">
+                    <div class="admin-tab active" data-tab="units" role="tab">Gerenciar Unidades</div>
+                    <div class="admin-tab" data-tab="add" role="tab">Adicionar Unidade</div>
+                    <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
+                </div>
+
+                <!-- UNITS -->
+                <div class="admin-content active" id="units-content">
+                    <h3>Unidades Cadastradas</h3>
+                    <div class="units-list" id="unitsList"></div>
+                </div>
+
+                <!-- ADD / EDIT UNIT -->
+                <div class="admin-content" id="add-content">
+                    <h3 id="formTitle">Adicionar Nova Unidade</h3>
+                    <form id="unitForm">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="unitName">Nome da Unidade *</label><input type="text" id="unitName" class="form-control" required></div>
+                            <div class="form-group"><label for="unitType">Tipo *</label>
+                                <select id="unitType" class="form-control" required>
+                                    <option value="">Selecione o tipo</option>
+                                    <option value="promocao">Promoção</option>
+                                    <option value="recuperacao">Recuperação</option>
+                                    <option value="administrativo">Administrativo</option>
+                                    <option value="vigilancia">Vigilância</option>
+                                    <option value="capne">Capne</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="unitAddress">Endereço *</label><input type="text" id="unitAddress" class="form-control" required placeholder="Ex: Rua Exemplo, 123"><small class="form-text">O link do Google Maps será gerado automaticamente</small></div>
+                            <div class="form-group"><label for="unitBairro">Bairro *</label><input type="text" id="unitBairro" class="form-control" required placeholder="Ex: Centro"></div>
+                            <div class="form-group"><label for="unitPhone">Telefone *</label><input type="text" id="unitPhone" class="form-control" required placeholder="Ex: 3314-1234"><small class="form-text">O link do WhatsApp será gerado automaticamente</small></div>
+                            <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
+                            
+                            <!-- Campo Responsável (será exibido condicionalmente) -->
+                            <div class="form-group hidden" id="responsibleFieldContainer">
+                                <label for="unitResponsavel">Responsável *</label>
+                                <input type="text" id="unitResponsavel" class="form-control" placeholder="Nome do responsável pela unidade">
+                            </div>
+                            
+                            <div class="form-group" id="enfermeiroField"><label for="unitEnfermeiro">Enfermeiro Responsável</label><input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável"></div>
+                            <div class="form-group" id="gerenteField"><label for="unitGerente">Gerente Responsável</label><input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável"></div>
+                            <div class="form-group" id="vacinaField"><label for="unitVacina">Sala de Vacina</label><select id="unitVacina" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                            <div class="form-group" id="odontoField"><label for="unitOdonto">Consultório Odontológico</label><select id="unitOdonto" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                            <div class="form-group" id="farmaciaField"><label for="unitFarmacia">Farmácia</label><select id="unitFarmacia" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
+                            <button type="reset" class="btn btn-secondary"><i class="fas fa-eraser"></i> Limpar</button>
+                            <button type="submit" class="btn btn-success" id="submitBtn"><i class="fas fa-plus"></i> Adicionar Unidade</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- CONFIG -->
+                <div class="admin-content" id="config-content">
+                    <h3>Configurações do Sistema</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="backupData">Backup de Dados</label><button type="button" id="backupData" class="btn btn-primary"><i class="fas fa-download"></i> Fazer Backup</button></div>
+                        <div class="form-group"><label for="restoreData">Restaurar Dados</label><input type="file" id="restoreData" class="form-control" accept=".json"></div>
+                        <div class="form-group"><label for="clearAll">Limpar Todos os Dados</label><button type="button" id="clearAll" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <main class="container" style="padding-bottom:120px;">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
+                    <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
+                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
+                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
+                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
+                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
+                    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
+                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
+                </div>
+
+                <div class="service-filters">
+                    <!-- Botão Toggle para Sala de Vacina -->
+                    <button class="service-toggle-btn" data-service="vaccine" data-value="">
+                        <i class="fas fa-syringe"></i>Com sala de vacina
+                    </button>
+                    
+                    <!-- Botão Toggle para Consultório Odontológico -->
+                    <button class="service-toggle-btn" data-service="dental" data-value="">
+                        <i class="fas fa-tooth"></i>Com consultório odontológico
+                    </button>
+                    
+                    <!-- Botão Toggle para Farmácia -->
+                    <button class="service-toggle-btn" data-service="pharmacy" data-value="">
+                        <i class="fas fa-pills"></i>Com farmácia
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabs" role="tablist">
+                <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
+                <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
+            </div>
+
+            <div class="content active" id="all-content">
+                <div class="results-count" id="all-count">Mostrando todos os contatos</div>
+                <div class="contact-grid" id="all-contacts"></div>
+            </div>
+
+            <div class="content" id="favorites-content">
+                <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
+                <div class="contact-grid" id="favorites-contacts"></div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container footer-content">
+                <p>Secretaria Municipal de Saúde - Prefeitura de Passo Fundo</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+    /***********************************************
+     * Data & Auth Services (simulam API local)
+     ***********************************************/
+    const sampleData = {
+        units: [] // REMOVIDOS TODOS OS CONTATOS
+    };
+
+    const DataService = {
+        useRemote: false,
+        remoteBase: '/api',
+
+        async _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); },
+
+        async getUnits(){
+            if(this.useRemote){
+                const res = await fetch(`${this.remoteBase}/unidades`);
+                return res.ok ? await res.json() : [];
+            }
+            await this._sleep(50);
+            const raw = localStorage.getItem('units');
+            if(raw) return JSON.parse(raw);
+            localStorage.setItem('units', JSON.stringify(sampleData.units));
+            return sampleData.units.slice();
+        },
+
+        async saveUnit(unit){
+            if(this.useRemote){
+                const method = unit.id ? 'PUT' : 'POST';
+                const url = unit.id ? `${this.remoteBase}/unidades/${unit.id}` : `${this.remoteBase}/unidades`;
+                const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(unit)});
+                return res.ok ? await res.json() : null;
+            }
+            await this._sleep(50);
+            const units = await this.getUnits();
+            if(unit.id){
+                const idx = units.findIndex(u=>u.id===unit.id);
+                if(idx>-1) units[idx]=unit;
+            } else {
+                unit.id = (units.length?Math.max(...units.map(u=>u.id)):0)+1;
+                units.push(unit);
+            }
+            localStorage.setItem('units', JSON.stringify(units));
+            return unit;
+        },
+
+        async deleteUnit(id){
+            if(this.useRemote){
+                await fetch(`${this.remoteBase}/unidades/${id}`, {method:'DELETE'});
+                return;
+            }
+            await this._sleep(50);
+            let units = await this.getUnits();
+            units = units.filter(u=>u.id!==id);
+            localStorage.setItem('units', JSON.stringify(units));
+        }
+    };
+
+    const AuthService = {
+        adminUser: 'admin',
+        adminPass: 'ZXqwas123@',
+        async login(username, password){
+            await DataService._sleep(120);
+            if(username === this.adminUser && password === this.adminPass){
+                localStorage.setItem('telefonia_isLogged', 'true');
+                return { success: true };
+            }
+            return { success: false, message: 'Usuário ou senha incorretos' };
+        },
+        logout(){
+            localStorage.removeItem('telefonia_isLogged');
+        },
+        isLogged(){
+            return localStorage.getItem('telefonia_isLogged') === 'true';
+        }
+    };
+
+    /***********************************************
+     * UI & App
+     ***********************************************/
+    const UI = {
+        elements: {},
+        async cache(){
+            this.elements = {
+                loginModal: document.getElementById('loginModal'),
+                loginForm: document.getElementById('loginForm'),
+                loginUsername: document.getElementById('loginUsername'),
+                loginPassword: document.getElementById('loginPassword'),
+                adminPanel: document.getElementById('adminPanel'),
+                adminToggle: document.getElementById('adminToggle'),
+                closeAdmin: document.getElementById('closeAdmin'),
+                logoutBtn: document.getElementById('logoutBtn'),
+                themeToggle: document.getElementById('themeToggle'),
+                searchInput: document.getElementById('searchInput'),
+                searchBtn: document.getElementById('searchBtn'),
+                filterBtns: document.querySelectorAll('.filter-btn'),
+                tabs: document.querySelectorAll('.tab'),
+                adminTabs: document.querySelectorAll('.admin-tab'),
+                allContacts: document.getElementById('all-contacts'),
+                favoritesContacts: document.getElementById('favorites-contacts'),
+                unitsListAdmin: document.getElementById('unitsList'),
+                formUnit: document.getElementById('unitForm'),
+                submitBtn: document.getElementById('submitBtn'),
+                cancelEditBtn: document.getElementById('cancelEdit'),
+                formTitle: document.getElementById('formTitle'),
+                allCount: document.getElementById('all-count'),
+                favoritesCount: document.getElementById('favorites-count'),
+                backupBtn: document.getElementById('backupData'),
+                restoreInput: document.getElementById('restoreData'),
+                clearAllBtn: document.getElementById('clearAll'),
+                unitType: document.getElementById('unitType'),
+                responsibleField: document.getElementById('responsibleFieldContainer'),
+                enfermeiroField: document.getElementById('enfermeiroField'),
+                gerenteField: document.getElementById('gerenteField'),
+                vacinaField: document.getElementById('vacinaField'),
+                odontoField: document.getElementById('odontoField'),
+                farmaciaField: document.getElementById('farmaciaField')
+            };
+        },
+
+        setupConditionalFormLogic() {
+            const unitTypeSelect = this.elements.unitType;
+            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
+            
+            function checkConditionalFields() {
+                const selectedType = unitTypeSelect.value;
+                
+                if (conditionalTypes.includes(selectedType)) {
+                    UI.elements.enfermeiroField.classList.add('hidden');
+                    UI.elements.gerenteField.classList.add('hidden');
+                    UI.elements.vacinaField.classList.add('hidden');
+                    UI.elements.odontoField.classList.add('hidden');
+                    UI.elements.farmaciaField.classList.add('hidden');
+                    
+                    UI.elements.responsibleField.classList.remove('hidden');
+                    document.getElementById('unitResponsavel').required = true;
+                } else {
+                    UI.elements.enfermeiroField.classList.remove('hidden');
+                    UI.elements.gerenteField.classList.remove('hidden');
+                    UI.elements.vacinaField.classList.remove('hidden');
+                    UI.elements.odontoField.classList.remove('hidden');
+                    UI.elements.farmaciaField.classList.remove('hidden');
+                    
+                    UI.elements.responsibleField.classList.add('hidden');
+                    document.getElementById('unitResponsavel').required = false;
+                }
+            }
+            
+            unitTypeSelect.addEventListener('change', checkConditionalFields);
+            checkConditionalFields();
+        },
+
+        getTypeLabel(type){
+            const map = { 
+                'promocao':'Promoção',
+                'recuperacao':'Recuperação',
+                'administrativo':'Administrativo',
+                'vigilancia':'Vigilância',
+                'capne':'Capne',
+                'outros':'Outros' 
+            };
+            return map[type] || type;
+        },
+
+        shouldShowServices(type) {
+            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
+            return !conditionalTypes.includes(type);
+        },
+
+        renderContacts(contacts, container){
+            const root = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+            root.innerHTML = '';
+            if(!contacts || contacts.length===0){
+                root.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>Nenhum contato encontrado</h3><p>Tente ajustar seus filtros ou termos de busca</p></div>`;
+                return;
+            }
+            contacts.forEach(c=>{
+                const card = document.createElement('div');
+                card.className = 'contact-card';
+                
+                const phoneClean = c.phone.replace(/\D/g, '');
+                const telLink = `tel:+55${phoneClean}`;
+                const whatsappLink = `https://wa.me/55${phoneClean}`;
+                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + ', ' + c.bairro + ', Passo Fundo, RS')}`;
+                
+                const showServices = this.shouldShowServices(c.type);
+                
+                card.innerHTML = `
+                    <button class="favorite-btn ${c.favorite? 'active':''}" data-id="${c.id}" title="Favoritar"><i class="fas fa-star"></i></button>
+                    <div class="contact-header"><div><h3 class="contact-name">${c.name}</h3><span class="contact-type">${this.getTypeLabel(c.type)}</span></div></div>
+                    <div class="contact-info">
+                        <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${c.address}, ${c.bairro}</span></div>
+                        <div class="contact-item"><i class="fas fa-phone"></i><span>${c.phone}</span></div>
+                        ${c.email?`<div class="contact-item"><i class="fas fa-envelope"></i><span>${c.email}</span></div>`:''}
+                        ${c.enfermeiro?`<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${c.enfermeiro}</span></div>`:''}
+                        ${c.gerente?`<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${c.gerente}</span></div>`:''}
+                        ${c.responsavel?`<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${c.responsavel}</span></div>`:''}
+                    </div>
+                    ${showServices ? `
+                    <div class="contact-services">
+                        <div class="service ${c.vacina==='Sim'? 'available':'unavailable'}"><i class="fas fa-syringe"></i><span class="service-label">Vacina</span></div>
+                        <div class="service ${c.odonto==='Sim'? 'available':'unavailable'}"><i class="fas fa-tooth"></i><span class="service-label">Odonto</span></div>
+                        <div class="service ${c.farmacia==='Sim'? 'available':'unavailable'}"><i class="fas fa-pills"></i><span class="service-label">Farmácia</span></div>
+                    </div>
+                    ` : ''}
+                    <div class="contact-actions">
+                        <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
+                        <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
+                    </div>
+                `;
+                root.appendChild(card);
+            });
+            this.attachContactListeners();
+        },
+
+        attachContactListeners(){
+            document.querySelectorAll('.favorite-btn').forEach(btn=>{
+                btn.onclick = async (e) => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    await App.toggleFavorite(id);
+                };
+            });
+        },
+
+        renderUnitsList(units){
+            this.elements.unitsListAdmin.innerHTML = '';
+            units.forEach(u=>{
+                const item = document.createElement('div');
+                item.className = 'unit-item';
+                item.innerHTML = `
+                    <div class="unit-info"><h4>${u.name}</h4><p>${this.getTypeLabel(u.type)} - ${u.phone}</p></div>
+                    <div class="unit-actions">
+                        <button class="btn btn-warning edit-unit" data-id="${u.id}"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger delete-unit" data-id="${u.id}"><i class="fas fa-trash"></i> Excluir</button>
+                    </div>
+                `;
+                this.elements.unitsListAdmin.appendChild(item);
+            });
+            document.querySelectorAll('.edit-unit').forEach(btn=> btn.onclick = ()=> App.editUnit(parseInt(btn.dataset.id)));
+            document.querySelectorAll('.delete-unit').forEach(btn=> btn.onclick = ()=> App.deleteUnit(parseInt(btn.dataset.id)));
+        },
+
+        showLogin(){ this.elements.loginModal.classList.add('active'); this.elements.loginModal.setAttribute('aria-hidden','false'); this.elements.loginUsername.focus(); },
+        hideLogin(){ this.elements.loginModal.classList.remove('active'); this.elements.loginModal.setAttribute('aria-hidden','true'); this.elements.loginForm.reset(); },
+
+        openAdmin(){ this.elements.adminPanel.classList.add('active'); this.elements.adminPanel.setAttribute('aria-hidden','false'); this.elements.logoutBtn.style.display = 'inline-flex'; },
+        closeAdmin(){ this.elements.adminPanel.classList.remove('active'); this.elements.adminPanel.setAttribute('aria-hidden','true'); },
+
+        toggleTheme(){
+            document.body.classList.toggle('dark-mode');
+            const icon = this.elements.themeToggle.querySelector('i');
+            if(document.body.classList.contains('dark-mode')){ icon.className = 'fas fa-sun'; localStorage.setItem('telefonia_theme','dark'); }
+            else { icon.className = 'fas fa-moon'; localStorage.setItem('telefonia_theme','light'); }
+        },
+
+        loadTheme(){
+            const t = localStorage.getItem('telefonia_theme');
+            if(t === 'dark'){ document.body.classList.add('dark-mode'); this.elements.themeToggle.querySelector('i').className = 'fas fa-sun'; }
+        },
+
+        setCounts(all, favorites){
+            this.elements.allCount.textContent = `Mostrando ${all} contatos`;
+            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
+        },
+
+        bindUIActions(){
+            this.elements.adminToggle.onclick = ()=> {
+                if(AuthService.isLogged()){
+                    this.openAdmin();
+                } else {
+                    this.showLogin();
+                }
+            };
+            this.elements.closeAdmin.onclick = ()=> this.closeAdmin();
+            this.elements.logoutBtn.onclick = ()=> {
+                AuthService.logout();
+                this.elements.logoutBtn.style.display = 'none';
+                this.closeAdmin();
+                alert('Desconectado do painel administrativo');
+            };
+
+            this.elements.loginForm.onsubmit = async (e)=>{
+                e.preventDefault();
+                const u = this.elements.loginUsername.value.trim();
+                const p = this.elements.loginPassword.value;
+                const res = await AuthService.login(u,p);
+                if(res.success){
+                    this.hideLogin();
+                    this.openAdmin();
+                    App.refreshAll();
+                } else {
+                    alert(res.message || 'Falha no login');
+                }
+            };
+
+            this.elements.themeToggle.onclick = ()=> this.toggleTheme();
+
+            this.elements.searchBtn.onclick = ()=> App.performSearch();
+            this.elements.searchInput.onkeypress = (e)=> { if(e.key==='Enter') App.performSearch(); };
+
+            this.elements.filterBtns.forEach(b=> b.onclick = function(){
+                UI.elements.filterBtns.forEach(x=> x.classList.remove('active'));
+                this.classList.add('active');
+                App.filterContacts(this.dataset.filter);
+            });
+
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.onclick = function() {
+                    this.classList.toggle('active');
+                    const newValue = this.classList.contains('active') ? 'Sim' : '';
+                    this.setAttribute('data-value', newValue);
+                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
+                };
+            });
+
+            this.elements.tabs.forEach(t=> t.onclick = function(){
+                UI.elements.tabs.forEach(x=> x.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.content').forEach(c=> c.classList.remove('active'));
+                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+            });
+
+            this.elements.adminTabs.forEach(t=> t.onclick = function(){
+                UI.elements.adminTabs.forEach(x=> x.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
+                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+            });
+
+            this.elements.formUnit.onsubmit = async (e)=>{
+                e.preventDefault();
+                await App.saveUnitFromForm();
+            };
+            this.elements.cancelEditBtn.onclick = ()=> {
+                this.elements.formUnit.reset();
+                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                this.elements.cancelEditBtn.style.display = 'none';
+                this.elements.formUnit.removeAttribute('data-edit-id');
+                this.setupConditionalFormLogic();
+            };
+
+            this.elements.backupBtn.onclick = ()=> App.backupData();
+            this.elements.restoreInput.onchange = (e)=> App.restoreData(e.target.files[0]);
+            this.elements.clearAllBtn.onclick = ()=> App.clearAllData();
+
+            this.setupConditionalFormLogic();
+        }
+    };
+
+    const App = {
+        units: [],
+        favorites: [], // REMOVIDOS TODOS OS FAVORITOS
+
+        async init(){
+            await UI.cache();
+            UI.loadTheme();
+            UI.bindUIActions();
+            if(AuthService.isLogged()){
+                UI.openAdmin();
+            } else {
+                UI.elements.logoutBtn.style.display = 'none';
+            }
+            await this.refreshAll();
+        },
+
+        async refreshAll(){
+            this.units = await DataService.getUnits();
+            this.units.forEach(u=> u.favorite = this.favorites.includes(u.id));
+            UI.renderContacts(this.units, 'all');
+            UI.renderContacts(this.units.filter(u=> this.favorites.includes(u.id)), 'favorites');
+            UI.renderUnitsList(this.units);
+            UI.setCounts(this.units.length, this.favorites.length);
+        },
+
+        async toggleFavorite(unitId){
+            const idx = this.units.findIndex(u=>u.id===unitId);
+            if(idx===-1) return;
+            this.units[idx].favorite = !this.units[idx].favorite;
+            if(this.units[idx].favorite){
+                if(!this.favorites.includes(unitId)) this.favorites.push(unitId);
+            } else {
+                const pos = this.favorites.indexOf(unitId);
+                if(pos>-1) this.favorites.splice(pos,1);
+            }
+            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+            await DataService.saveUnit(this.units[idx]);
+            await this.refreshAll();
+        },
+
+        async filterContacts(filter){
+            let filtered = this.units.slice();
+            if(filter && filter !== 'all') filtered = filtered.filter(u=> u.type === filter);
+            
+            const vaccineBtn = document.querySelector('.service-toggle-btn[data-service="vaccine"]');
+            const dentalBtn = document.querySelector('.service-toggle-btn[data-service="dental"]');
+            const pharmacyBtn = document.querySelector('.service-toggle-btn[data-service="pharmacy"]');
+            
+            const vaccine = vaccineBtn.getAttribute('data-value');
+            const dental = dentalBtn.getAttribute('data-value');
+            const pharmacy = pharmacyBtn.getAttribute('data-value');
+            
+            if(vaccine) filtered = filtered.filter(u=> u.vacina === vaccine);
+            if(dental) filtered = filtered.filter(u=> u.odonto === dental);
+            if(pharmacy) filtered = filtered.filter(u=> u.farmacia === pharmacy);
+            
+            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
+            if(term) filtered = filtered.filter(u=> {
+                return (u.name||'').toLowerCase().includes(term) ||
+                       (u.phone||'').includes(term) ||
+                       (u.address||'').toLowerCase().includes(term) ||
+                       (u.bairro||'').toLowerCase().includes(term) ||
+                       (u.enfermeiro||'').toLowerCase().includes(term) ||
+                       (u.gerente||'').toLowerCase().includes(term) ||
+                       (u.responsavel||'').toLowerCase().includes(term);
+            });
+            
+            UI.renderContacts(filtered,'all');
+            UI.setCounts(filtered.length, this.favorites.length);
+        },
+
+        async performSearch(){
+            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            await this.filterContacts(activeFilter);
+        },
+
+        async editUnit(id){
+            if(!AuthService.isLogged()){ UI.showLogin(); return; }
+            const unit = this.units.find(u=>u.id===id);
+            if(!unit) return;
+            document.getElementById('unitName').value = unit.name;
+            document.getElementById('unitType').value = unit.type;
+            document.getElementById('unitAddress').value = unit.address;
+            document.getElementById('unitBairro').value = unit.bairro;
+            document.getElementById('unitPhone').value = unit.phone;
+            document.getElementById('unitEmail').value = unit.email || '';
+            document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
+            document.getElementById('unitGerente').value = unit.gerente || '';
+            document.getElementById('unitVacina').value = unit.vacina || 'Não';
+            document.getElementById('unitOdonto').value = unit.odonto || 'Não';
+            document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+            document.getElementById('unitResponsavel').value = unit.responsavel || '';
+            
+            UI.elements.formTitle.textContent = 'Editar Unidade';
+            UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+            UI.elements.cancelEditBtn.style.display = 'inline-flex';
+            UI.elements.formUnit.setAttribute('data-edit-id', id);
+            
+            setTimeout(() => {
+                UI.setupConditionalFormLogic();
+            }, 100);
+            
+            UI.elements.adminTabs.forEach(t=> t.classList.remove('active'));
+            document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
+            document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
+            document.getElementById('add-content').classList.add('active');
+            UI.openAdmin();
+        },
+
+        async deleteUnit(id){
+            if(!AuthService.isLogged()){ UI.showLogin(); return; }
+            if(!confirm('Tem certeza que deseja excluir esta unidade?')) return;
+            await DataService.deleteUnit(id);
+            this.favorites = this.favorites.filter(f=>f!==id);
+            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+            await this.refreshAll();
+            alert('Unidade excluída com sucesso!');
+        },
+
+        async saveUnitFromForm(){
+            if(!AuthService.isLogged()){ UI.showLogin(); return; }
+            const editId = UI.elements.formUnit.getAttribute('data-edit-id');
+            
+            const responsibleField = document.getElementById('unitResponsavel');
+            const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
+            
+            if (isResponsibleVisible && !responsibleField.value.trim()) {
+                alert('Por favor, preencha o campo Responsável!');
+                responsibleField.focus();
+                return;
+            }
+            
+            const unitData = {
+                id: editId ? parseInt(editId) : undefined,
+                name: document.getElementById('unitName').value,
+                type: document.getElementById('unitType').value,
+                address: document.getElementById('unitAddress').value,
+                bairro: document.getElementById('unitBairro').value,
+                phone: document.getElementById('unitPhone').value,
+                email: document.getElementById('unitEmail').value,
+                enfermeiro: document.getElementById('unitEnfermeiro').value,
+                gerente: document.getElementById('unitGerente').value,
+                vacina: document.getElementById('unitVacina').value,
+                odonto: document.getElementById('unitOdonto').value,
+                farmacia: document.getElementById('unitFarmacia').value,
+                responsavel: document.getElementById('unitResponsavel').value,
+                favorite: editId ? (this.units.find(u=>u.id===parseInt(editId))?.favorite || false) : false
+            };
+            
+            await DataService.saveUnit(unitData);
+            await this.refreshAll();
+            UI.elements.formUnit.reset();
+            UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+            UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+            UI.elements.cancelEditBtn.style.display = 'none';
+            UI.elements.formUnit.removeAttribute('data-edit-id');
+            
+            UI.setupConditionalFormLogic();
+            
+            alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
+        },
+
+        backupData(){
+            const data = { units:this.units };
+            const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'backup-telefonia-' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+            alert('Backup realizado com sucesso!');
+        },
+
+        restoreData(file){
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e)=> {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.units){
+                        if(confirm('Isso substituirá todos os dados atuais. Continuar?')){
+                            localStorage.setItem('units', JSON.stringify(data.units));
+                            await this.refreshAll();
+                            alert('Dados restaurados com sucesso!');
+                        }
+                    } else alert('Arquivo de backup inválido!');
+                } catch(err){
+                    alert('Erro ao ler arquivo: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            UI.elements.restoreInput.value = '';
+        },
+
+        clearAllData(){
+            if(!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) return;
+            localStorage.removeItem('units');
+            localStorage.removeItem('telefonia_favorites');
+            localStorage.removeItem('telefonia_isLogged');
+            this.units = []; this.favorites = [];
+            this.refreshAll();
+            alert('Todos os dados foram apagados!');
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', ()=> App.init());
+
+    window.App = App;
+    window.UI = UI;
+    window.DataService = DataService;
+    window.AuthService = AuthService;
+    </script>
+</body>
+</html>
