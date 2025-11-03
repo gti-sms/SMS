@@ -1,18 +1,1 @@
-[
-  {
-    "id": 3,
-    "name": "334455",
-    "type": "administrativo",
-    "address": "44444",
-    "bairro": "44444",
-    "phone": "331122444",
-    "email": "aa@aaa",
-    "enfermeiro": "",
-    "gerente": "",
-    "vacina": "Não",
-    "odonto": "Não",
-    "farmacia": "Não",
-    "responsavel": "123",
-    "favorite": false
-  }
-]
+[]
