@@ -643,7 +643,7 @@
 
     <script>
     /***********************************************
-     * Data & Auth Services
+     * Data & Auth Services - VERSÃO CORRIGIDA
      ***********************************************/
     const sampleData = {
         units: []
@@ -656,7 +656,7 @@
         repoOwner: 'gti-sms',
         repoName: 'SMS',
         filePath: 'data/units.json',
-        autoSync: true,
+        autoSync: false, // Desativado por padrão para evitar problemas
 
         async _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); },
 
@@ -667,33 +667,47 @@
             }
             await this._sleep(50);
             const raw = localStorage.getItem('units');
-            if(raw) return JSON.parse(raw);
-            localStorage.setItem('units', JSON.stringify(sampleData.units));
-            return sampleData.units.slice();
+            if(raw) {
+                try {
+                    return JSON.parse(raw);
+                } catch(e) {
+                    console.error('Erro ao carregar unidades:', e);
+                    return [];
+                }
+            }
+            // Se não existir dados, inicializar com array vazio
+            localStorage.setItem('units', JSON.stringify([]));
+            return [];
         },
 
         async saveUnit(unit){
+            console.log('Salvando unidade:', unit);
+            
             if(this.useRemote){
                 const method = unit.id ? 'PUT' : 'POST';
                 const url = unit.id ? `${this.remoteBase}/unidades/${unit.id}` : `${this.remoteBase}/unidades`;
                 const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(unit)});
                 return res.ok ? await res.json() : null;
             }
+            
             await this._sleep(50);
             const units = await this.getUnits();
+            console.log('Unidades existentes:', units);
+            
             if(unit.id){
                 const idx = units.findIndex(u=>u.id===unit.id);
-                if(idx>-1) units[idx]=unit;
+                if(idx>-1) {
+                    units[idx] = unit;
+                    console.log('Unidade atualizada:', unit);
+                }
             } else {
-                unit.id = (units.length?Math.max(...units.map(u=>u.id)):0)+1;
+                unit.id = (units.length ? Math.max(...units.map(u=>u.id)) : 0) + 1;
                 units.push(unit);
+                console.log('Nova unidade adicionada:', unit);
             }
-            localStorage.setItem('units', JSON.stringify(units));
             
-            // Sincronizar com GitHub se configurado
-            if (this.autoSync && this.githubToken) {
-                setTimeout(() => this.syncWithGitHub(), 1000);
-            }
+            localStorage.setItem('units', JSON.stringify(units));
+            console.log('Unidades salvas no localStorage:', units);
             
             return unit;
         },
@@ -707,15 +721,10 @@
             let units = await this.getUnits();
             units = units.filter(u=>u.id!==id);
             localStorage.setItem('units', JSON.stringify(units));
-            
-            // Sincronizar com GitHub se configurado
-            if (this.autoSync && this.githubToken) {
-                setTimeout(() => this.syncWithGitHub(), 1000);
-            }
         },
 
         /***********************************************
-         * GitHub Sync Functions
+         * GitHub Sync Functions (Opcional)
          ***********************************************/
         async syncWithGitHub() {
             if (!this.githubToken) {
@@ -1163,6 +1172,11 @@
             } else {
                 UI.elements.logoutBtn.style.display = 'none';
             }
+            
+            // Carregar favoritos
+            const favs = localStorage.getItem('telefonia_favorites');
+            if(favs) this.favorites = JSON.parse(favs);
+            
             await this.refreshAll();
             
             // Carregar configuração do GitHub
@@ -1171,7 +1185,11 @@
 
         async refreshAll(){
             this.units = await DataService.getUnits();
+            console.log('Unidades carregadas:', this.units);
+            
+            // Atualizar favoritos
             this.units.forEach(u=> u.favorite = this.favorites.includes(u.id));
+            
             UI.renderContacts(this.units, 'all');
             UI.renderContacts(this.units.filter(u=> this.favorites.includes(u.id)), 'favorites');
             UI.renderUnitsList(this.units);
@@ -1303,7 +1321,11 @@
                 favorite: editId ? (this.units.find(u=>u.id===parseInt(editId))?.favorite || false) : false
             };
             
-            await DataService.saveUnit(unitData);
+            console.log('Dados da unidade a ser salva:', unitData);
+            
+            const savedUnit = await DataService.saveUnit(unitData);
+            console.log('Unidade salva:', savedUnit);
+            
             await this.refreshAll();
             UI.elements.formUnit.reset();
             UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
