@@ -643,94 +643,61 @@
 
     <script>
     /***********************************************
-     * Data & Auth Services
+     * Data & Auth Services - VERSÃO RÁPIDA
      ***********************************************/
-    const sampleData = {
-        units: []
-    };
-
     const DataService = {
         useRemote: false,
         remoteBase: '/api',
-        githubToken: '', // Token será configurado pelo usuário
+        githubToken: '',
         repoOwner: 'gti-sms',
         repoName: 'SMS',
         filePath: 'data/units.json',
-        autoSync: true,
-
-        async _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); },
+        autoSync: false,
 
         async getUnits(){
             if(this.useRemote){
                 const res = await fetch(`${this.remoteBase}/unidades`);
                 return res.ok ? await res.json() : [];
             }
-            await this._sleep(50);
             
-            try {
-                const raw = localStorage.getItem('units');
-                if(raw) {
+            const raw = localStorage.getItem('units');
+            if(raw) {
+                try {
                     return JSON.parse(raw);
+                } catch(e) {
+                    console.error('Erro ao carregar unidades:', e);
+                    return [];
                 }
-                
-                // Se não há dados, inicializar com array vazio
-                localStorage.setItem('units', JSON.stringify(sampleData.units));
-                return sampleData.units.slice();
-                
-            } catch (error) {
-                console.error('Erro ao carregar unidades:', error);
-                // Se há erro, recriar os dados
-                localStorage.setItem('units', JSON.stringify(sampleData.units));
-                return sampleData.units.slice();
             }
+            // Se não existir dados, inicializar com array vazio
+            localStorage.setItem('units', JSON.stringify([]));
+            return [];
         },
 
         async saveUnit(unit){
-            console.log('🔧 DataService.saveUnit - Iniciando...', unit);
+            console.log('Salvando unidade:', unit);
             
-            await this._sleep(50);
-            
-            try {
-                let units = await this.getUnits();
-                console.log('📋 Unidades existentes:', units);
-                
-                if (unit.id) {
-                    // EDIÇÃO - Encontrar e atualizar unidade existente
-                    const index = units.findIndex(u => u.id === unit.id);
-                    console.log('✏️ Editando - Índice encontrado:', index);
-                    
-                    if (index !== -1) {
-                        // Mantém os dados existentes e atualiza apenas os modificados
-                        units[index] = { ...units[index], ...unit };
-                        console.log('✅ Unidade atualizada:', units[index]);
-                    } else {
-                        console.warn('❌ Unidade não encontrada para edição, adicionando como nova');
-                        units.push(unit);
-                    }
-                } else {
-                    // NOVA UNIDADE - Gerar novo ID
-                    const maxId = units.length > 0 ? Math.max(...units.map(u => u.id)) : 0;
-                    unit.id = maxId + 1;
-                    console.log('🆕 Nova unidade - ID gerado:', unit.id);
-                    units.push(unit);
-                }
-                
-                console.log('💾 Salvando no localStorage...', units);
-                localStorage.setItem('units', JSON.stringify(units));
-                console.log('✅ Dados salvos no localStorage com sucesso');
-                
-                // Sincronizar com GitHub se configurado
-                if (this.autoSync && this.githubToken) {
-                    console.log('🔄 Iniciando sincronização com GitHub...');
-                    setTimeout(() => this.syncWithGitHub(), 1000);
-                }
-                
-                return unit;
-                
-            } catch (error) {
-                console.error('❌ Erro ao salvar unidade:', error);
-                throw error;
+            if(this.useRemote){
+                const method = unit.id ? 'PUT' : 'POST';
+                const url = unit.id ? `${this.remoteBase}/unidades/${unit.id}` : `${this.remoteBase}/unidades`;
+                const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(unit)});
+                return res.ok ? await res.json() : null;
             }
+            
+            const units = await this.getUnits();
+            
+            if(unit.id){
+                const idx = units.findIndex(u=>u.id===unit.id);
+                if(idx > -1) {
+                    units[idx] = unit;
+                }
+            } else {
+                unit.id = (units.length ? Math.max(...units.map(u=>u.id)) : 0) + 1;
+                units.push(unit);
+            }
+            
+            localStorage.setItem('units', JSON.stringify(units));
+            return unit;
         },
 
         async deleteUnit(id){
@@ -738,30 +705,24 @@
                 await fetch(`${this.remoteBase}/unidades/${id}`, {method:'DELETE'});
                 return;
             }
-            await this._sleep(50);
+            
             let units = await this.getUnits();
             units = units.filter(u=>u.id!==id);
             localStorage.setItem('units', JSON.stringify(units));
-            
-            // Sincronizar com GitHub se configurado
-            if (this.autoSync && this.githubToken) {
-                setTimeout(() => this.syncWithGitHub(), 1000);
-            }
         },
 
         /***********************************************
-         * GitHub Sync Functions
+         * GitHub Sync Functions (Opcional)
          ***********************************************/
         async syncWithGitHub() {
             if (!this.githubToken) {
-                return { success: false, message: 'Token do GitHub não configurado. Configure na aba GitHub Sync.' };
+                return { success: false, message: 'Token do GitHub não configurado.' };
             }
             
             try {
                 const localUnits = await this.getUnits();
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(localUnits, null, 2))));
                 
-                // Verificar se o arquivo já existe
                 const existingFile = await this.getGitHubFile();
                 let sha = null;
                 
@@ -769,7 +730,6 @@
                     sha = existingFile.sha;
                 }
                 
-                // Fazer commit
                 const response = await fetch(
                     `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
                     {
@@ -868,7 +828,6 @@
         adminUser: 'admin',
         adminPass: 'ZXqwas123@',
         async login(username, password){
-            await DataService._sleep(120);
             if(username === this.adminUser && password === this.adminPass){
                 localStorage.setItem('telefonia_isLogged', 'true');
                 return { success: true };
@@ -1086,7 +1045,6 @@
             const statusEl = this.elements.syncStatus;
             statusEl.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
             
-            // Auto-hide after 5 seconds for success messages
             if (type === 'success') {
                 setTimeout(() => {
                     statusEl.innerHTML = '';
@@ -1163,7 +1121,12 @@
                 await App.saveUnitFromForm();
             };
             this.elements.cancelEditBtn.onclick = ()=> {
-                App.resetUnitForm();
+                this.elements.formUnit.reset();
+                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                this.elements.cancelEditBtn.style.display = 'none';
+                this.elements.formUnit.removeAttribute('data-edit-id');
+                this.setupConditionalFormLogic();
             };
 
             this.elements.backupBtn.onclick = ()=> App.backupData();
@@ -1193,6 +1156,11 @@
             } else {
                 UI.elements.logoutBtn.style.display = 'none';
             }
+            
+            // Carregar favoritos
+            const favs = localStorage.getItem('telefonia_favorites');
+            if(favs) this.favorites = JSON.parse(favs);
+            
             await this.refreshAll();
             
             // Carregar configuração do GitHub
@@ -1201,11 +1169,8 @@
 
         async refreshAll(){
             this.units = await DataService.getUnits();
-            // Carregar favoritos do localStorage
-            const savedFavorites = localStorage.getItem('telefonia_favorites');
-            this.favorites = savedFavorites ? JSON.parse(savedFavorites) : [];
             
-            // Atualizar estado de favorito nas unidades
+            // Atualizar favoritos
             this.units.forEach(u=> u.favorite = this.favorites.includes(u.id));
             
             UI.renderContacts(this.units, 'all');
@@ -1267,27 +1232,14 @@
         },
 
         async editUnit(id){
-            console.log('✏️ EditUnit chamado para ID:', id);
-            
-            if(!AuthService.isLogged()){ 
-                UI.showLogin(); 
-                return; 
-            }
-            
-            const unit = this.units.find(u => u.id === id);
-            if(!unit) {
-                console.error('❌ Unidade não encontrada para edição');
-                return;
-            }
-            
-            console.log('📝 Carregando dados da unidade:', unit);
-            
-            // Preencher formulário com dados da unidade
-            document.getElementById('unitName').value = unit.name || '';
-            document.getElementById('unitType').value = unit.type || '';
-            document.getElementById('unitAddress').value = unit.address || '';
-            document.getElementById('unitBairro').value = unit.bairro || '';
-            document.getElementById('unitPhone').value = unit.phone || '';
+            if(!AuthService.isLogged()){ UI.showLogin(); return; }
+            const unit = this.units.find(u=>u.id===id);
+            if(!unit) return;
+            document.getElementById('unitName').value = unit.name;
+            document.getElementById('unitType').value = unit.type;
+            document.getElementById('unitAddress').value = unit.address;
+            document.getElementById('unitBairro').value = unit.bairro;
+            document.getElementById('unitPhone').value = unit.phone;
             document.getElementById('unitEmail').value = unit.email || '';
             document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
             document.getElementById('unitGerente').value = unit.gerente || '';
@@ -1296,28 +1248,20 @@
             document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
             document.getElementById('unitResponsavel').value = unit.responsavel || '';
             
-            // Atualizar interface para modo edição
             UI.elements.formTitle.textContent = 'Editar Unidade';
             UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
             UI.elements.cancelEditBtn.style.display = 'inline-flex';
             UI.elements.formUnit.setAttribute('data-edit-id', id);
             
-            console.log('✅ Formulário preenchido para edição');
-            
-            // Aguardar um pouco para garantir que o DOM foi atualizado
             setTimeout(() => {
                 UI.setupConditionalFormLogic();
-                console.log('✅ Lógica condicional aplicada');
             }, 100);
             
-            // Navegar para a aba de adicionar/editar
-            UI.elements.adminTabs.forEach(t => t.classList.remove('active'));
+            UI.elements.adminTabs.forEach(t=> t.classList.remove('active'));
             document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
-            document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
             document.getElementById('add-content').classList.add('active');
-            
             UI.openAdmin();
-            console.log('✅ Painel administrativo aberto no modo edição');
         },
 
         async deleteUnit(id){
@@ -1331,118 +1275,47 @@
         },
 
         async saveUnitFromForm(){
-            console.log('=== INICIANDO SALVAMENTO ===');
-            
-            if(!AuthService.isLogged()){ 
-                console.log('Usuário não logado');
-                UI.showLogin(); 
-                return; 
-            }
-            
+            if(!AuthService.isLogged()){ UI.showLogin(); return; }
             const editId = UI.elements.formUnit.getAttribute('data-edit-id');
-            console.log('Modo:', editId ? 'EDIÇÃO' : 'CRIAÇÃO', 'ID:', editId);
             
-            // Coletar dados do formulário
-            const unitData = {
-                name: document.getElementById('unitName').value.trim(),
-                type: document.getElementById('unitType').value,
-                address: document.getElementById('unitAddress').value.trim(),
-                bairro: document.getElementById('unitBairro').value.trim(),
-                phone: document.getElementById('unitPhone').value.trim(),
-                email: document.getElementById('unitEmail').value.trim(),
-                enfermeiro: document.getElementById('unitEnfermeiro').value.trim(),
-                gerente: document.getElementById('unitGerente').value.trim(),
-                vacina: document.getElementById('unitVacina').value,
-                odonto: document.getElementById('unitOdonto').value,
-                farmacia: document.getElementById('unitFarmacia').value,
-                responsavel: document.getElementById('unitResponsavel').value.trim()
-            };
-            
-            console.log('Dados do formulário:', unitData);
-            
-            // Validar campos obrigatórios
-            if (!unitData.name) {
-                alert('Por favor, preencha o nome da unidade!');
-                document.getElementById('unitName').focus();
-                return;
-            }
-            if (!unitData.type) {
-                alert('Por favor, selecione o tipo da unidade!');
-                document.getElementById('unitType').focus();
-                return;
-            }
-            if (!unitData.address) {
-                alert('Por favor, preencha o endereço!');
-                document.getElementById('unitAddress').focus();
-                return;
-            }
-            if (!unitData.bairro) {
-                alert('Por favor, preencha o bairro!');
-                document.getElementById('unitBairro').focus();
-                return;
-            }
-            if (!unitData.phone) {
-                alert('Por favor, preencha o telefone!');
-                document.getElementById('unitPhone').focus();
-                return;
-            }
-            
-            // Validar campo responsável se visível
             const responsibleField = document.getElementById('unitResponsavel');
             const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
-            if (isResponsibleVisible && !unitData.responsavel) {
+            
+            if (isResponsibleVisible && !responsibleField.value.trim()) {
                 alert('Por favor, preencha o campo Responsável!');
                 responsibleField.focus();
                 return;
             }
             
-            try {
-                // Se é edição, manter o ID e favorite
-                if (editId) {
-                    const existingUnit = this.units.find(u => u.id === parseInt(editId));
-                    if (existingUnit) {
-                        unitData.id = parseInt(editId);
-                        unitData.favorite = existingUnit.favorite || false;
-                        console.log('Editando unidade existente:', unitData);
-                    }
-                } else {
-                    // Nova unidade
-                    unitData.favorite = false;
-                    console.log('Criando nova unidade:', unitData);
-                }
-                
-                console.log('Chamando DataService.saveUnit...');
-                const savedUnit = await DataService.saveUnit(unitData);
-                console.log('Unidade salva com sucesso:', savedUnit);
-                
-                // Forçar refresh dos dados
-                await this.refreshAll();
-                console.log('Interface atualizada');
-                
-                // Reset do formulário
-                this.resetUnitForm();
-                
-                alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
-                console.log('=== SALVAMENTO CONCLUÍDO ===');
-                
-            } catch (error) {
-                console.error('Erro ao salvar unidade:', error);
-                alert('Erro ao salvar unidade: ' + error.message);
-            }
-        },
-
-        resetUnitForm() {
+            const unitData = {
+                id: editId ? parseInt(editId) : undefined,
+                name: document.getElementById('unitName').value,
+                type: document.getElementById('unitType').value,
+                address: document.getElementById('unitAddress').value,
+                bairro: document.getElementById('unitBairro').value,
+                phone: document.getElementById('unitPhone').value,
+                email: document.getElementById('unitEmail').value,
+                enfermeiro: document.getElementById('unitEnfermeiro').value,
+                gerente: document.getElementById('unitGerente').value,
+                vacina: document.getElementById('unitVacina').value,
+                odonto: document.getElementById('unitOdonto').value,
+                farmacia: document.getElementById('unitFarmacia').value,
+                responsavel: document.getElementById('unitResponsavel').value,
+                favorite: editId ? (this.units.find(u=>u.id===parseInt(editId))?.favorite || false) : false
+            };
+            
+            const savedUnit = await DataService.saveUnit(unitData);
+            
+            await this.refreshAll();
             UI.elements.formUnit.reset();
             UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
             UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
             UI.elements.cancelEditBtn.style.display = 'none';
             UI.elements.formUnit.removeAttribute('data-edit-id');
+            
             UI.setupConditionalFormLogic();
             
-            // Resetar campos específicos para valores padrão
-            document.getElementById('unitVacina').value = 'Não';
-            document.getElementById('unitOdonto').value = 'Não';
-            document.getElementById('unitFarmacia').value = 'Não';
+            alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
         },
 
         backupData(){
@@ -1499,12 +1372,10 @@
                 DataService.filePath = filePath;
                 DataService.autoSync = autoSync !== false;
                 
-                // Preencher formulário (não preenche o token por segurança)
                 UI.elements.repoOwner.value = owner;
                 UI.elements.repoName.value = repo;
                 UI.elements.filePath.value = filePath;
                 
-                // Mostrar indicador que o token está configurado
                 if (token) {
                     UI.elements.githubToken.placeholder = '•••••••••• (já configurado)';
                 }
@@ -1535,7 +1406,6 @@
                 autoSync: DataService.autoSync 
             }));
             
-            // Limpar o campo do token por segurança
             UI.elements.githubToken.value = '';
             UI.elements.githubToken.placeholder = '•••••••••• (configurado com sucesso)';
             
