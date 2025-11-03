@@ -918,7 +918,8 @@
             UI.loadTheme();
             UI.bindUIActions();
             if(AuthService.isLogged()){
-                UI.openAdmin();
+                // UI.openAdmin(); // REMOVIDA ABERTURA AUTOMÁTICA - AGORA SÓ ABRE QUANDO CLICAR NO BOTÃO
+                UI.elements.logoutBtn.style.display = 'inline-flex';
             } else {
                 UI.elements.logoutBtn.style.display = 'none';
             }
