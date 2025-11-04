@@ -404,6 +404,38 @@
             background: rgba(44,106,160,.2);
             color: var(--primary-dark);
         }
+        
+        /* Update Notification */
+        .update-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .update-notification button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -497,11 +529,38 @@
                                 <input type="text" id="unitResponsavel" class="form-control" placeholder="Nome do responsável pela unidade">
                             </div>
                             
-                            <div class="form-group" id="enfermeiroField"><label for="unitEnfermeiro">Enfermeiro Responsável</label><input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável"></div>
-                            <div class="form-group" id="gerenteField"><label for="unitGerente">Gerente Responsável</label><input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável"></div>
-                            <div class="form-group" id="vacinaField"><label for="unitVacina">Sala de Vacina</label><select id="unitVacina" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-                            <div class="form-group" id="odontoField"><label for="unitOdonto">Consultório Odontológico</label><select id="unitOdonto" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-                            <div class="form-group" id="farmaciaField"><label for="unitFarmacia">Farmácia</label><select id="unitFarmacia" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                            <!-- CAMPOS DE SERVIÇOS - AGORA VISÍVEIS PARA PROMOÇÃO E RECUPERAÇÃO -->
+                            <div class="form-group" id="vacinaField">
+                                <label for="unitVacina">Sala de Vacina</label>
+                                <select id="unitVacina" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="odontoField">
+                                <label for="unitOdonto">Consultório Odontológico</label>
+                                <select id="unitOdonto" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="farmaciaField">
+                                <label for="unitFarmacia">Farmácia</label>
+                                <select id="unitFarmacia" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Campos específicos para promoção e recuperação -->
+                            <div class="form-group" id="enfermeiroField">
+                                <label for="unitEnfermeiro">Enfermeiro Responsável</label>
+                                <input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável">
+                            </div>
+                            <div class="form-group" id="gerenteField">
+                                <label for="unitGerente">Gerente Responsável</label>
+                                <input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável">
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
@@ -553,6 +612,9 @@
                         <button type="button" class="btn btn-info" id="testConnection">
                             <i class="fas fa-plug"></i> Testar Conexão
                         </button>
+                        <button type="button" class="btn btn-secondary" id="enableAutoSync">
+                            <i class="fas fa-sync"></i> Ativar Sincronização Automática
+                        </button>
                     </div>
                     <div id="syncStatus" style="margin-top: 20px;"></div>
                     
@@ -576,7 +638,8 @@
                     <div class="form-grid">
                         <div class="form-group"><label for="backupData">Backup de Dados</label><button type="button" id="backupData" class="btn btn-primary"><i class="fas fa-download"></i> Fazer Backup</button></div>
                         <div class="form-group"><label for="restoreData">Restaurar Dados</label><input type="file" id="restoreData" class="form-control" accept=".json"></div>
-                        <div class="form-group"><label for="clearAll">Limpar Todos os Dados</label><button type="button" id="clearAll" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
+                        <div class="form-group"><label for="clearData">Limpar Dados</label><button type="button" id="clearData" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
+                        <div class="form-group"><label for="autoSave">Salvamento Automático</label><select id="autoSave" class="form-control"><option value="true">Ativado</option><option value="false">Desativado</option></select></div>
                     </div>
                 </div>
             </div>
@@ -594,720 +657,904 @@
                     <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
                     <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
                     <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
-                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-building"></i> Administrativo</button>
-                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-virus"></i> Vigilância</button>
+                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
+                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
                     <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
-                    <button class="filter-btn" data-filter="outros"><i class="fas fa-ellipsis-h"></i> Outros</button>
+                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
                 </div>
 
                 <div class="service-filters">
-                    <button class="service-toggle-btn active" data-service="all"><i class="fas fa-asterisk"></i> Todos os Serviços</button>
-                    <button class="service-toggle-btn" data-service="vacina"><i class="fas fa-syringe"></i> Sala de Vacina</button>
-                    <button class="service-toggle-btn" data-service="odonto"><i class="fas fa-tooth"></i> Odontológico</button>
-                    <button class="service-toggle-btn" data-service="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
+                    <!-- Botão Toggle para Sala de Vacina -->
+                    <button class="service-toggle-btn" data-service="vaccine" data-value="">
+                        <i class="fas fa-syringe"></i>Com sala de vacina
+                    </button>
+                    
+                    <!-- Botão Toggle para Consultório Odontológico -->
+                    <button class="service-toggle-btn" data-service="dental" data-value="">
+                        <i class="fas fa-tooth"></i>Com consultório odontológico
+                    </button>
+                    
+                    <!-- Botão Toggle para Farmácia -->
+                    <button class="service-toggle-btn" data-service="pharmacy" data-value="">
+                        <i class="fas fa-pills"></i>Com farmácia
+                    </button>
                 </div>
             </div>
 
             <div class="tabs" role="tablist">
-                <div class="tab active" data-tab="unidades" role="tab"><i class="fas fa-clinic-medical"></i> Unidades de Saúde</div>
-                <div class="tab" data-tab="ramais" role="tab"><i class="fas fa-phone"></i> Ramais</div>
+                <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
+                <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
             </div>
 
-            <div class="results-count" id="resultsCount">Carregando unidades...</div>
-
-            <div class="content active" id="unidades-content">
-                <div class="contact-grid" id="contactGrid"></div>
+            <div class="content active" id="all-content">
+                <div class="results-count" id="all-count">Mostrando todos os contatos</div>
+                <div class="contact-grid" id="all-contacts"></div>
             </div>
 
-            <div class="content" id="ramais-content">
-                <div class="contact-grid" id="ramaisContainer"></div>
+            <div class="content" id="favorites-content">
+                <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
+                <div class="contact-grid" id="favorites-contacts"></div>
             </div>
         </main>
 
         <footer class="footer">
-            <div class="container">
-                <p>Secretaria Municipal de Saúde - Prefeitura Municipal de Passo Fundo/RS</p>
+            <div class="container footer-content">
+                <p>Secretaria Municipal de Saúde - Prefeitura de Passo Fundo</p>
             </div>
         </footer>
     </div>
 
     <script>
-        // ========== VARIÁVEIS GLOBAIS ==========
-        let units = [];
-        let isAdmin = false;
-        let editingUnitId = null;
-        let currentFilter = 'all';
-        let currentServiceFilter = 'all';
-        let currentTab = 'unidades';
-        let isDarkMode = false;
-        let gitHubConfig = {
-            token: '',
-            repoOwner: 'gti-sms',
-            repoName: 'SMS',
-            filePath: 'data/units.json'
-        };
+    // =============================================
+    // DATA SERVICE - VERSÃO CORRIGIDA COM CARREGAMENTO REMOTO
+    // =============================================
+    const DataService = {
+        githubToken: '',
+        repoOwner: 'gti-sms',
+        repoName: 'SMS', 
+        filePath: 'data/units.json',
+        useRemoteData: true, // Nova flag para usar dados remotos
 
-        // ========== INICIALIZAÇÃO ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
-        function initializeApp() {
-            loadGitHubConfig();
-            loadUnits();
-            setupEventListeners();
-            applyTheme();
-        }
-
-        // ========== GITHUB INTEGRATION ==========
-        async function loadUnits() {
-            showLoading('contactGrid', 'Carregando unidades...');
-            
-            // Tenta carregar do GitHub primeiro
+        // Carregar unidades - PRIMEIRO TENTA DO GITHUB, DEPOIS LOCAL
+        async getUnits() {
             try {
-                const data = await fetchFromGitHub();
-                if (data && data.units) {
-                    units = data.units;
-                    showSyncStatus('Dados carregados do GitHub com sucesso!', 'success');
-                    renderUnits();
-                    return;
+                // Sempre tenta carregar do GitHub primeiro (RAW URL)
+                const remoteData = await this.loadFromGitHubRaw();
+                if (remoteData && remoteData.length > 0) {
+                    console.log('Carregando dados do GitHub:', remoteData.length, 'unidades');
+                    
+                    // Salva localmente como backup/cache
+                    this.saveUnits(remoteData);
+                    
+                    return remoteData;
+                }
+                
+                // Fallback para dados locais se GitHub falhar
+                const localUnits = localStorage.getItem('units');
+                return localUnits ? JSON.parse(localUnits) : [];
+                
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+                // Fallback para dados locais em caso de erro
+                const localUnits = localStorage.getItem('units');
+                return localUnits ? JSON.parse(localUnits) : [];
+            }
+        },
+
+        // NOVO MÉTODO: Carregar dados do GitHub via RAW URL (sem token)
+        async loadFromGitHubRaw() {
+            try {
+                const rawUrl = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/main/${this.filePath}`;
+                
+                const response = await fetch(rawUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return Array.isArray(data) ? data : [];
+                } else if (response.status === 404) {
+                    console.log('Arquivo não encontrado no GitHub');
+                    return [];
+                } else {
+                    console.log('Erro ao buscar dados do GitHub:', response.status);
+                    return [];
                 }
             } catch (error) {
-                console.log('Não foi possível carregar do GitHub:', error);
+                console.log('Erro de rede ao buscar dados do GitHub:', error.message);
+                return [];
             }
-            
-            // Fallback para dados locais
-            const localData = localStorage.getItem('telefoniaUnits');
-            if (localData) {
-                try {
-                    const parsed = JSON.parse(localData);
-                    units = parsed.units || parsed;
-                    showSyncStatus('Dados carregados do armazenamento local', 'warning');
-                } catch (e) {
-                    units = [];
-                    showSyncStatus('Erro ao carregar dados locais', 'error');
-                }
-            } else {
-                units = getDefaultUnits();
-                showSyncStatus('Usando dados padrão do sistema', 'info');
-            }
-            
-            renderUnits();
-        }
+        },
 
-        async function fetchFromGitHub() {
-            if (!gitHubConfig.token) {
-                throw new Error('Token do GitHub não configurado');
-            }
-
-            const url = `https://api.github.com/repos/${gitHubConfig.repoOwner}/${gitHubConfig.repoName}/contents/${gitHubConfig.filePath}`;
-            
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `token ${gitHubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`GitHub API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const content = atob(data.content);
-            return JSON.parse(content);
-        }
-
-        async function saveToGitHub() {
-            if (!gitHubConfig.token) {
-                showSyncStatus('Erro: Token do GitHub não configurado', 'error');
-                return false;
-            }
-
-            showSyncStatus('Enviando dados para GitHub...', 'loading');
-
+        // Salvar unidades no localStorage
+        saveUnits(units) {
             try {
-                // Primeiro, obtém o SHA do arquivo atual (se existir)
-                let sha = null;
-                try {
-                    const currentFile = await fetchFromGitHub();
-                    sha = currentFile.sha;
-                } catch (e) {
-                    // Arquivo não existe, vamos criar um novo
-                }
-
-                const data = {
-                    units: units,
-                    lastUpdated: new Date().toISOString(),
-                    totalUnits: units.length
-                };
-
-                const content = btoa(JSON.stringify(data, null, 2));
-                
-                const url = `https://api.github.com/repos/${gitHubConfig.repoOwner}/${gitHubConfig.repoName}/contents/${gitHubConfig.filePath}`;
-                
-                const response = await fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${gitHubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Atualização automática: ${new Date().toLocaleString()}`,
-                        content: content,
-                        sha: sha
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Erro ao salvar no GitHub');
-                }
-
-                showSyncStatus('Dados salvos no GitHub com sucesso!', 'success');
+                localStorage.setItem('units', JSON.stringify(units));
                 return true;
             } catch (error) {
-                console.error('Erro ao salvar no GitHub:', error);
-                showSyncStatus(`Erro: ${error.message}`, 'error');
+                console.error('Erro ao salvar unidades:', error);
                 return false;
             }
-        }
+        },
 
-        function loadGitHubConfig() {
-            const saved = localStorage.getItem('gitHubConfig');
-            if (saved) {
-                gitHubConfig = { ...gitHubConfig, ...JSON.parse(saved) };
-                document.getElementById('githubToken').value = gitHubConfig.token || '';
-                document.getElementById('repoOwner').value = gitHubConfig.repoOwner;
-                document.getElementById('repoName').value = gitHubConfig.repoName;
-                document.getElementById('filePath').value = gitHubConfig.filePath;
+        // Adicionar/editar unidade
+        saveUnit(unit) {
+            const units = this.getUnitsSync();
+            
+            if (unit.id) {
+                // Editar unidade existente
+                const index = units.findIndex(u => u.id === unit.id);
+                if (index !== -1) {
+                    units[index] = unit;
+                }
+            } else {
+                // Nova unidade
+                unit.id = units.length > 0 ? Math.max(...units.map(u => u.id)) + 1 : 1;
+                units.push(unit);
             }
-        }
+            
+            return this.saveUnits(units) ? unit : null;
+        },
 
-        function saveGitHubConfig() {
-            gitHubConfig.token = document.getElementById('githubToken').value;
-            gitHubConfig.repoOwner = document.getElementById('repoOwner').value;
-            gitHubConfig.repoName = document.getElementById('repoName').value;
-            gitHubConfig.filePath = document.getElementById('filePath').value;
-            
-            localStorage.setItem('gitHubConfig', JSON.stringify(gitHubConfig));
-            showSyncStatus('Configuração do GitHub salva com sucesso!', 'success');
-        }
-
-        function showSyncStatus(message, type) {
-            const statusEl = document.getElementById('syncStatus');
-            if (!statusEl) return;
-            
-            statusEl.innerHTML = `
-                <div class="sync-status sync-${type}">
-                    <i class="fas fa-${getStatusIcon(type)}"></i>
-                    ${type === 'loading' ? '<span class="loading" style="margin-right: 10px;"></span>' : ''}
-                    ${message}
-                </div>
-            `;
-        }
-
-        function getStatusIcon(type) {
-            const icons = {
-                success: 'check-circle',
-                error: 'exclamation-circle',
-                warning: 'exclamation-triangle',
-                info: 'info-circle',
-                loading: 'sync'
-            };
-            return icons[type] || 'info-circle';
-        }
-
-        // ========== EVENT LISTENERS ==========
-        function setupEventListeners() {
-            // Login
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-            
-            // Admin Panel
-            document.getElementById('adminToggle').addEventListener('click', toggleAdminPanel);
-            document.getElementById('closeAdmin').addEventListener('click', closeAdminPanel);
-            
-            // Admin Tabs
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
-            });
-            
-            // GitHub
-            document.getElementById('saveGitHubConfig').addEventListener('click', saveGitHubConfig);
-            document.getElementById('syncToGitHub').addEventListener('click', saveToGitHub);
-            document.getElementById('pullFromGitHub').addEventListener('click', loadUnits);
-            document.getElementById('testConnection').addEventListener('click', testGitHubConnection);
-            
-            // Unit Form
-            document.getElementById('unitForm').addEventListener('submit', handleUnitSubmit);
-            document.getElementById('unitType').addEventListener('change', handleUnitTypeChange);
-            document.getElementById('cancelEdit').addEventListener('click', cancelEdit);
-            
-            // Search and Filters
-            document.getElementById('searchBtn').addEventListener('click', performSearch);
-            document.getElementById('searchInput').addEventListener('input', performSearch);
-            document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') performSearch();
-            });
-            
-            // Filter Buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentFilter = btn.dataset.filter;
-                    renderUnits();
-                });
-            });
-            
-            // Service Filters
-            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.service-toggle-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentServiceFilter = btn.dataset.service;
-                    renderUnits();
-                });
-            });
-            
-            // Main Tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentTab = tab.dataset.tab;
-                    document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
-                    renderUnits();
-                });
-            });
-            
-            // Theme Toggle
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            
-            // Backup/Restore
-            document.getElementById('backupData').addEventListener('click', backupData);
-            document.getElementById('restoreData').addEventListener('change', restoreData);
-            document.getElementById('clearAll').addEventListener('click', clearAllData);
-        }
-
-        // ========== GITHUB CONNECTION TEST ==========
-        async function testGitHubConnection() {
-            if (!gitHubConfig.token) {
-                showSyncStatus('Erro: Token do GitHub não configurado', 'error');
-                return;
+        // Versão síncrona para uso interno
+        getUnitsSync() {
+            try {
+                const units = localStorage.getItem('units');
+                return units ? JSON.parse(units) : [];
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+                return [];
             }
+        },
 
-            showSyncStatus('Testando conexão com GitHub...', 'loading');
+        // Excluir unidade
+        deleteUnit(id) {
+            const units = this.getUnitsSync().filter(unit => unit.id !== id);
+            return this.saveUnits(units);
+        },
+
+        // ========== GITHUB SYNC ==========
+        
+        // Testar conexão com GitHub
+        async testGitHubConnection() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado' };
+            }
 
             try {
-                const url = `https://api.github.com/repos/${gitHubConfig.repoOwner}/${gitHubConfig.repoName}`;
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `token ${gitHubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
                     }
-                });
+                );
 
                 if (response.ok) {
-                    showSyncStatus('Conexão com GitHub estabelecida com sucesso!', 'success');
+                    return { success: true, message: 'Conexão com GitHub estabelecida!' };
                 } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    const error = await response.json();
+                    return { success: false, message: error.message || 'Erro na conexão' };
                 }
             } catch (error) {
-                showSyncStatus(`Erro na conexão: ${error.message}`, 'error');
+                return { success: false, message: 'Erro de rede: ' + error.message };
+            }
+        },
+
+        // Buscar arquivo do GitHub
+        async getGitHubFile() {
+            if (!this.githubToken) return null;
+
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+
+                if (response.status === 404) {
+                    return { exists: false, message: 'Arquivo não encontrado' };
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return { exists: true, data: data };
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Erro ao buscar arquivo:', error);
+                return null;
+            }
+        },
+
+        // Sincronizar para GitHub
+        async syncToGitHub() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado' };
+            }
+
+            try {
+                const units = this.getUnitsSync();
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(units, null, 2))));
+                
+                // Verificar se arquivo já existe
+                const fileInfo = await this.getGitHubFile();
+                let sha = null;
+
+                if (fileInfo && fileInfo.exists) {
+                    sha = fileInfo.data.sha;
+                }
+
+                const payload = {
+                    message: `Sync: ${new Date().toLocaleString('pt-BR')}`,
+                    content: content
+                };
+
+                if (sha) {
+                    payload.sha = sha;
+                }
+
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${this.githubToken}`,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    return { 
+                        success: true, 
+                        message: sha ? 'Dados sincronizados com sucesso!' : 'Arquivo criado e sincronizado!'
+                    };
+                } else {
+                    return { 
+                        success: false, 
+                        message: result.message || 'Erro na sincronização' 
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao sincronizar:', error);
+                return { 
+                    success: false, 
+                    message: 'Erro de rede: ' + error.message 
+                };
+            }
+        },
+
+        // Puxar do GitHub
+        async pullFromGitHub() {
+            if (!this.githubToken) {
+                return { success: false, message: 'Token do GitHub não configurado' };
+            }
+
+            try {
+                const fileInfo = await this.getGitHubFile();
+
+                if (!fileInfo || !fileInfo.exists) {
+                    return { success: false, message: 'Arquivo não encontrado no GitHub' };
+                }
+
+                const content = JSON.parse(decodeURIComponent(escape(atob(fileInfo.data.content))));
+                
+                // Salvar no localStorage
+                if (this.saveUnits(content)) {
+                    return { 
+                        success: true, 
+                        message: `Dados carregados! ${content.length} unidades.`,
+                        data: content
+                    };
+                } else {
+                    return { success: false, message: 'Erro ao salvar dados localmente' };
+                }
+            } catch (error) {
+                console.error('Erro ao puxar dados:', error);
+                return { 
+                    success: false, 
+                    message: 'Erro ao carregar dados: ' + error.message 
+                };
             }
         }
+    };
 
-        // ========== RENDER FUNCTIONS ==========
-        function renderUnits() {
-            if (currentTab === 'ramais') {
-                renderRamais();
-            } else {
-                renderUnidades();
+    // =============================================
+    // AUTH SERVICE
+    // =============================================
+    const AuthService = {
+        adminUser: 'admin',
+        adminPass: 'ZXqwas123@',
+        
+        login(username, password) {
+            if (username === this.adminUser && password === this.adminPass) {
+                localStorage.setItem('telefonia_isLogged', 'true');
+                return { success: true };
             }
+            return { success: false, message: 'Usuário ou senha incorretos' };
+        },
+
+        logout() {
+            localStorage.removeItem('telefonia_isLogged');
+        },
+
+        isLogged() {
+            return localStorage.getItem('telefonia_isLogged') === 'true';
         }
+    };
 
-        function renderUnidades() {
-            const grid = document.getElementById('contactGrid');
-            if (!grid) return;
+    // =============================================
+    // UI CONTROLLER - VERSÃO CORRIGIDA
+    // =============================================
+    const UI = {
+        elements: {},
 
-            let filteredUnits = filterUnits(units);
+        init() {
+            this.cacheElements();
+            this.loadTheme();
+            this.bindEvents();
+            this.setupConditionalFormLogic();
             
-            if (filteredUnits.length === 0) {
-                grid.innerHTML = `
+            // Verificar se está logado
+            if (AuthService.isLogged()) {
+                this.elements.logoutBtn.style.display = 'inline-flex';
+            }
+
+            // Carregar configuração do GitHub
+            this.loadGitHubConfig();
+        },
+
+        cacheElements() {
+            // Modal de login
+            this.elements.loginModal = document.getElementById('loginModal');
+            this.elements.loginForm = document.getElementById('loginForm');
+            this.elements.loginUsername = document.getElementById('loginUsername');
+            this.elements.loginPassword = document.getElementById('loginPassword');
+
+            // Header
+            this.elements.adminToggle = document.getElementById('adminToggle');
+            this.elements.themeToggle = document.getElementById('themeToggle');
+
+            // Painel administrativo
+            this.elements.adminPanel = document.getElementById('adminPanel');
+            this.elements.closeAdmin = document.getElementById('closeAdmin');
+            this.elements.logoutBtn = document.getElementById('logoutBtn');
+            this.elements.adminTabs = document.querySelectorAll('.admin-tab');
+            
+            // Conteúdo
+            this.elements.allContacts = document.getElementById('all-contacts');
+            this.elements.favoritesContacts = document.getElementById('favorites-contacts');
+            this.elements.unitsList = document.getElementById('unitsList');
+            this.elements.allCount = document.getElementById('all-count');
+            this.elements.favoritesCount = document.getElementById('favorites-count');
+
+            // Formulário de unidade
+            this.elements.unitForm = document.getElementById('unitForm');
+            this.elements.submitBtn = document.getElementById('submitBtn');
+            this.elements.cancelEdit = document.getElementById('cancelEdit');
+            this.elements.formTitle = document.getElementById('formTitle');
+
+            // Busca e filtros
+            this.elements.searchInput = document.getElementById('searchInput');
+            this.elements.searchBtn = document.getElementById('searchBtn');
+            this.elements.filterBtns = document.querySelectorAll('.filter-btn');
+            this.elements.tabs = document.querySelectorAll('.tab');
+
+            // GitHub Sync
+            this.elements.githubToken = document.getElementById('githubToken');
+            this.elements.repoOwner = document.getElementById('repoOwner');
+            this.elements.repoName = document.getElementById('repoName');
+            this.elements.filePath = document.getElementById('filePath');
+            this.elements.saveGitHubConfig = document.getElementById('saveGitHubConfig');
+            this.elements.syncToGitHub = document.getElementById('syncToGitHub');
+            this.elements.pullFromGitHub = document.getElementById('pullFromGitHub');
+            this.elements.testConnection = document.getElementById('testConnection');
+            this.elements.syncStatus = document.getElementById('syncStatus');
+
+            // Configurações
+            this.elements.backupBtn = document.getElementById('backupData');
+            this.elements.restoreInput = document.getElementById('restoreData');
+            this.elements.clearAllBtn = document.getElementById('clearData');
+
+            // Campos condicionais
+            this.elements.unitType = document.getElementById('unitType');
+            this.elements.responsibleField = document.getElementById('responsibleFieldContainer');
+            this.elements.enfermeiroField = document.getElementById('enfermeiroField');
+            this.elements.gerenteField = document.getElementById('gerenteField');
+            this.elements.vacinaField = document.getElementById('vacinaField');
+            this.elements.odontoField = document.getElementById('odontoField');
+            this.elements.farmaciaField = document.getElementById('farmaciaField');
+        },
+
+        setupConditionalFormLogic() {
+            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
+            
+            const checkFields = () => {
+                const type = this.elements.unitType.value;
+                const isConditional = conditionalTypes.includes(type);
+
+                // Mostrar/ocultar campos baseado no tipo
+                this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
+                this.elements.gerenteField.classList.toggle('hidden', isConditional);
+                
+                this.elements.responsibleField.classList.toggle('hidden', !isConditional);
+
+                // Definir required
+                document.getElementById('unitResponsavel').required = isConditional;
+            };
+
+            this.elements.unitType.addEventListener('change', checkFields);
+            checkFields(); // Verificar estado inicial
+        },
+
+        bindEvents() {
+            // Toggle do painel admin
+            this.elements.adminToggle.addEventListener('click', () => {
+                if (AuthService.isLogged()) {
+                    this.openAdmin();
+                } else {
+                    this.showLogin();
+                }
+            });
+
+            // Fechar painel admin
+            this.elements.closeAdmin.addEventListener('click', () => this.closeAdmin());
+
+            // Logout
+            this.elements.logoutBtn.addEventListener('click', () => {
+                AuthService.logout();
+                this.elements.logoutBtn.style.display = 'none';
+                this.closeAdmin();
+                alert('Desconectado do painel administrativo');
+            });
+
+            // Login
+            this.elements.loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = this.elements.loginUsername.value.trim();
+                const password = this.elements.loginPassword.value;
+
+                const result = AuthService.login(username, password);
+                if (result.success) {
+                    this.hideLogin();
+                    this.openAdmin();
+                    this.elements.logoutBtn.style.display = 'inline-flex';
+                    App.refreshAll();
+                } else {
+                    alert(result.message);
+                }
+            });
+
+            // Toggle tema
+            this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+
+            // Busca
+            this.elements.searchBtn.addEventListener('click', () => App.performSearch());
+            this.elements.searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') App.performSearch();
+            });
+
+            // Filtros
+            this.elements.filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    UI.elements.filterBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    App.filterContacts(this.dataset.filter);
+                });
+            });
+
+            // Toggle serviços
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const value = this.classList.contains('active') ? 'Sim' : '';
+                    this.setAttribute('data-value', value);
+                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
+                });
+            });
+
+            // Tabs principais
+            this.elements.tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    UI.elements.tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                });
+            });
+
+            // Tabs do admin
+            this.elements.adminTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    UI.elements.adminTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                });
+            });
+
+            // Formulário de unidade
+            this.elements.unitForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                App.saveUnitFromForm();
+            });
+
+            this.elements.cancelEdit.addEventListener('click', () => {
+                this.elements.unitForm.reset();
+                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                this.elements.cancelEdit.style.display = 'none';
+                this.elements.unitForm.removeAttribute('data-edit-id');
+                this.setupConditionalFormLogic();
+            });
+
+            // GitHub Sync
+            this.elements.saveGitHubConfig.addEventListener('click', () => App.saveGitHubConfig());
+            this.elements.syncToGitHub.addEventListener('click', () => App.syncToGitHub());
+            this.elements.pullFromGitHub.addEventListener('click', () => App.pullFromGitHub());
+            this.elements.testConnection.addEventListener('click', () => App.testGitHubConnection());
+
+            // Configurações
+            this.elements.backupBtn.addEventListener('click', () => App.backupData());
+            this.elements.restoreInput.addEventListener('change', (e) => App.restoreData(e.target.files[0]));
+            this.elements.clearAllBtn.addEventListener('click', () => App.clearAllData());
+        },
+
+        // Métodos de UI
+        showLogin() {
+            this.elements.loginModal.classList.add('active');
+            this.elements.loginModal.setAttribute('aria-hidden', 'false');
+            this.elements.loginUsername.focus();
+        },
+
+        hideLogin() {
+            this.elements.loginModal.classList.remove('active');
+            this.elements.loginModal.setAttribute('aria-hidden', 'true');
+            this.elements.loginForm.reset();
+        },
+
+        openAdmin() {
+            this.elements.adminPanel.classList.add('active');
+            this.elements.adminPanel.setAttribute('aria-hidden', 'false');
+        },
+
+        closeAdmin() {
+            this.elements.adminPanel.classList.remove('active');
+            this.elements.adminPanel.setAttribute('aria-hidden', 'true');
+        },
+
+        toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.elements.themeToggle.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('telefonia_theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('telefonia_theme', 'light');
+            }
+        },
+
+        loadTheme() {
+            const theme = localStorage.getItem('telefonia_theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-sun';
+            }
+        },
+
+        loadGitHubConfig() {
+            const config = localStorage.getItem('github_config');
+            if (config) {
+                const { token, owner, repo, filePath } = JSON.parse(config);
+                DataService.githubToken = token;
+                DataService.repoOwner = owner;
+                DataService.repoName = repo;
+                DataService.filePath = filePath;
+
+                this.elements.repoOwner.value = owner;
+                this.elements.repoName.value = repo;
+                this.elements.filePath.value = filePath;
+
+                if (token) {
+                    this.elements.githubToken.placeholder = '•••••••••• (já configurado)';
+                }
+            }
+        },
+
+        showSyncStatus(message, type = 'info') {
+            const statusEl = this.elements.syncStatus;
+            statusEl.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => statusEl.innerHTML = '', 5000);
+            }
+        },
+
+        // Renderização
+        renderContacts(contacts, container) {
+            const target = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+            target.innerHTML = '';
+
+            if (!contacts || contacts.length === 0) {
+                target.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-search"></i>
-                        <h3>Nenhuma unidade encontrada</h3>
-                        <p>Tente ajustar os filtros ou termos de busca</p>
+                        <h3>Nenhum contato encontrado</h3>
+                        <p>Tente ajustar seus filtros ou termos de busca</p>
                     </div>
                 `;
-                updateResultsCount(0);
                 return;
             }
 
-            grid.innerHTML = filteredUnits.map(unit => `
-                <div class="contact-card" data-id="${unit.id}">
-                    <button class="favorite-btn ${unit.favorite ? 'active' : ''}" onclick="toggleFavorite('${unit.id}')">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    
-                    <div class="contact-header">
-                        <h3 class="contact-name">${unit.name}</h3>
-                        <span class="contact-type">${getTypeLabel(unit.type)}</span>
-                    </div>
-                    
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <strong>Endereço:</strong><br>
-                                ${unit.address} - ${unit.bairro}
-                            </div>
-                        </div>
-                        
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <strong>Telefone:</strong><br>
-                                ${unit.phone}
-                            </div>
-                        </div>
-                        
-                        ${unit.email ? `
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <strong>E-mail:</strong><br>
-                                ${unit.email}
-                            </div>
-                        </div>` : ''}
-                        
-                        ${unit.enfermeiro ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user-nurse"></i>
-                            <div>
-                                <strong>Enfermeiro:</strong><br>
-                                ${unit.enfermeiro}
-                            </div>
-                        </div>` : ''}
-                        
-                        ${unit.gerente ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user-tie"></i>
-                            <div>
-                                <strong>Gerente:</strong><br>
-                                ${unit.gerente}
-                            </div>
-                        </div>` : ''}
-                    </div>
-                    
-                    <div class="contact-services">
-                        <div class="service ${unit.vacina === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-syringe"></i>
-                            <div class="service-label">Vacina</div>
-                        </div>
-                        <div class="service ${unit.odonto === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-tooth"></i>
-                            <div class="service-label">Odonto</div>
-                        </div>
-                        <div class="service ${unit.farmacia === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-pills"></i>
-                            <div class="service-label">Farmácia</div>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-actions">
-                        <button class="action-btn call-btn" onclick="callNumber('${unit.phone}')">
-                            <i class="fas fa-phone"></i> Ligar
-                        </button>
-                        <button class="action-btn whatsapp-btn" onclick="openWhatsApp('${unit.phone}')">
-                            <i class="fab fa-whatsapp"></i> WhatsApp
-                        </button>
-                        <button class="action-btn location-btn" onclick="openLocation('${unit.address}, ${unit.bairro}')">
-                            <i class="fas fa-map"></i> Mapa
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            updateResultsCount(filteredUnits.length);
-        }
-
-        function renderRamais() {
-            const container = document.getElementById('ramaisContainer');
-            if (!container) return;
-
-            // Filtra apenas unidades administrativas para ramais
-            const ramais = units.filter(unit => unit.type === 'administrativo');
-            
-            if (ramais.length === 0) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-phone"></i>
-                        <h3>Nenhum ramal encontrado</h3>
-                        <p>Não há unidades administrativas cadastradas</p>
-                    </div>
-                `;
-                updateResultsCount(0);
-                return;
-            }
-
-            container.innerHTML = ramais.map(unit => `
-                <div class="contact-card" data-id="${unit.id}">
-                    <div class="contact-header">
-                        <h3 class="contact-name">${unit.name}</h3>
-                        <span class="contact-type">Ramal</span>
-                    </div>
-                    
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <div>
-                                <strong>Ramal:</strong><br>
-                                ${unit.phone}
-                            </div>
-                        </div>
-                        
-                        ${unit.email ? `
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <strong>E-mail:</strong><br>
-                                ${unit.email}
-                            </div>
-                        </div>` : ''}
-                        
-                        ${unit.responsavel ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user"></i>
-                            <div>
-                                <strong>Responsável:</strong><br>
-                                ${unit.responsavel}
-                            </div>
-                        </div>` : ''}
-                    </div>
-                    
-                    <div class="contact-actions">
-                        <button class="action-btn call-btn" onclick="callNumber('${unit.phone}')">
-                            <i class="fas fa-phone"></i> Ligar
-                        </button>
-                        ${unit.email ? `
-                        <button class="action-btn whatsapp-btn" onclick="sendEmail('${unit.email}')">
-                            <i class="fas fa-envelope"></i> E-mail
-                        </button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-
-            updateResultsCount(ramais.length);
-        }
-
-        // ========== HELPER FUNCTIONS ==========
-        function filterUnits(unitsList) {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            return unitsList.filter(unit => {
-                // Filtro de tipo
-                if (currentFilter !== 'all' && unit.type !== currentFilter) {
-                    return false;
-                }
-                
-                // Filtro de serviços
-                if (currentServiceFilter !== 'all') {
-                    if (currentServiceFilter === 'vacina' && unit.vacina !== 'Sim') return false;
-                    if (currentServiceFilter === 'odonto' && unit.odonto !== 'Sim') return false;
-                    if (currentServiceFilter === 'farmacia' && unit.farmacia !== 'Sim') return false;
-                }
-                
-                // Filtro de busca
-                if (searchTerm) {
-                    const searchFields = [
-                        unit.name, unit.phone, unit.address, unit.bairro, 
-                        unit.enfermeiro, unit.gerente, unit.responsavel
-                    ].filter(Boolean);
-                    
-                    return searchFields.some(field => 
-                        field.toLowerCase().includes(searchTerm)
-                    );
-                }
-                
-                return true;
+            contacts.forEach(contact => {
+                const card = this.createContactCard(contact);
+                target.appendChild(card);
             });
-        }
 
-        function updateResultsCount(count) {
-            const element = document.getElementById('resultsCount');
-            if (element) {
-                element.textContent = `${count} unidade${count !== 1 ? 's' : ''} encontrada${count !== 1 ? 's' : ''}`;
-            }
-        }
+            this.attachFavoriteListeners();
+        },
 
-        function showLoading(containerId, message = 'Carregando...') {
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <h3>${message}</h3>
+        createContactCard(contact) {
+            const phoneClean = contact.phone.replace(/\D/g, '');
+            const telLink = `tel:+55${phoneClean}`;
+            const whatsappLink = `https://wa.me/55${phoneClean}`;
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address + ', ' + contact.bairro + ', Passo Fundo, RS')}`;
+            
+            const typeLabel = this.getTypeLabel(contact.type);
+
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.innerHTML = `
+                <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar">
+                    <i class="fas fa-star"></i>
+                </button>
+                <div class="contact-header">
+                    <div>
+                        <h3 class="contact-name">${contact.name}</h3>
+                        <span class="contact-type">${typeLabel}</span>
+                    </div>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${contact.address}, ${contact.bairro}</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${contact.phone}</span>
+                    </div>
+                    ${contact.email ? `
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>${contact.email}</span>
+                    </div>` : ''}
+                    ${contact.enfermeiro ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-nurse"></i>
+                        <span>Enf. ${contact.enfermeiro}</span>
+                    </div>` : ''}
+                    ${contact.gerente ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Gerente: ${contact.gerente}</span>
+                    </div>` : ''}
+                    ${contact.responsavel ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user"></i>
+                        <span>Responsável: ${contact.responsavel}</span>
+                    </div>` : ''}
+                </div>
+                <!-- SEMPRE MOSTRAR SERVIÇOS -->
+                <div class="contact-services">
+                    <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-syringe"></i>
+                        <span class="service-label">Vacina</span>
+                    </div>
+                    <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-tooth"></i>
+                        <span class="service-label">Odonto</span>
+                    </div>
+                    <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-pills"></i>
+                        <span class="service-label">Farmácia</span>
+                    </div>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')">
+                        <i class="fas fa-phone"></i> Ligar
+                    </button>
+                    <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')">
+                        <i class="fas fa-map"></i> Localização
+                    </button>
+                </div>
+            `;
+
+            return card;
+        },
+
+        attachFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    await App.toggleFavorite(id);
+                });
+            });
+        },
+
+        renderUnitsList(units) {
+            this.elements.unitsList.innerHTML = '';
+
+            units.forEach(unit => {
+                const item = document.createElement('div');
+                item.className = 'unit-item';
+                item.innerHTML = `
+                    <div class="unit-info">
+                        <h4>${unit.name}</h4>
+                        <p>${this.getTypeLabel(unit.type)} - ${unit.phone}</p>
+                    </div>
+                    <div class="unit-actions">
+                        <button class="btn btn-warning edit-unit" data-id="${unit.id}">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger delete-unit" data-id="${unit.id}">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
                     </div>
                 `;
-            }
-        }
+                this.elements.unitsList.appendChild(item);
+            });
 
-        function getTypeLabel(type) {
-            const labels = {
+            // Adicionar event listeners para editar/excluir
+            document.querySelectorAll('.edit-unit').forEach(btn => {
+                btn.addEventListener('click', () => App.editUnit(parseInt(btn.dataset.id)));
+            });
+
+            document.querySelectorAll('.delete-unit').forEach(btn => {
+                btn.addEventListener('click', () => App.deleteUnit(parseInt(btn.dataset.id)));
+            });
+        },
+
+        getTypeLabel(type) {
+            const types = {
                 'promocao': 'Promoção',
-                'recuperacao': 'Recuperação',
+                'recuperacao': 'Recuperação', 
                 'administrativo': 'Administrativo',
                 'vigilancia': 'Vigilância',
                 'capne': 'Capne',
                 'outros': 'Outros'
             };
-            return labels[type] || type;
-        }
+            return types[type] || type;
+        },
 
-        // ========== ACTION FUNCTIONS ==========
-        function callNumber(phone) {
-            window.open(`tel:${phone}`, '_self');
+        setCounts(allCount, favoritesCount) {
+            this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
+            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
         }
+    };
 
-        function openWhatsApp(phone) {
-            const cleanedPhone = phone.replace(/\D/g, '');
-            window.open(`https://wa.me/55${cleanedPhone}`, '_blank');
-        }
+    // =============================================
+    // MAIN APPLICATION - VERSÃO CORRIGIDA
+    // =============================================
+    const App = {
+        units: [],
+        favorites: [],
 
-        function openLocation(address) {
-            window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank');
-        }
+        async init() {
+            UI.init();
+            this.loadFavorites();
+            await this.refreshAll(); // Agora é async
+        },
 
-        function sendEmail(email) {
-            window.open(`mailto:${email}`, '_blank');
-        }
+        loadFavorites() {
+            const favs = localStorage.getItem('telefonia_favorites');
+            this.favorites = favs ? JSON.parse(favs) : [];
+        },
 
-        function toggleFavorite(id) {
-            const unit = units.find(u => u.id === id);
-            if (unit) {
-                unit.favorite = !unit.favorite;
-                saveUnits();
-                renderUnits();
-            }
-        }
-
-        // ========== ADMIN FUNCTIONS ==========
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+        async refreshAll() {
+            // AGORA CARREGA DO GITHUB PRIMEIRO
+            this.units = await DataService.getUnits();
             
-            // Credenciais padrão (em produção, isso deve ser mais seguro)
-            if (username === 'admin' && password === 'sms2024') {
-                isAdmin = true;
-                document.getElementById('loginModal').classList.remove('active');
-                document.getElementById('logoutBtn').style.display = 'block';
-                showSyncStatus('Login administrativo realizado com sucesso', 'success');
+            // Atualizar favoritos nas unidades
+            this.units.forEach(unit => {
+                unit.favorite = this.favorites.includes(unit.id);
+            });
+
+            UI.renderContacts(this.units, 'all');
+            UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
+            UI.renderUnitsList(this.units);
+            UI.setCounts(this.units.length, this.favorites.length);
+        },
+
+        async toggleFavorite(unitId) {
+            const index = this.favorites.indexOf(unitId);
+            
+            if (index === -1) {
+                this.favorites.push(unitId);
             } else {
-                alert('Credenciais inválidas!');
+                this.favorites.splice(index, 1);
             }
-        }
 
-        function handleLogout() {
-            isAdmin = false;
-            document.getElementById('logoutBtn').style.display = 'none';
-            closeAdminPanel();
-            showSyncStatus('Logout realizado', 'info');
-        }
+            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+            
+            // Atualizar a unidade
+            const unitIndex = this.units.findIndex(u => u.id === unitId);
+            if (unitIndex !== -1) {
+                this.units[unitIndex].favorite = !this.units[unitIndex].favorite;
+                DataService.saveUnit(this.units[unitIndex]);
+            }
 
-        function toggleAdminPanel() {
-            if (!isAdmin) {
-                document.getElementById('loginModal').classList.add('active');
+            this.refreshAll();
+        },
+
+        async filterContacts(filter) {
+            let filtered = [...this.units];
+            
+            if (filter && filter !== 'all') {
+                filtered = filtered.filter(unit => unit.type === filter);
+            }
+
+            // Aplicar filtros de serviços
+            const vaccineFilter = document.querySelector('.service-toggle-btn[data-service="vaccine"]').getAttribute('data-value');
+            const dentalFilter = document.querySelector('.service-toggle-btn[data-service="dental"]').getAttribute('data-value');
+            const pharmacyFilter = document.querySelector('.service-toggle-btn[data-service="pharmacy"]').getAttribute('data-value');
+
+            if (vaccineFilter) {
+                filtered = filtered.filter(unit => unit.vacina === vaccineFilter);
+            }
+            if (dentalFilter) {
+                filtered = filtered.filter(unit => unit.odonto === dentalFilter);
+            }
+            if (pharmacyFilter) {
+                filtered = filtered.filter(unit => unit.farmacia === pharmacyFilter);
+            }
+
+            // Aplicar busca por texto
+            const searchTerm = UI.elements.searchInput.value.toLowerCase().trim();
+            if (searchTerm) {
+                filtered = filtered.filter(unit => 
+                    unit.name.toLowerCase().includes(searchTerm) ||
+                    unit.phone.includes(searchTerm) ||
+                    unit.address.toLowerCase().includes(searchTerm) ||
+                    unit.bairro.toLowerCase().includes(searchTerm) ||
+                    (unit.enfermeiro && unit.enfermeiro.toLowerCase().includes(searchTerm)) ||
+                    (unit.gerente && unit.gerente.toLowerCase().includes(searchTerm)) ||
+                    (unit.responsavel && unit.responsavel.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            UI.renderContacts(filtered, 'all');
+            UI.setCounts(filtered.length, this.favorites.length);
+        },
+
+        performSearch() {
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            this.filterContacts(activeFilter);
+        },
+
+        editUnit(id) {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
                 return;
             }
-            
-            const panel = document.getElementById('adminPanel');
-            panel.classList.toggle('active');
-            if (panel.classList.contains('active')) {
-                renderUnitsList();
-            }
-        }
 
-        function closeAdminPanel() {
-            document.getElementById('adminPanel').classList.remove('active');
-            cancelEdit();
-        }
-
-        function switchAdminTab(tabName) {
-            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
-            
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            document.getElementById(`${tabName}-content`).classList.add('active');
-        }
-
-        function handleUnitTypeChange() {
-            const type = document.getElementById('unitType').value;
-            const responsibleField = document.getElementById('responsibleFieldContainer');
-            
-            // Mostra campo de responsável apenas para tipos administrativos
-            if (type === 'administrativo') {
-                responsibleField.classList.remove('hidden');
-            } else {
-                responsibleField.classList.add('hidden');
-            }
-        }
-
-        function handleUnitSubmit(e) {
-            e.preventDefault();
-            
-            const unitData = {
-                name: document.getElementById('unitName').value,
-                type: document.getElementById('unitType').value,
-                address: document.getElementById('unitAddress').value,
-                bairro: document.getElementById('unitBairro').value,
-                phone: document.getElementById('unitPhone').value,
-                email: document.getElementById('unitEmail').value,
-                enfermeiro: document.getElementById('unitEnfermeiro').value,
-                gerente: document.getElementById('unitGerente').value,
-                vacina: document.getElementById('unitVacina').value,
-                odonto: document.getElementById('unitOdonto').value,
-                farmacia: document.getElementById('unitFarmacia').value,
-                responsavel: document.getElementById('unitResponsavel').value || ''
-            };
-            
-            if (editingUnitId) {
-                // Editar unidade existente
-                const index = units.findIndex(u => u.id === editingUnitId);
-                if (index !== -1) {
-                    units[index] = { ...units[index], ...unitData };
-                }
-            } else {
-                // Adicionar nova unidade
-                unitData.id = generateId();
-                unitData.favorite = false;
-                units.push(unitData);
-            }
-            
-            saveUnits();
-            renderUnits();
-            renderUnitsList();
-            document.getElementById('unitForm').reset();
-            cancelEdit();
-            
-            showSyncStatus(`Unidade ${editingUnitId ? 'atualizada' : 'adicionada'} com sucesso!`, 'success');
-        }
-
-        function editUnit(id) {
-            const unit = units.find(u => u.id === id);
+            const unit = this.units.find(u => u.id === id);
             if (!unit) return;
-            
-            editingUnitId = id;
-            document.getElementById('formTitle').textContent = 'Editar Unidade';
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Atualizar Unidade';
-            document.getElementById('cancelEdit').style.display = 'block';
-            
-            // Preenche o formulário
+
+            // Preencher formulário
             document.getElementById('unitName').value = unit.name;
             document.getElementById('unitType').value = unit.type;
             document.getElementById('unitAddress').value = unit.address;
@@ -1320,209 +1567,243 @@
             document.getElementById('unitOdonto').value = unit.odonto || 'Não';
             document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
             document.getElementById('unitResponsavel').value = unit.responsavel || '';
-            
-            // Atualiza campos condicionais
-            handleUnitTypeChange();
-            
-            // Muda para a aba de adição/edição
-            switchAdminTab('add');
-        }
 
-        function deleteUnit(id) {
-            if (!confirm('Tem certeza que deseja excluir esta unidade?')) return;
-            
-            units = units.filter(u => u.id !== id);
-            saveUnits();
-            renderUnits();
-            renderUnitsList();
-            
-            showSyncStatus('Unidade excluída com sucesso!', 'success');
-        }
+            UI.elements.formTitle.textContent = 'Editar Unidade';
+            UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+            UI.elements.cancelEdit.style.display = 'inline-flex';
+            UI.elements.unitForm.setAttribute('data-edit-id', id);
 
-        function cancelEdit() {
-            editingUnitId = null;
-            document.getElementById('formTitle').textContent = 'Adicionar Nova Unidade';
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-            document.getElementById('cancelEdit').style.display = 'none';
-            document.getElementById('unitForm').reset();
-        }
+            // Atualizar campos condicionais
+            setTimeout(() => UI.setupConditionalFormLogic(), 100);
 
-        function renderUnitsList() {
-            const list = document.getElementById('unitsList');
-            if (!list) return;
-            
-            list.innerHTML = units.map(unit => `
-                <div class="unit-item">
-                    <div>
-                        <h4>${unit.name}</h4>
-                        <p><strong>Tipo:</strong> ${getTypeLabel(unit.type)} | <strong>Telefone:</strong> ${unit.phone}</p>
-                        <p><strong>Endereço:</strong> ${unit.address} - ${unit.bairro}</p>
-                    </div>
-                    <div class="unit-actions">
-                        <button class="btn btn-primary" onclick="editUnit('${unit.id}')">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button class="btn btn-danger" onclick="deleteUnit('${unit.id}')">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+            // Mudar para aba de adicionar/editar
+            UI.elements.adminTabs.forEach(tab => tab.classList.remove('active'));
+            document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
+            document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('add-content').classList.add('active');
 
-        // ========== THEME FUNCTIONS ==========
-        function toggleTheme() {
-            isDarkMode = !isDarkMode;
-            applyTheme();
-            localStorage.setItem('darkMode', isDarkMode);
-        }
+            UI.openAdmin();
+        },
 
-        function applyTheme() {
-            const themeIcon = document.querySelector('#themeToggle i');
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-                themeIcon.className = 'fas fa-sun';
-            } else {
-                document.body.classList.remove('dark-mode');
-                themeIcon.className = 'fas fa-moon';
+        async deleteUnit(id) {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
+                return;
             }
-        }
 
-        // ========== BACKUP/RESTORE FUNCTIONS ==========
-        function backupData() {
-            const data = {
-                units: units,
-                exportedAt: new Date().toISOString(),
-                version: '1.0'
+            if (!confirm('Tem certeza que deseja excluir esta unidade?')) {
+                return;
+            }
+
+            if (DataService.deleteUnit(id)) {
+                this.favorites = this.favorites.filter(favId => favId !== id);
+                localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+                await this.refreshAll();
+                alert('Unidade excluída com sucesso!');
+            } else {
+                alert('Erro ao excluir unidade!');
+            }
+        },
+
+        async saveUnitFromForm() {
+            if (!AuthService.isLogged()) {
+                UI.showLogin();
+                return;
+            }
+
+            const editId = UI.elements.unitForm.getAttribute('data-edit-id');
+            const responsibleField = document.getElementById('unitResponsavel');
+            const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
+
+            // Validar campo responsável se visível
+            if (isResponsibleVisible && !responsibleField.value.trim()) {
+                alert('Por favor, preencha o campo Responsável!');
+                responsibleField.focus();
+                return;
+            }
+
+            const unitData = {
+                id: editId ? parseInt(editId) : undefined,
+                name: document.getElementById('unitName').value,
+                type: document.getElementById('unitType').value,
+                address: document.getElementById('unitAddress').value,
+                bairro: document.getElementById('unitBairro').value,
+                phone: document.getElementById('unitPhone').value,
+                email: document.getElementById('unitEmail').value,
+                enfermeiro: document.getElementById('unitEnfermeiro').value,
+                gerente: document.getElementById('unitGerente').value,
+                vacina: document.getElementById('unitVacina').value,
+                odonto: document.getElementById('unitOdonto').value,
+                farmacia: document.getElementById('unitFarmacia').value,
+                responsavel: document.getElementById('unitResponsavel').value,
+                favorite: editId ? (this.units.find(u => u.id === parseInt(editId))?.favorite || false) : false
             };
+
+            const savedUnit = DataService.saveUnit(unitData);
+            if (savedUnit) {
+                await this.refreshAll();
+                UI.elements.unitForm.reset();
+                UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+                UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+                UI.elements.cancelEdit.style.display = 'none';
+                UI.elements.unitForm.removeAttribute('data-edit-id');
+                UI.setupConditionalFormLogic();
+
+                alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
+            } else {
+                alert('Erro ao salvar unidade!');
+            }
+        },
+
+        // GitHub Sync
+        saveGitHubConfig() {
+            const token = UI.elements.githubToken.value.trim();
+            const owner = UI.elements.repoOwner.value.trim();
+            const repo = UI.elements.repoName.value.trim();
+            const filePath = UI.elements.filePath.value.trim();
+
+            if (!token || !owner || !repo || !filePath) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            DataService.githubToken = token;
+            DataService.repoOwner = owner;
+            DataService.repoName = repo;
+            DataService.filePath = filePath;
+
+            localStorage.setItem('github_config', JSON.stringify({
+                token,
+                owner, 
+                repo,
+                filePath
+            }));
+
+            UI.elements.githubToken.value = '';
+            UI.elements.githubToken.placeholder = '•••••••••• (configurado com sucesso)';
+            UI.showSyncStatus('Configuração do GitHub salva com sucesso!', 'success');
+        },
+
+        async syncToGitHub() {
+            UI.showSyncStatus('<div class="loading"></div> Sincronizando com GitHub...', 'loading');
             
+            const result = await DataService.syncToGitHub();
+            
+            if (result.success) {
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
+            } else {
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
+            }
+        },
+
+        async pullFromGitHub() {
+            if (!confirm('Isso substituirá os dados locais pelos do GitHub. Continuar?')) {
+                return;
+            }
+
+            UI.showSyncStatus('<div class="loading"></div> Buscando dados do GitHub...', 'loading');
+            
+            const result = await DataService.pullFromGitHub();
+            
+            if (result.success) {
+                this.units = result.data;
+                await this.refreshAll();
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
+            } else {
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
+            }
+        },
+
+        async testGitHubConnection() {
+            UI.showSyncStatus('<div class="loading"></div> Testando conexão...', 'loading');
+            
+            const result = await DataService.testGitHubConnection();
+            
+            if (result.success) {
+                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
+            } else {
+                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
+            }
+        },
+
+        // Backup e restore
+        backupData() {
+            const data = {
+                units: this.units,
+                favorites: this.favorites,
+                timestamp: new Date().toISOString()
+            };
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `telefonia-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `backup-telefonia-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
-            showSyncStatus('Backup realizado com sucesso!', 'success');
-        }
 
-        function restoreData(e) {
-            const file = e.target.files[0];
+            alert('Backup realizado com sucesso!');
+        },
+
+        restoreData(file) {
             if (!file) return;
-            
+
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (data.units && Array.isArray(data.units)) {
-                        units = data.units;
-                        saveUnits();
-                        renderUnits();
-                        renderUnitsList();
-                        showSyncStatus('Dados restaurados com sucesso!', 'success');
-                    } else {
-                        throw new Error('Formato de arquivo inválido');
+                    
+                    if (!data.units) {
+                        alert('Arquivo de backup inválido!');
+                        return;
+                    }
+
+                    if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
+                        DataService.saveUnits(data.units);
+                        
+                        if (data.favorites) {
+                            this.favorites = data.favorites;
+                            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+                        }
+
+                        this.refreshAll();
+                        alert('Dados restaurados com sucesso!');
                     }
                 } catch (error) {
-                    alert('Erro ao restaurar dados: ' + error.message);
+                    alert('Erro ao ler arquivo: ' + error.message);
                 }
             };
             reader.readAsText(file);
-            e.target.value = ''; // Reset input
-        }
+            UI.elements.restoreInput.value = '';
+        },
 
-        function clearAllData() {
-            if (!confirm('ATENÇÃO: Isso irá apagar TODOS os dados. Tem certeza?')) return;
-            if (!confirm('CONFIRMAÇÃO FINAL: Esta ação não pode ser desfeita. Continuar?')) return;
+        clearAllData() {
+            if (!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) {
+                return;
+            }
+
+            localStorage.removeItem('units');
+            localStorage.removeItem('telefonia_favorites');
+            localStorage.removeItem('telefonia_isLogged');
+            localStorage.removeItem('github_config');
             
-            units = getDefaultUnits();
-            saveUnits();
-            renderUnits();
-            renderUnitsList();
+            this.units = [];
+            this.favorites = [];
+            this.refreshAll();
             
-            showSyncStatus('Todos os dados foram resetados', 'warning');
+            alert('Todos os dados foram apagados!');
         }
+    };
 
-        // ========== UTILITY FUNCTIONS ==========
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
+    // Inicializar aplicação quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => App.init());
 
-        function performSearch() {
-            renderUnits();
-        }
-
-        function saveUnits() {
-            const data = {
-                units: units,
-                lastUpdated: new Date().toISOString(),
-                totalUnits: units.length
-            };
-            localStorage.setItem('telefoniaUnits', JSON.stringify(data));
-        }
-
-        // ========== DEFAULT DATA ==========
-        function getDefaultUnits() {
-            return [
-                {
-                    id: '1',
-                    name: 'UBS Central',
-                    type: 'promocao',
-                    address: 'Rua General Neto, 123',
-                    bairro: 'Centro',
-                    phone: '3314-1000',
-                    email: 'ubs.central@pmpf.rs.gov.br',
-                    enfermeiro: 'Maria Silva',
-                    gerente: 'João Santos',
-                    vacina: 'Sim',
-                    odonto: 'Sim',
-                    farmacia: 'Sim',
-                    responsavel: '',
-                    favorite: false
-                },
-                {
-                    id: '2',
-                    name: 'CAPS II',
-                    type: 'recuperacao',
-                    address: 'Av. Brasil, 456',
-                    bairro: 'São José',
-                    phone: '3314-2000',
-                    email: 'caps.ii@pmpf.rs.gov.br',
-                    enfermeiro: 'Ana Oliveira',
-                    gerente: 'Pedro Costa',
-                    vacina: 'Não',
-                    odonto: 'Sim',
-                    farmacia: 'Sim',
-                    responsavel: '',
-                    favorite: false
-                },
-                {
-                    id: '3',
-                    name: 'Secretaria de Saúde',
-                    type: 'administrativo',
-                    address: 'Praça Marechal Floriano, 101',
-                    bairro: 'Centro',
-                    phone: '3314-3000',
-                    email: 'secretaria.saude@pmpf.rs.gov.br',
-                    enfermeiro: '',
-                    gerente: '',
-                    vacina: 'Não',
-                    odonto: 'Não',
-                    farmacia: 'Não',
-                    responsavel: 'Carlos Mendes',
-                    favorite: false
-                }
-            ];
-        }
-
-        // Carrega tema salvo
-        const savedTheme = localStorage.getItem('darkMode');
-        if (savedTheme !== null) {
-            isDarkMode = JSON.parse(savedTheme);
-        }
+    // Expor para debugging
+    window.App = App;
+    window.UI = UI;
+    window.DataService = DataService;
     </script>
 </body>
 </html>
