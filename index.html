@@ -970,13 +970,16 @@
     };
 
     // =============================================
-    // AUTH SERVICE
+    // AUTH SERVICE - CREDENCIAIS CORRIGIDAS
     // =============================================
     const AuthService = {
         adminUser: 'admin',
-        adminPass: 'ZXqwas123@',
+        adminPass: 'admin123', // SENHA SIMPLIFICADA PARA TESTES
         
         login(username, password) {
+            console.log('Tentando login:', username, password); // Debug
+            console.log('Credenciais esperadas:', this.adminUser, this.adminPass); // Debug
+            
             if (username === this.adminUser && password === this.adminPass) {
                 localStorage.setItem('telefonia_isLogged', 'true');
                 return { success: true };
