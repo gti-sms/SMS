@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval' blob:">
     <title>Telefonia - Secretaria Municipal de Saúde PMPF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -436,9 +437,42 @@
             cursor: pointer;
             font-weight: bold;
         }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+    <!-- LOADING SCREEN -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <h2>Carregando dados...</h2>
+        <p id="loadingStatus">Conectando ao GitHub</p>
+    </div>
+
     <!-- LOGIN MODAL -->
     <div class="login-modal" id="loginModal" aria-hidden="true">
         <div class="login-form" role="dialog" aria-labelledby="loginTitle">
@@ -459,7 +493,7 @@
         </div>
     </div>
 
-    <div id="telefonia-container">
+    <div id="telefonia-container" style="display:none;">
         <header>
             <div class="container">
                 <div class="header-content">
@@ -706,71 +740,96 @@
 
     <script>
     // =============================================
-    // DATA SERVICE - VERSÃO CORRIGIDA COM CARREGAMENTO REMOTO
+    // DATA SERVICE - VERSÃO DEFINITIVA
     // =============================================
     const DataService = {
         githubToken: '',
         repoOwner: 'gti-sms',
         repoName: 'SMS', 
         filePath: 'data/units.json',
-        useRemoteData: true, // Nova flag para usar dados remotos
 
-        // Carregar unidades - PRIMEIRO TENTA DO GITHUB, DEPOIS LOCAL
+        // Carregar unidades - SEMPRE DO GITHUB PRIMEIRO
         async getUnits() {
             try {
-                // Sempre tenta carregar do GitHub primeiro (RAW URL)
+                console.log('🔄 Iniciando carregamento de dados...');
+                
+                // PRIMEIRO: Tentar carregar do GitHub
                 const remoteData = await this.loadFromGitHubRaw();
                 if (remoteData && remoteData.length > 0) {
-                    console.log('Carregando dados do GitHub:', remoteData.length, 'unidades');
+                    console.log('✅ Dados carregados do GitHub:', remoteData.length, 'unidades');
                     
-                    // Salva localmente como backup/cache
+                    // Salvar localmente como cache
                     this.saveUnits(remoteData);
-                    
                     return remoteData;
                 }
                 
-                // Fallback para dados locais se GitHub falhar
-                const localUnits = localStorage.getItem('units');
-                return localUnits ? JSON.parse(localUnits) : [];
+                console.log('❌ GitHub vazio ou indisponível, tentando dados locais...');
+                
+                // SEGUNDO: Fallback para dados locais
+                const localUnits = this.getUnitsSync();
+                if (localUnits && localUnits.length > 0) {
+                    console.log('📁 Usando dados locais em cache:', localUnits.length, 'unidades');
+                    return localUnits;
+                }
+                
+                // TERCEIRO: Se tudo falhar, array vazio
+                console.log('💡 Nenhum dado encontrado, iniciando com array vazio');
+                return [];
                 
             } catch (error) {
-                console.error('Erro ao carregar unidades:', error);
-                // Fallback para dados locais em caso de erro
-                const localUnits = localStorage.getItem('units');
-                return localUnits ? JSON.parse(localUnits) : [];
+                console.error('💥 Erro crítico ao carregar unidades:', error);
+                return this.getUnitsSync() || [];
             }
         },
 
-        // NOVO MÉTODO: Carregar dados do GitHub via RAW URL (sem token)
+        // CARREGAR DO GITHUB - VERSÃO ROBUSTA
         async loadFromGitHubRaw() {
             try {
-                const rawUrl = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/main/${this.filePath}`;
+                const rawUrl = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/main/${this.filePath}?t=${Date.now()}`;
+                console.log('🌐 Acessando:', rawUrl);
                 
-                const response = await fetch(rawUrl);
+                const response = await fetch(rawUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    cache: 'no-cache'
+                });
+                
+                console.log('📡 Status:', response.status);
                 
                 if (response.ok) {
-                    const data = await response.json();
+                    const text = await response.text();
+                    
+                    if (!text.trim()) {
+                        console.log('📭 Arquivo vazio no GitHub');
+                        return [];
+                    }
+                    
+                    const data = JSON.parse(text);
+                    console.log('✅ Dados parseados:', Array.isArray(data) ? data.length : 'não é array');
+                    
                     return Array.isArray(data) ? data : [];
                 } else if (response.status === 404) {
-                    console.log('Arquivo não encontrado no GitHub');
+                    console.log('❌ Arquivo não encontrado no GitHub');
                     return [];
                 } else {
-                    console.log('Erro ao buscar dados do GitHub:', response.status);
+                    console.log('❌ Erro HTTP:', response.status);
                     return [];
                 }
             } catch (error) {
-                console.log('Erro de rede ao buscar dados do GitHub:', error.message);
+                console.log('🌐 Erro de rede:', error.message);
                 return [];
             }
         },
 
-        // Salvar unidades no localStorage
         saveUnits(units) {
             try {
                 localStorage.setItem('units', JSON.stringify(units));
+                console.log('💾 Dados salvos localmente:', units.length, 'unidades');
                 return true;
             } catch (error) {
-                console.error('Erro ao salvar unidades:', error);
+                console.error('❌ Erro ao salvar unidades:', error);
                 return false;
             }
         },
@@ -784,23 +843,29 @@
                 const index = units.findIndex(u => u.id === unit.id);
                 if (index !== -1) {
                     units[index] = unit;
+                    console.log('✏️ Unidade editada:', unit.id, unit.name);
                 }
             } else {
                 // Nova unidade
                 unit.id = units.length > 0 ? Math.max(...units.map(u => u.id)) + 1 : 1;
                 units.push(unit);
+                console.log('➕ Nova unidade:', unit.id, unit.name);
             }
             
-            return this.saveUnits(units) ? unit : null;
+            const success = this.saveUnits(units);
+            return success ? unit : null;
         },
 
         // Versão síncrona para uso interno
         getUnitsSync() {
             try {
-                const units = localStorage.getItem('units');
-                return units ? JSON.parse(units) : [];
+                const unitsJson = localStorage.getItem('units');
+                if (!unitsJson) return [];
+                
+                const units = JSON.parse(unitsJson);
+                return Array.isArray(units) ? units : [];
             } catch (error) {
-                console.error('Erro ao carregar unidades:', error);
+                console.error('❌ Erro ao carregar unidades locais:', error);
                 return [];
             }
         },
@@ -813,7 +878,6 @@
 
         // ========== GITHUB SYNC ==========
         
-        // Testar conexão com GitHub
         async testGitHubConnection() {
             if (!this.githubToken) {
                 return { success: false, message: 'Token do GitHub não configurado' };
@@ -841,7 +905,6 @@
             }
         },
 
-        // Buscar arquivo do GitHub
         async getGitHubFile() {
             if (!this.githubToken) return null;
 
@@ -872,7 +935,6 @@
             }
         },
 
-        // Sincronizar para GitHub
         async syncToGitHub() {
             if (!this.githubToken) {
                 return { success: false, message: 'Token do GitHub não configurado' };
@@ -882,7 +944,6 @@
                 const units = this.getUnitsSync();
                 const content = btoa(unescape(encodeURIComponent(JSON.stringify(units, null, 2))));
                 
-                // Verificar se arquivo já existe
                 const fileInfo = await this.getGitHubFile();
                 let sha = null;
 
@@ -934,7 +995,6 @@
             }
         },
 
-        // Puxar do GitHub
         async pullFromGitHub() {
             if (!this.githubToken) {
                 return { success: false, message: 'Token do GitHub não configurado' };
@@ -949,7 +1009,6 @@
 
                 const content = JSON.parse(decodeURIComponent(escape(atob(fileInfo.data.content))));
                 
-                // Salvar no localStorage
                 if (this.saveUnits(content)) {
                     return { 
                         success: true, 
@@ -970,16 +1029,13 @@
     };
 
     // =============================================
-    // AUTH SERVICE - CREDENCIAIS CORRIGIDAS
+    // AUTH SERVICE
     // =============================================
     const AuthService = {
         adminUser: 'admin',
-        adminPass: 'admin123', // SENHA SIMPLIFICADA PARA TESTES
+        adminPass: 'admin123',
         
         login(username, password) {
-            console.log('Tentando login:', username, password); // Debug
-            console.log('Credenciais esperadas:', this.adminUser, this.adminPass); // Debug
-            
             if (username === this.adminUser && password === this.adminPass) {
                 localStorage.setItem('telefonia_isLogged', 'true');
                 return { success: true };
@@ -997,7 +1053,7 @@
     };
 
     // =============================================
-    // UI CONTROLLER - VERSÃO CORRIGIDA
+    // UI CONTROLLER
     // =============================================
     const UI = {
         elements: {},
@@ -1008,12 +1064,10 @@
             this.bindEvents();
             this.setupConditionalFormLogic();
             
-            // Verificar se está logado
             if (AuthService.isLogged()) {
                 this.elements.logoutBtn.style.display = 'inline-flex';
             }
 
-            // Carregar configuração do GitHub
             this.loadGitHubConfig();
         },
 
@@ -1074,9 +1128,6 @@
             this.elements.responsibleField = document.getElementById('responsibleFieldContainer');
             this.elements.enfermeiroField = document.getElementById('enfermeiroField');
             this.elements.gerenteField = document.getElementById('gerenteField');
-            this.elements.vacinaField = document.getElementById('vacinaField');
-            this.elements.odontoField = document.getElementById('odontoField');
-            this.elements.farmaciaField = document.getElementById('farmaciaField');
         },
 
         setupConditionalFormLogic() {
@@ -1086,18 +1137,15 @@
                 const type = this.elements.unitType.value;
                 const isConditional = conditionalTypes.includes(type);
 
-                // Mostrar/ocultar campos baseado no tipo
                 this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
                 this.elements.gerenteField.classList.toggle('hidden', isConditional);
-                
                 this.elements.responsibleField.classList.toggle('hidden', !isConditional);
 
-                // Definir required
                 document.getElementById('unitResponsavel').required = isConditional;
             };
 
             this.elements.unitType.addEventListener('change', checkFields);
-            checkFields(); // Verificar estado inicial
+            checkFields();
         },
 
         bindEvents() {
@@ -1358,7 +1406,6 @@
                         <span>Responsável: ${contact.responsavel}</span>
                     </div>` : ''}
                 </div>
-                <!-- SEMPRE MOSTRAR SERVIÇOS -->
                 <div class="contact-services">
                     <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}">
                         <i class="fas fa-syringe"></i>
@@ -1421,7 +1468,6 @@
                 this.elements.unitsList.appendChild(item);
             });
 
-            // Adicionar event listeners para editar/excluir
             document.querySelectorAll('.edit-unit').forEach(btn => {
                 btn.addEventListener('click', () => App.editUnit(parseInt(btn.dataset.id)));
             });
@@ -1446,20 +1492,46 @@
         setCounts(allCount, favoritesCount) {
             this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
             this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
+        },
+
+        // NOVO: Mostrar/ocultar loading
+        showLoading(message = 'Carregando dados...') {
+            document.getElementById('loadingScreen').style.display = 'flex';
+            document.getElementById('loadingStatus').textContent = message;
+            document.getElementById('telefonia-container').style.display = 'none';
+        },
+
+        hideLoading() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('telefonia-container').style.display = 'block';
         }
     };
 
     // =============================================
-    // MAIN APPLICATION - VERSÃO CORRIGIDA
+    // MAIN APPLICATION - VERSÃO DEFINITIVA
     // =============================================
     const App = {
         units: [],
         favorites: [],
 
         async init() {
-            UI.init();
-            this.loadFavorites();
-            await this.refreshAll(); // Agora é async
+            console.log('🚀 Iniciando aplicação Telefonia SMS...');
+            UI.showLoading('Conectando ao GitHub...');
+            
+            try {
+                UI.init();
+                this.loadFavorites();
+                await this.refreshAll();
+                
+                // Configurar verificações automáticas
+                this.setupAutoRefresh();
+                
+            } catch (error) {
+                console.error('💥 Erro na inicialização:', error);
+                UI.showSyncStatus('Erro ao carregar dados. Verifique o console.', 'error');
+            } finally {
+                UI.hideLoading();
+            }
         },
 
         loadFavorites() {
@@ -1468,10 +1540,13 @@
         },
 
         async refreshAll() {
-            // AGORA CARREGA DO GITHUB PRIMEIRO
-            this.units = await DataService.getUnits();
+            console.log('🔄 Atualizando dados da aplicação...');
             
-            // Atualizar favoritos nas unidades
+            // SEMPRE carregar do GitHub primeiro
+            this.units = await DataService.getUnits();
+            console.log('📊 Unidades carregadas:', this.units.length);
+            
+            // Atualizar favoritos
             this.units.forEach(unit => {
                 unit.favorite = this.favorites.includes(unit.id);
             });
@@ -1480,6 +1555,41 @@
             UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
             UI.renderUnitsList(this.units);
             UI.setCounts(this.units.length, this.favorites.length);
+        },
+
+        // NOVO: Configurar atualização automática
+        setupAutoRefresh() {
+            // Verificar atualizações a cada 2 minutos
+            setInterval(async () => {
+                console.log('⏰ Verificando atualizações no GitHub...');
+                try {
+                    const remoteData = await DataService.loadFromGitHubRaw();
+                    if (remoteData && remoteData.length !== this.units.length) {
+                        console.log('🔄 Atualizações encontradas! Recarregando...');
+                        await this.refreshAll();
+                        this.showUpdateNotification();
+                    }
+                } catch (error) {
+                    console.log('❌ Erro na verificação automática:', error);
+                }
+            }, 120000); // 2 minutos
+        },
+
+        showUpdateNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                <i class="fas fa-sync-alt"></i>
+                <span>Dados atualizados carregados do GitHub!</span>
+                <button onclick="this.parentElement.remove()">✕</button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
         },
 
         async toggleFavorite(unitId) {
@@ -1493,7 +1603,6 @@
 
             localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
             
-            // Atualizar a unidade
             const unitIndex = this.units.findIndex(u => u.id === unitId);
             if (unitIndex !== -1) {
                 this.units[unitIndex].favorite = !this.units[unitIndex].favorite;
@@ -1510,7 +1619,6 @@
                 filtered = filtered.filter(unit => unit.type === filter);
             }
 
-            // Aplicar filtros de serviços
             const vaccineFilter = document.querySelector('.service-toggle-btn[data-service="vaccine"]').getAttribute('data-value');
             const dentalFilter = document.querySelector('.service-toggle-btn[data-service="dental"]').getAttribute('data-value');
             const pharmacyFilter = document.querySelector('.service-toggle-btn[data-service="pharmacy"]').getAttribute('data-value');
@@ -1525,7 +1633,6 @@
                 filtered = filtered.filter(unit => unit.farmacia === pharmacyFilter);
             }
 
-            // Aplicar busca por texto
             const searchTerm = UI.elements.searchInput.value.toLowerCase().trim();
             if (searchTerm) {
                 filtered = filtered.filter(unit => 
@@ -1557,7 +1664,6 @@
             const unit = this.units.find(u => u.id === id);
             if (!unit) return;
 
-            // Preencher formulário
             document.getElementById('unitName').value = unit.name;
             document.getElementById('unitType').value = unit.type;
             document.getElementById('unitAddress').value = unit.address;
@@ -1576,10 +1682,8 @@
             UI.elements.cancelEdit.style.display = 'inline-flex';
             UI.elements.unitForm.setAttribute('data-edit-id', id);
 
-            // Atualizar campos condicionais
             setTimeout(() => UI.setupConditionalFormLogic(), 100);
 
-            // Mudar para aba de adicionar/editar
             UI.elements.adminTabs.forEach(tab => tab.classList.remove('active'));
             document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
             document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
@@ -1618,7 +1722,6 @@
             const responsibleField = document.getElementById('unitResponsavel');
             const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
 
-            // Validar campo responsável se visível
             if (isResponsibleVisible && !responsibleField.value.trim()) {
                 alert('Por favor, preencha o campo Responsável!');
                 responsibleField.focus();
@@ -1800,7 +1903,7 @@
         }
     };
 
-    // Inicializar aplicação quando o DOM estiver pronto
+    // Inicializar aplicação
     document.addEventListener('DOMContentLoaded', () => App.init());
 
     // Expor para debugging
