@@ -1,21 +1,34 @@
-{
-  "units": [
-    {
-      "id": "unit-1762210919826",
-      "name": "fff",
-      "type": "vigilancia",
-      "address": "ddd",
-      "bairro": "ddd",
-      "phone": "",
-      "email": "ddd@ddd",
-      "responsavel": "",
-      "enfermeiro": "dddd",
-      "gerente": "dddd",
-      "vacina": "Não",
-      "odonto": "Não",
-      "farmacia": "Não"
-    }
-  ],
-  "lastUpdate": "2025-11-03T23:02:47.068Z",
-  "updatedBy": "admin"
-}
+[
+  {
+    "name": "gui",
+    "type": "administrativo",
+    "address": "Avenida Brasil 1156",
+    "bairro": "Centro",
+    "phone": "5433161156",
+    "email": "dd@dd.com",
+    "enfermeiro": "",
+    "gerente": "",
+    "vacina": "Não",
+    "odonto": "Não",
+    "farmacia": "Não",
+    "responsavel": "123",
+    "favorite": false,
+    "id": 1
+  },
+  {
+    "id": 2,
+    "name": "teste",
+    "type": "administrativo",
+    "address": "trttrt",
+    "bairro": "rrr",
+    "phone": "444444",
+    "email": "444@rfr",
+    "enfermeiro": "",
+    "gerente": "",
+    "vacina": "Não",
+    "odonto": "Não",
+    "farmacia": "Não",
+    "responsavel": "eeeee",
+    "favorite": false
+  }
+]
