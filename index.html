@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval' blob:">
     <title>Telefonia - Secretaria Municipal de Saúde PMPF</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -304,6 +305,29 @@
             display: none !important;
         }
         
+        /* GitHub Sync Status */
+        .sync-status {
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin: 10px 0;
+            text-align: center;
+        }
+        .sync-success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+        .sync-error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        .sync-loading {
+            background: rgba(44, 106, 160, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
         /* Enhanced Responsive Design */
         @media (max-width:1200px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
@@ -381,9 +405,131 @@
             background: rgba(44,106,160,.2);
             color: var(--primary-dark);
         }
+        
+        /* Update Notification */
+        .update-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .update-notification button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        /* Auto Sync Button */
+        .auto-sync-btn {
+            position: relative;
+        }
+        
+        .auto-sync-status {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--secondary);
+            border: 2px solid white;
+        }
+        
+        .auto-sync-status.inactive {
+            background: var(--gray);
+        }
+        
+        .auto-sync-status.syncing {
+            background: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* Live Updates Indicator */
+        .live-updates-indicator {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        .live-updates-indicator .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body>
+    <!-- LOADING SCREEN -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <h2>Carregando dados...</h2>
+        <p id="loadingStatus">Conectando ao GitHub</p>
+    </div>
+
     <!-- LOGIN MODAL -->
     <div class="login-modal" id="loginModal" aria-hidden="true">
         <div class="login-form" role="dialog" aria-labelledby="loginTitle">
@@ -404,7 +550,7 @@
         </div>
     </div>
 
-    <div id="telefonia-container">
+    <div id="telefonia-container" style="display:none;">
         <header>
             <div class="container">
                 <div class="header-content">
@@ -412,6 +558,7 @@
                         <i class="fas fa-phone-alt"></i>
                         <div>
                             <h1>Telefonia - SMS</h1>
+                            <small style="font-size: 0.8rem; opacity: 0.8;">Atualizações automáticas ativas</small>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -436,6 +583,7 @@
                 <div class="admin-tabs" role="tablist">
                     <div class="admin-tab active" data-tab="units" role="tab">Gerenciar Unidades</div>
                     <div class="admin-tab" data-tab="add" role="tab">Adicionar Unidade</div>
+                    <div class="admin-tab" data-tab="github" role="tab">GitHub Sync</div>
                     <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
                 </div>
 
@@ -473,11 +621,38 @@
                                 <input type="text" id="unitResponsavel" class="form-control" placeholder="Nome do responsável pela unidade">
                             </div>
                             
-                            <div class="form-group" id="enfermeiroField"><label for="unitEnfermeiro">Enfermeiro Responsável</label><input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável"></div>
-                            <div class="form-group" id="gerenteField"><label for="unitGerente">Gerente Responsável</label><input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável"></div>
-                            <div class="form-group" id="vacinaField"><label for="unitVacina">Sala de Vacina</label><select id="unitVacina" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-                            <div class="form-group" id="odontoField"><label for="unitOdonto">Consultório Odontológico</label><select id="unitOdonto" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-                            <div class="form-group" id="farmaciaField"><label for="unitFarmacia">Farmácia</label><select id="unitFarmacia" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                            <!-- CAMPOS DE SERVIÇOS - AGORA VISÍVEIS PARA PROMOÇÃO E RECUPERAÇÃO -->
+                            <div class="form-group" id="vacinaField">
+                                <label for="unitVacina">Sala de Vacina</label>
+                                <select id="unitVacina" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="odontoField">
+                                <label for="unitOdonto">Consultório Odontológico</label>
+                                <select id="unitOdonto" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="farmaciaField">
+                                <label for="unitFarmacia">Farmácia</label>
+                                <select id="unitFarmacia" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Campos específicos para promoção e recuperação -->
+                            <div class="form-group" id="enfermeiroField">
+                                <label for="unitEnfermeiro">Enfermeiro Responsável</label>
+                                <input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável">
+                            </div>
+                            <div class="form-group" id="gerenteField">
+                                <label for="unitGerente">Gerente Responsável</label>
+                                <input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável">
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
@@ -487,639 +662,1225 @@
                     </form>
                 </div>
 
+                <!-- GITHUB SYNC -->
+                <div class="admin-content" id="github-content">
+                    <h3><i class="fab fa-github"></i> Sincronização com GitHub</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="githubToken">Token do GitHub *</label>
+                            <input type="password" id="githubToken" class="form-control" 
+                                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                            <small class="form-text">
+                                <a href="https://github.com/settings/tokens" target="_blank">Gerar token</a> 
+                                (precisa das permissões: repo)
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="repoOwner">Proprietário do Repositório</label>
+                            <input type="text" id="repoOwner" class="form-control" 
+                                   placeholder="seu-usuario" value="gti-sms">
+                        </div>
+                        <div class="form-group">
+                            <label for="repoName">Nome do Repositório</label>
+                            <input type="text" id="repoName" class="form-control" 
+                                   placeholder="nome-repositorio" value="telefonia-sms">
+                        </div>
+                        <div class="form-group">
+                            <label for="branchName">Branch</label>
+                            <input type="text" id="branchName" class="form-control" 
+                                   placeholder="main" value="main">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="testConnection"><i class="fas fa-plug"></i> Testar Conexão</button>
+                        <button class="btn btn-success" id="saveConfig"><i class="fas fa-save"></i> Salvar Configuração</button>
+                        <button class="btn btn-warning" id="forceSync"><i class="fas fa-sync"></i> Forçar Sincronização</button>
+                    </div>
+                    <div id="syncStatus"></div>
+                </div>
+
                 <!-- CONFIG -->
                 <div class="admin-content" id="config-content">
-                    <h3>Configurações do Sistema</h3>
+                    <h3><i class="fas fa-cog"></i> Configurações do Sistema</h3>
                     <div class="form-grid">
-                        <div class="form-group"><label for="backupData">Backup de Dados</label><button type="button" id="backupData" class="btn btn-primary"><i class="fas fa-download"></i> Fazer Backup</button></div>
-                        <div class="form-group"><label for="restoreData">Restaurar Dados</label><input type="file" id="restoreData" class="form-control" accept=".json"></div>
-                        <div class="form-group"><label for="clearAll">Limpar Todos os Dados</label><button type="button" id="clearAll" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
+                        <div class="form-group">
+                            <label for="autoSync">Sincronização Automática</label>
+                            <select id="autoSync" class="form-control">
+                                <option value="true">Ativada</option>
+                                <option value="false">Desativada</option>
+                            </select>
+                            <small class="form-text">Atualiza os dados automaticamente a cada 5 minutos</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="syncInterval">Intervalo de Sincronização (minutos)</label>
+                            <input type="number" id="syncInterval" class="form-control" min="1" max="60" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="notifyUpdates">Notificar Atualizações</label>
+                            <select id="notifyUpdates" class="form-control">
+                                <option value="true">Ativado</option>
+                                <option value="false">Desativado</option>
+                            </select>
+                            <small class="form-text">Mostrar notificação quando houver atualizações</small>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-success" id="saveSettings"><i class="fas fa-save"></i> Salvar Configurações</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- MAIN -->
-        <main class="container" style="padding-bottom:120px;">
+        <!-- SEARCH & FILTERS -->
+        <div class="container">
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome, bairro ou telefone...">
                     <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
                 </div>
-
                 <div class="filter-options">
-                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
-                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
-                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
-                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
-                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
+                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todas</button>
+                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heartbeat"></i> Promoção</button>
+                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-procedures"></i> Recuperação</button>
+                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-building"></i> Administrativo</button>
+                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-virus"></i> Vigilância</button>
                     <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
-                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
+                    <button class="filter-btn" data-filter="outros"><i class="fas fa-ellipsis-h"></i> Outros</button>
                 </div>
-
                 <div class="service-filters">
-                    <!-- Botão Toggle para Sala de Vacina -->
-                    <button class="service-toggle-btn" data-service="vaccine" data-value="">
-                        <i class="fas fa-syringe"></i>Com sala de vacina
-                    </button>
-                    
-                    <!-- Botão Toggle para Consultório Odontológico -->
-                    <button class="service-toggle-btn" data-service="dental" data-value="">
-                        <i class="fas fa-tooth"></i>Com consultório odontológico
-                    </button>
-                    
-                    <!-- Botão Toggle para Farmácia -->
-                    <button class="service-toggle-btn" data-service="pharmacy" data-value="">
-                        <i class="fas fa-pills"></i>Com farmácia
-                    </button>
+                    <button class="service-toggle-btn active" data-service="all"><i class="fas fa-th-large"></i> Todos os serviços</button>
+                    <button class="service-toggle-btn" data-service="vacina"><i class="fas fa-syringe"></i> Sala de Vacina</button>
+                    <button class="service-toggle-btn" data-service="odonto"><i class="fas fa-tooth"></i> Odontológico</button>
+                    <button class="service-toggle-btn" data-service="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
                 </div>
             </div>
 
+            <!-- TABS -->
             <div class="tabs" role="tablist">
-                <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
-                <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
+                <div class="tab active" data-tab="unidades" role="tab"><i class="fas fa-map-marker-alt"></i> Unidades de Saúde</div>
+                <div class="tab" data-tab="ramais" role="tab"><i class="fas fa-phone"></i> Ramais Administrativos</div>
             </div>
 
-            <div class="content active" id="all-content">
-                <div class="results-count" id="all-count">Mostrando todos os contatos</div>
-                <div class="contact-grid" id="all-contacts"></div>
+            <!-- RESULTS COUNT -->
+            <div class="results-count" id="resultsCount"></div>
+
+            <!-- UNIDADES DE SAÚDE -->
+            <div class="content active" id="unidades-content" role="tabpanel">
+                <div class="contact-grid" id="contactGrid"></div>
             </div>
 
-            <div class="content" id="favorites-content">
-                <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
-                <div class="contact-grid" id="favorites-contacts"></div>
+            <!-- RAMAIS ADMINISTRATIVOS -->
+            <div class="content" id="ramais-content" role="tabpanel">
+                <div class="contact-grid" id="ramaisGrid"></div>
             </div>
-        </main>
+        </div>
 
-        <footer class="footer">
-            <div class="container footer-content">
-                <p>Secretaria Municipal de Saúde - Prefeitura de Passo Fundo</p>
+        <!-- FOOTER -->
+        <div class="footer">
+            <div class="container">
+                <p>Secretaria Municipal de Saúde de Passo Fundo/RS - Sistema de Telefonia</p>
             </div>
-        </footer>
+        </div>
+
+        <!-- LIVE UPDATES INDICATOR -->
+        <div class="live-updates-indicator" id="liveUpdatesIndicator" style="display:none;">
+            <div class="pulse-dot"></div>
+            <span>Atualizações em tempo real</span>
+        </div>
     </div>
 
     <script>
-    /***********************************************
-     * Data & Auth Services (simulam API local)
-     ***********************************************/
-    const sampleData = {
-        units: [] // REMOVIDOS TODOS OS CONTATOS
-    };
+        // ====== CONFIGURAÇÕES INICIAIS ======
+        const CONFIG = {
+            GITHUB_TOKEN: localStorage.getItem('githubToken') || '',
+            REPO_OWNER: localStorage.getItem('repoOwner') || 'gti-sms',
+            REPO_NAME: localStorage.getItem('repoName') || 'telefonia-sms',
+            BRANCH: localStorage.getItem('branchName') || 'main',
+            AUTO_SYNC: localStorage.getItem('autoSync') !== 'false',
+            SYNC_INTERVAL: parseInt(localStorage.getItem('syncInterval')) || 5,
+            NOTIFY_UPDATES: localStorage.getItem('notifyUpdates') !== 'false',
+            DATA_FILE: 'telefonia-data.json',
+            LAST_SYNC: localStorage.getItem('lastSync') || null
+        };
 
-    const DataService = {
-        useRemote: false,
-        remoteBase: '/api',
+        // ====== ESTADO GLOBAL ======
+        let state = {
+            isAdmin: false,
+            units: [],
+            ramais: [],
+            filteredUnits: [],
+            filteredRamais: [],
+            currentFilter: 'all',
+            currentServiceFilter: 'all',
+            currentTab: 'unidades',
+            editId: null,
+            autoSyncInterval: null,
+            lastUpdateTime: null,
+            isSyncing: false
+        };
 
-        async _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); },
-
-        async getUnits(){
-            if(this.useRemote){
-                const res = await fetch(`${this.remoteBase}/unidades`);
-                return res.ok ? await res.json() : [];
-            }
-            await this._sleep(50);
-            const raw = localStorage.getItem('units');
-            if(raw) return JSON.parse(raw);
-            localStorage.setItem('units', JSON.stringify(sampleData.units));
-            return sampleData.units.slice();
-        },
-
-        async saveUnit(unit){
-            if(this.useRemote){
-                const method = unit.id ? 'PUT' : 'POST';
-                const url = unit.id ? `${this.remoteBase}/unidades/${unit.id}` : `${this.remoteBase}/unidades`;
-                const res = await fetch(url, {method,headers:{'Content-Type':'application/json'},body:JSON.stringify(unit)});
-                return res.ok ? await res.json() : null;
-            }
-            await this._sleep(50);
-            const units = await this.getUnits();
-            if(unit.id){
-                const idx = units.findIndex(u=>u.id===unit.id);
-                if(idx>-1) units[idx]=unit;
-            } else {
-                unit.id = (units.length?Math.max(...units.map(u=>u.id)):0)+1;
-                units.push(unit);
-            }
-            localStorage.setItem('units', JSON.stringify(units));
-            return unit;
-        },
-
-        async deleteUnit(id){
-            if(this.useRemote){
-                await fetch(`${this.remoteBase}/unidades/${id}`, {method:'DELETE'});
-                return;
-            }
-            await this._sleep(50);
-            let units = await this.getUnits();
-            units = units.filter(u=>u.id!==id);
-            localStorage.setItem('units', JSON.stringify(units));
-        }
-    };
-
-    const AuthService = {
-        adminUser: 'admin',
-        adminPass: 'ZXqwas123@',
-        async login(username, password){
-            await DataService._sleep(120);
-            if(username === this.adminUser && password === this.adminPass){
-                localStorage.setItem('telefonia_isLogged', 'true');
-                return { success: true };
-            }
-            return { success: false, message: 'Usuário ou senha incorretos' };
-        },
-        logout(){
-            localStorage.removeItem('telefonia_isLogged');
-        },
-        isLogged(){
-            return localStorage.getItem('telefonia_isLogged') === 'true';
-        }
-    };
-
-    /***********************************************
-     * UI & App
-     ***********************************************/
-    const UI = {
-        elements: {},
-        async cache(){
-            this.elements = {
-                loginModal: document.getElementById('loginModal'),
-                loginForm: document.getElementById('loginForm'),
-                loginUsername: document.getElementById('loginUsername'),
-                loginPassword: document.getElementById('loginPassword'),
-                adminPanel: document.getElementById('adminPanel'),
-                adminToggle: document.getElementById('adminToggle'),
-                closeAdmin: document.getElementById('closeAdmin'),
-                logoutBtn: document.getElementById('logoutBtn'),
-                themeToggle: document.getElementById('themeToggle'),
-                searchInput: document.getElementById('searchInput'),
-                searchBtn: document.getElementById('searchBtn'),
-                filterBtns: document.querySelectorAll('.filter-btn'),
-                tabs: document.querySelectorAll('.tab'),
-                adminTabs: document.querySelectorAll('.admin-tab'),
-                allContacts: document.getElementById('all-contacts'),
-                favoritesContacts: document.getElementById('favorites-contacts'),
-                unitsListAdmin: document.getElementById('unitsList'),
-                formUnit: document.getElementById('unitForm'),
-                submitBtn: document.getElementById('submitBtn'),
-                cancelEditBtn: document.getElementById('cancelEdit'),
-                formTitle: document.getElementById('formTitle'),
-                allCount: document.getElementById('all-count'),
-                favoritesCount: document.getElementById('favorites-count'),
-                backupBtn: document.getElementById('backupData'),
-                restoreInput: document.getElementById('restoreData'),
-                clearAllBtn: document.getElementById('clearAll'),
-                unitType: document.getElementById('unitType'),
-                responsibleField: document.getElementById('responsibleFieldContainer'),
-                enfermeiroField: document.getElementById('enfermeiroField'),
-                gerenteField: document.getElementById('gerenteField'),
-                vacinaField: document.getElementById('vacinaField'),
-                odontoField: document.getElementById('odontoField'),
-                farmaciaField: document.getElementById('farmaciaField')
-            };
-        },
-
-        setupConditionalFormLogic() {
-            const unitTypeSelect = this.elements.unitType;
-            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
+        // ====== INICIALIZAÇÃO ======
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Iniciando aplicação...');
             
-            function checkConditionalFields() {
-                const selectedType = unitTypeSelect.value;
+            // Inicializar elementos da UI
+            initializeUI();
+            
+            // Carregar dados do GitHub
+            await loadDataFromGitHub();
+            
+            // Inicializar sincronização automática
+            initializeAutoSync();
+            
+            // Esconder tela de carregamento
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('telefonia-container').style.display = 'block';
+            }, 1000);
+        });
+
+        // ====== INICIALIZAÇÃO DA UI ======
+        function initializeUI() {
+            // Event listeners para abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+
+            // Event listeners para abas administrativas
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchAdminTab(tabId);
+                });
+            });
+
+            // Event listeners para filtros
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filter = this.getAttribute('data-filter');
+                    applyFilter(filter);
+                });
+            });
+
+            // Event listeners para filtros de serviços
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const service = this.getAttribute('data-service');
+                    applyServiceFilter(service);
+                });
+            });
+
+            // Botão de busca
+            document.getElementById('searchBtn').addEventListener('click', performSearch);
+            document.getElementById('searchInput').addEventListener('input', performSearch);
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+
+            // Botão de tema
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Botão de admin
+            document.getElementById('adminToggle').addEventListener('click', toggleAdminPanel);
+            document.getElementById('closeAdmin').addEventListener('click', toggleAdminPanel);
+
+            // Formulário de login
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+
+            // Formulário de unidade
+            document.getElementById('unitForm').addEventListener('submit', handleUnitSubmit);
+            document.getElementById('cancelEdit').addEventListener('click', cancelEdit);
+
+            // Botões do GitHub
+            document.getElementById('testConnection').addEventListener('click', testGitHubConnection);
+            document.getElementById('saveConfig').addEventListener('click', saveGitHubConfig);
+            document.getElementById('forceSync').addEventListener('click', forceSync);
+
+            // Configurações
+            document.getElementById('saveSettings').addEventListener('click', saveSettings);
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Configurar campos condicionais
+            document.getElementById('unitType').addEventListener('change', toggleConditionalFields);
+
+            // Carregar tema salvo
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            // Carregar configurações salvas
+            loadSavedSettings();
+        }
+
+        // ====== CARREGAMENTO DE DADOS ======
+        async function loadDataFromGitHub() {
+            const loadingStatus = document.getElementById('loadingStatus');
+            
+            try {
+                loadingStatus.textContent = 'Conectando ao GitHub...';
                 
-                if (conditionalTypes.includes(selectedType)) {
-                    UI.elements.enfermeiroField.classList.add('hidden');
-                    UI.elements.gerenteField.classList.add('hidden');
-                    UI.elements.vacinaField.classList.add('hidden');
-                    UI.elements.odontoField.classList.add('hidden');
-                    UI.elements.farmaciaField.classList.add('hidden');
-                    
-                    UI.elements.responsibleField.classList.remove('hidden');
-                    document.getElementById('unitResponsavel').required = true;
-                } else {
-                    UI.elements.enfermeiroField.classList.remove('hidden');
-                    UI.elements.gerenteField.classList.remove('hidden');
-                    UI.elements.vacinaField.classList.remove('hidden');
-                    UI.elements.odontoField.classList.remove('hidden');
-                    UI.elements.farmaciaField.classList.remove('hidden');
-                    
-                    UI.elements.responsibleField.classList.add('hidden');
-                    document.getElementById('unitResponsavel').required = false;
+                // Verificar se temos token configurado
+                if (!CONFIG.GITHUB_TOKEN) {
+                    console.warn('Token do GitHub não configurado. Usando dados locais.');
+                    loadLocalData();
+                    return;
                 }
+
+                loadingStatus.textContent = 'Carregando dados do GitHub...';
+                
+                // Tentar carregar dados do GitHub
+                const data = await fetchGitHubData();
+                
+                if (data) {
+                    console.log('Dados carregados do GitHub:', data);
+                    state.units = data.units || [];
+                    state.ramais = data.ramais || [];
+                    state.lastUpdateTime = new Date().toISOString();
+                    
+                    // Salvar dados localmente como backup
+                    localStorage.setItem('telefoniaData', JSON.stringify(data));
+                    localStorage.setItem('lastSync', new Date().toISOString());
+                    
+                    // Atualizar UI
+                    updateUI();
+                    
+                    // Mostrar indicador de atualizações em tempo real
+                    showLiveUpdatesIndicator();
+                    
+                    loadingStatus.textContent = 'Dados carregados com sucesso!';
+                } else {
+                    throw new Error('Falha ao carregar dados do GitHub');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do GitHub:', error);
+                loadingStatus.textContent = 'Erro ao carregar dados. Usando backup local...';
+                
+                // Tentar carregar dados locais como fallback
+                setTimeout(loadLocalData, 1000);
+            }
+        }
+
+        async function fetchGitHubData() {
+            try {
+                const url = `https://api.github.com/repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/contents/${CONFIG.DATA_FILE}?ref=${CONFIG.BRANCH}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+
+                const fileData = await response.json();
+                const content = fileData.content;
+                
+                // Decodificar conteúdo base64
+                const decodedContent = atob(content);
+                
+                return JSON.parse(decodedContent);
+            } catch (error) {
+                console.error('Erro ao buscar dados do GitHub:', error);
+                return null;
+            }
+        }
+
+        function loadLocalData() {
+            try {
+                const localData = localStorage.getItem('telefoniaData');
+                if (localData) {
+                    const data = JSON.parse(localData);
+                    state.units = data.units || [];
+                    state.ramais = data.ramais || [];
+                    state.lastUpdateTime = localStorage.getItem('lastSync');
+                    
+                    updateUI();
+                    showSyncStatus('Usando dados locais (GitHub não disponível)', 'sync-error');
+                } else {
+                    // Dados padrão se não houver nada
+                    state.units = [];
+                    state.ramais = [];
+                    updateUI();
+                    showSyncStatus('Nenhum dado disponível', 'sync-error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados locais:', error);
+                state.units = [];
+                state.ramais = [];
+                updateUI();
+                showSyncStatus('Erro ao carregar dados', 'sync-error');
+            }
+        }
+
+        // ====== SINCRONIZAÇÃO AUTOMÁTICA ======
+        function initializeAutoSync() {
+            if (CONFIG.AUTO_SYNC && CONFIG.GITHUB_TOKEN) {
+                // Sincronizar imediatamente
+                autoSync();
+                
+                // Configurar intervalo
+                const intervalMs = CONFIG.SYNC_INTERVAL * 60 * 1000;
+                state.autoSyncInterval = setInterval(autoSync, intervalMs);
+                
+                console.log(`Sincronização automática ativada a cada ${CONFIG.SYNC_INTERVAL} minutos`);
+            } else {
+                console.log('Sincronização automática desativada');
+            }
+        }
+
+        async function autoSync() {
+            if (state.isSyncing) return;
+            
+            state.isSyncing = true;
+            updateAutoSyncStatus('syncing');
+            
+            try {
+                console.log('Iniciando sincronização automática...');
+                const data = await fetchGitHubData();
+                
+                if (data) {
+                    // Verificar se houve mudanças
+                    const currentData = JSON.stringify({units: state.units, ramais: state.ramais});
+                    const newData = JSON.stringify(data);
+                    
+                    if (currentData !== newData) {
+                        console.log('Dados atualizados encontrados no GitHub');
+                        state.units = data.units || [];
+                        state.ramais = data.ramais || [];
+                        state.lastUpdateTime = new Date().toISOString();
+                        
+                        // Atualizar UI
+                        updateUI();
+                        
+                        // Mostrar notificação se configurado
+                        if (CONFIG.NOTIFY_UPDATES) {
+                            showUpdateNotification();
+                        }
+                        
+                        // Salvar dados localmente
+                        localStorage.setItem('telefoniaData', JSON.stringify(data));
+                        localStorage.setItem('lastSync', state.lastUpdateTime);
+                        
+                        showSyncStatus('Dados atualizados automaticamente', 'sync-success');
+                    } else {
+                        console.log('Nenhuma alteração encontrada no GitHub');
+                        showSyncStatus('Dados já estão atualizados', 'sync-success');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro na sincronização automática:', error);
+                showSyncStatus('Erro na sincronização automática', 'sync-error');
+            } finally {
+                state.isSyncing = false;
+                updateAutoSyncStatus('active');
+            }
+        }
+
+        function updateAutoSyncStatus(status) {
+            const indicator = document.querySelector('.auto-sync-status');
+            if (indicator) {
+                indicator.className = 'auto-sync-status ' + status;
+            }
+        }
+
+        // ====== ATUALIZAÇÃO DA UI ======
+        function updateUI() {
+            applyFilter(state.currentFilter);
+            updateResultsCount();
+            renderUnitsList();
+        }
+
+        function applyFilter(filter) {
+            state.currentFilter = filter;
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+            });
+            
+            // Aplicar filtro
+            let filtered = state.units;
+            
+            if (filter !== 'all') {
+                filtered = state.units.filter(unit => unit.type === filter);
             }
             
-            unitTypeSelect.addEventListener('change', checkConditionalFields);
-            checkConditionalFields();
-        },
+            // Aplicar filtro de serviços
+            if (state.currentServiceFilter !== 'all') {
+                filtered = filtered.filter(unit => {
+                    if (state.currentServiceFilter === 'vacina') return unit.vacina === 'Sim';
+                    if (state.currentServiceFilter === 'odonto') return unit.odonto === 'Sim';
+                    if (state.currentServiceFilter === 'farmacia') return unit.farmacia === 'Sim';
+                    return true;
+                });
+            }
+            
+            state.filteredUnits = filtered;
+            renderContactGrid();
+        }
 
-        getTypeLabel(type){
-            const map = { 
-                'promocao':'Promoção',
-                'recuperacao':'Recuperação',
-                'administrativo':'Administrativo',
-                'vigilancia':'Vigilância',
-                'capne':'Capne',
-                'outros':'Outros' 
-            };
-            return map[type] || type;
-        },
+        function applyServiceFilter(service) {
+            state.currentServiceFilter = service;
+            
+            // Atualizar botões ativos
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-service') === service);
+            });
+            
+            // Reaplicar filtro atual
+            applyFilter(state.currentFilter);
+        }
 
-        shouldShowServices(type) {
-            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
-            return !conditionalTypes.includes(type);
-        },
-
-        renderContacts(contacts, container){
-            const root = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
-            root.innerHTML = '';
-            if(!contacts || contacts.length===0){
-                root.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>Nenhum contato encontrado</h3><p>Tente ajustar seus filtros ou termos de busca</p></div>`;
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!query) {
+                applyFilter(state.currentFilter);
                 return;
             }
-            contacts.forEach(c=>{
-                const card = document.createElement('div');
-                card.className = 'contact-card';
-                
-                const phoneClean = c.phone.replace(/\D/g, '');
-                const telLink = `tel:+55${phoneClean}`;
-                const whatsappLink = `https://wa.me/55${phoneClean}`;
-                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + ', ' + c.bairro + ', Passo Fundo, RS')}`;
-                
-                const showServices = this.shouldShowServices(c.type);
-                
-                card.innerHTML = `
-                    <button class="favorite-btn ${c.favorite? 'active':''}" data-id="${c.id}" title="Favoritar"><i class="fas fa-star"></i></button>
-                    <div class="contact-header"><div><h3 class="contact-name">${c.name}</h3><span class="contact-type">${this.getTypeLabel(c.type)}</span></div></div>
-                    <div class="contact-info">
-                        <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${c.address}, ${c.bairro}</span></div>
-                        <div class="contact-item"><i class="fas fa-phone"></i><span>${c.phone}</span></div>
-                        ${c.email?`<div class="contact-item"><i class="fas fa-envelope"></i><span>${c.email}</span></div>`:''}
-                        ${c.enfermeiro?`<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${c.enfermeiro}</span></div>`:''}
-                        ${c.gerente?`<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${c.gerente}</span></div>`:''}
-                        ${c.responsavel?`<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${c.responsavel}</span></div>`:''}
-                    </div>
-                    ${showServices ? `
-                    <div class="contact-services">
-                        <div class="service ${c.vacina==='Sim'? 'available':'unavailable'}"><i class="fas fa-syringe"></i><span class="service-label">Vacina</span></div>
-                        <div class="service ${c.odonto==='Sim'? 'available':'unavailable'}"><i class="fas fa-tooth"></i><span class="service-label">Odonto</span></div>
-                        <div class="service ${c.farmacia==='Sim'? 'available':'unavailable'}"><i class="fas fa-pills"></i><span class="service-label">Farmácia</span></div>
-                    </div>
-                    ` : ''}
-                    <div class="contact-actions">
-                        <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
-                        <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                        <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
+            
+            let filtered = state.units.filter(unit => 
+                unit.name.toLowerCase().includes(query) ||
+                unit.bairro.toLowerCase().includes(query) ||
+                unit.phone.includes(query) ||
+                unit.address.toLowerCase().includes(query)
+            );
+            
+            // Aplicar filtro de tipo atual
+            if (state.currentFilter !== 'all') {
+                filtered = filtered.filter(unit => unit.type === state.currentFilter);
+            }
+            
+            // Aplicar filtro de serviços
+            if (state.currentServiceFilter !== 'all') {
+                filtered = filtered.filter(unit => {
+                    if (state.currentServiceFilter === 'vacina') return unit.vacina === 'Sim';
+                    if (state.currentServiceFilter === 'odonto') return unit.odonto === 'Sim';
+                    if (state.currentServiceFilter === 'farmacia') return unit.farmacia === 'Sim';
+                    return true;
+                });
+            }
+            
+            state.filteredUnits = filtered;
+            renderContactGrid();
+            updateResultsCount();
+        }
+
+        function renderContactGrid() {
+            const grid = document.getElementById('contactGrid');
+            grid.innerHTML = '';
+            
+            if (state.filteredUnits.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>Nenhuma unidade encontrada</h3>
+                        <p>Tente ajustar os filtros ou termos da busca</p>
                     </div>
                 `;
-                root.appendChild(card);
+                return;
+            }
+            
+            state.filteredUnits.forEach(unit => {
+                const card = createContactCard(unit);
+                grid.appendChild(card);
             });
-            this.attachContactListeners();
-        },
+        }
 
-        attachContactListeners(){
-            document.querySelectorAll('.favorite-btn').forEach(btn=>{
-                btn.onclick = async (e) => {
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    await App.toggleFavorite(id);
-                };
+        function createContactCard(unit) {
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.innerHTML = `
+                <button class="favorite-btn" data-id="${unit.id}">
+                    <i class="far fa-star"></i>
+                </button>
+                <div class="contact-header">
+                    <h3 class="contact-name">${unit.name}</h3>
+                    <span class="contact-type">${getTypeLabel(unit.type)}</span>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Endereço:</strong><br>
+                            ${unit.address}<br>
+                            <small>Bairro: ${unit.bairro}</small>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Telefone:</strong><br>
+                            ${formatPhone(unit.phone)}
+                        </div>
+                    </div>
+                    ${unit.email ? `
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>E-mail:</strong><br>
+                            ${unit.email}
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${unit.responsavel ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <strong>Responsável:</strong><br>
+                            ${unit.responsavel}
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${unit.enfermeiro ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-nurse"></i>
+                        <div>
+                            <strong>Enfermeiro:</strong><br>
+                            ${unit.enfermeiro}
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${unit.gerente ? `
+                    <div class="contact-item">
+                        <i class="fas fa-user-tie"></i>
+                        <div>
+                            <strong>Gerente:</strong><br>
+                            ${unit.gerente}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="contact-services">
+                    <div class="service ${unit.vacina === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-syringe"></i>
+                        <div class="service-label">Vacina</div>
+                    </div>
+                    <div class="service ${unit.odonto === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-tooth"></i>
+                        <div class="service-label">Odonto</div>
+                    </div>
+                    <div class="service ${unit.farmacia === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-pills"></i>
+                        <div class="service-label">Farmácia</div>
+                    </div>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn call-btn" onclick="callNumber('${unit.phone}')">
+                        <i class="fas fa-phone"></i> Ligar
+                    </button>
+                    <button class="action-btn whatsapp-btn" onclick="openWhatsApp('${unit.phone}')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="action-btn location-btn" onclick="openLocation('${unit.address}')">
+                        <i class="fas fa-map-marker-alt"></i> Localização
+                    </button>
+                </div>
+            `;
+            
+            // Configurar favorito
+            const favoriteBtn = card.querySelector('.favorite-btn');
+            const isFavorite = localStorage.getItem(`favorite_${unit.id}`) === 'true';
+            if (isFavorite) {
+                favoriteBtn.querySelector('i').className = 'fas fa-star';
+                favoriteBtn.classList.add('active');
+            }
+            
+            favoriteBtn.addEventListener('click', function() {
+                toggleFavorite(unit.id, this);
             });
-        },
+            
+            return card;
+        }
 
-        renderUnitsList(units){
-            this.elements.unitsListAdmin.innerHTML = '';
-            units.forEach(u=>{
+        function updateResultsCount() {
+            const count = state.filteredUnits.length;
+            const total = state.units.length;
+            const countElement = document.getElementById('resultsCount');
+            
+            let filterText = '';
+            if (state.currentFilter !== 'all') {
+                filterText = ` do tipo ${getTypeLabel(state.currentFilter)}`;
+            }
+            
+            if (state.currentServiceFilter !== 'all') {
+                const serviceLabel = getServiceLabel(state.currentServiceFilter);
+                filterText += filterText ? ` com ${serviceLabel}` : ` com ${serviceLabel}`;
+            }
+            
+            countElement.textContent = `${count} de ${total} unidades${filterText} encontradas`;
+            
+            if (state.lastUpdateTime) {
+                const updateTime = new Date(state.lastUpdateTime).toLocaleString('pt-BR');
+                countElement.innerHTML += ` <small style="opacity:0.7;">(Atualizado: ${updateTime})</small>`;
+            }
+        }
+
+        // ====== FUNÇÕES UTILITÁRIAS ======
+        function getTypeLabel(type) {
+            const labels = {
+                'promocao': 'Promoção',
+                'recuperacao': 'Recuperação',
+                'administrativo': 'Administrativo',
+                'vigilancia': 'Vigilância',
+                'capne': 'Capne',
+                'outros': 'Outros'
+            };
+            return labels[type] || type;
+        }
+
+        function getServiceLabel(service) {
+            const labels = {
+                'vacina': 'Sala de Vacina',
+                'odonto': 'Consultório Odontológico',
+                'farmacia': 'Farmácia'
+            };
+            return labels[service] || service;
+        }
+
+        function formatPhone(phone) {
+            // Remove caracteres não numéricos
+            const cleaned = phone.replace(/\D/g, '');
+            
+            // Formatação para números brasileiros
+            if (cleaned.length === 10) {
+                return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            } else if (cleaned.length === 11) {
+                return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            }
+            
+            return phone;
+        }
+
+        function callNumber(phone) {
+            const cleaned = phone.replace(/\D/g, '');
+            window.open(`tel:${cleaned}`);
+        }
+
+        function openWhatsApp(phone) {
+            const cleaned = phone.replace(/\D/g, '');
+            const message = 'Olá, gostaria de obter mais informações.';
+            window.open(`https://wa.me/55${cleaned}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function openLocation(address) {
+            const encodedAddress = encodeURIComponent(address + ', Passo Fundo, RS');
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+        }
+
+        function toggleFavorite(id, button) {
+            const isFavorite = localStorage.getItem(`favorite_${id}`) === 'true';
+            const newFavoriteState = !isFavorite;
+            
+            localStorage.setItem(`favorite_${id}`, newFavoriteState.toString());
+            
+            const icon = button.querySelector('i');
+            if (newFavoriteState) {
+                icon.className = 'fas fa-star';
+                button.classList.add('active');
+            } else {
+                icon.className = 'far fa-star';
+                button.classList.remove('active');
+            }
+        }
+
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            
+            // Atualizar abas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('data-tab') === tabId);
+            });
+            
+            // Atualizar conteúdo
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabId}-content`);
+            });
+            
+            // Atualizar contagem de resultados
+            updateResultsCount();
+        }
+
+        function switchAdminTab(tabId) {
+            // Atualizar abas
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.getAttribute('data-tab') === tabId);
+            });
+            
+            // Atualizar conteúdo
+            document.querySelectorAll('.admin-content').forEach(content => {
+                content.classList.toggle('active', content.id === `${tabId}-content`);
+            });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark.toString());
+            
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // ====== FUNÇÕES ADMINISTRATIVAS ======
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            const isVisible = panel.classList.contains('active');
+            
+            if (!isVisible && !state.isAdmin) {
+                // Mostrar modal de login se não estiver logado
+                document.getElementById('loginModal').classList.add('active');
+            } else {
+                panel.classList.toggle('active');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Verificação simples (em produção, usar autenticação segura)
+            if (username === 'admin' && password === 'sms2024') {
+                state.isAdmin = true;
+                document.getElementById('loginModal').classList.remove('active');
+                document.getElementById('adminPanel').classList.add('active');
+                document.getElementById('logoutBtn').style.display = 'block';
+                
+                // Carregar lista de unidades
+                renderUnitsList();
+            } else {
+                alert('Credenciais inválidas!');
+            }
+        }
+
+        function handleLogout() {
+            state.isAdmin = false;
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('logoutBtn').style.display = 'none';
+            cancelEdit();
+        }
+
+        function renderUnitsList() {
+            const list = document.getElementById('unitsList');
+            list.innerHTML = '';
+            
+            state.units.forEach(unit => {
                 const item = document.createElement('div');
                 item.className = 'unit-item';
                 item.innerHTML = `
-                    <div class="unit-info"><h4>${u.name}</h4><p>${this.getTypeLabel(u.type)} - ${u.phone}</p></div>
+                    <div>
+                        <h4>${unit.name}</h4>
+                        <p><strong>Tipo:</strong> ${getTypeLabel(unit.type)} | <strong>Bairro:</strong> ${unit.bairro} | <strong>Telefone:</strong> ${unit.phone}</p>
+                    </div>
                     <div class="unit-actions">
-                        <button class="btn btn-warning edit-unit" data-id="${u.id}"><i class="fas fa-edit"></i> Editar</button>
-                        <button class="btn btn-danger delete-unit" data-id="${u.id}"><i class="fas fa-trash"></i> Excluir</button>
+                        <button class="btn btn-primary edit-unit" data-id="${unit.id}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger delete-unit" data-id="${unit.id}"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
-                this.elements.unitsListAdmin.appendChild(item);
+                
+                list.appendChild(item);
             });
-            document.querySelectorAll('.edit-unit').forEach(btn=> btn.onclick = ()=> App.editUnit(parseInt(btn.dataset.id)));
-            document.querySelectorAll('.delete-unit').forEach(btn=> btn.onclick = ()=> App.deleteUnit(parseInt(btn.dataset.id)));
-        },
-
-        showLogin(){ this.elements.loginModal.classList.add('active'); this.elements.loginModal.setAttribute('aria-hidden','false'); this.elements.loginUsername.focus(); },
-        hideLogin(){ this.elements.loginModal.classList.remove('active'); this.elements.loginModal.setAttribute('aria-hidden','true'); this.elements.loginForm.reset(); },
-
-        openAdmin(){ this.elements.adminPanel.classList.add('active'); this.elements.adminPanel.setAttribute('aria-hidden','false'); this.elements.logoutBtn.style.display = 'inline-flex'; },
-        closeAdmin(){ this.elements.adminPanel.classList.remove('active'); this.elements.adminPanel.setAttribute('aria-hidden','true'); },
-
-        toggleTheme(){
-            document.body.classList.toggle('dark-mode');
-            const icon = this.elements.themeToggle.querySelector('i');
-            if(document.body.classList.contains('dark-mode')){ icon.className = 'fas fa-sun'; localStorage.setItem('telefonia_theme','dark'); }
-            else { icon.className = 'fas fa-moon'; localStorage.setItem('telefonia_theme','light'); }
-        },
-
-        loadTheme(){
-            const t = localStorage.getItem('telefonia_theme');
-            if(t === 'dark'){ document.body.classList.add('dark-mode'); this.elements.themeToggle.querySelector('i').className = 'fas fa-sun'; }
-        },
-
-        setCounts(all, favorites){
-            this.elements.allCount.textContent = `Mostrando ${all} contatos`;
-            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
-        },
-
-        bindUIActions(){
-            this.elements.adminToggle.onclick = ()=> {
-                if(AuthService.isLogged()){
-                    this.openAdmin();
-                } else {
-                    this.showLogin();
-                }
-            };
-            this.elements.closeAdmin.onclick = ()=> this.closeAdmin();
-            this.elements.logoutBtn.onclick = ()=> {
-                AuthService.logout();
-                this.elements.logoutBtn.style.display = 'none';
-                this.closeAdmin();
-                alert('Desconectado do painel administrativo');
-            };
-
-            this.elements.loginForm.onsubmit = async (e)=>{
-                e.preventDefault();
-                const u = this.elements.loginUsername.value.trim();
-                const p = this.elements.loginPassword.value;
-                const res = await AuthService.login(u,p);
-                if(res.success){
-                    this.hideLogin();
-                    this.openAdmin();
-                    App.refreshAll();
-                } else {
-                    alert(res.message || 'Falha no login');
-                }
-            };
-
-            this.elements.themeToggle.onclick = ()=> this.toggleTheme();
-
-            this.elements.searchBtn.onclick = ()=> App.performSearch();
-            this.elements.searchInput.onkeypress = (e)=> { if(e.key==='Enter') App.performSearch(); };
-
-            this.elements.filterBtns.forEach(b=> b.onclick = function(){
-                UI.elements.filterBtns.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                App.filterContacts(this.dataset.filter);
+            
+            // Adicionar event listeners para editar/excluir
+            document.querySelectorAll('.edit-unit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    editUnit(id);
+                });
             });
-
-            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
-                btn.onclick = function() {
-                    this.classList.toggle('active');
-                    const newValue = this.classList.contains('active') ? 'Sim' : '';
-                    this.setAttribute('data-value', newValue);
-                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
-                };
+            
+            document.querySelectorAll('.delete-unit').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    deleteUnit(id);
+                });
             });
-
-            this.elements.tabs.forEach(t=> t.onclick = function(){
-                UI.elements.tabs.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.content').forEach(c=> c.classList.remove('active'));
-                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
-            });
-
-            this.elements.adminTabs.forEach(t=> t.onclick = function(){
-                UI.elements.adminTabs.forEach(x=> x.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
-                document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
-            });
-
-            this.elements.formUnit.onsubmit = async (e)=>{
-                e.preventDefault();
-                await App.saveUnitFromForm();
-            };
-            this.elements.cancelEditBtn.onclick = ()=> {
-                this.elements.formUnit.reset();
-                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                this.elements.cancelEditBtn.style.display = 'none';
-                this.elements.formUnit.removeAttribute('data-edit-id');
-                this.setupConditionalFormLogic();
-            };
-
-            this.elements.backupBtn.onclick = ()=> App.backupData();
-            this.elements.restoreInput.onchange = (e)=> App.restoreData(e.target.files[0]);
-            this.elements.clearAllBtn.onclick = ()=> App.clearAllData();
-
-            this.setupConditionalFormLogic();
         }
-    };
 
-    const App = {
-        units: [],
-        favorites: [], // REMOVIDOS TODOS OS FAVORITOS
+        function toggleConditionalFields() {
+            const type = document.getElementById('unitType').value;
+            const responsibleField = document.getElementById('responsibleFieldContainer');
+            const vacinaField = document.getElementById('vacinaField');
+            const odontoField = document.getElementById('odontoField');
+            const farmaciaField = document.getElementById('farmaciaField');
+            const enfermeiroField = document.getElementById('enfermeiroField');
+            const gerenteField = document.getElementById('gerenteField');
+            
+            // Mostrar campos de serviços apenas para promoção e recuperação
+            const showServices = type === 'promocao' || type === 'recuperacao';
+            
+            vacinaField.classList.toggle('hidden', !showServices);
+            odontoField.classList.toggle('hidden', !showServices);
+            farmaciaField.classList.toggle('hidden', !showServices);
+            enfermeiroField.classList.toggle('hidden', !showServices);
+            gerenteField.classList.toggle('hidden', !showServices);
+            
+            // Mostrar campo responsável apenas para administrativo, vigilância, capne e outros
+            const showResponsible = type === 'administrativo' || type === 'vigilancia' || type === 'capne' || type === 'outros';
+            responsibleField.classList.toggle('hidden', !showResponsible);
+            
+            // Tornar obrigatório ou não baseado na visibilidade
+            document.getElementById('unitResponsavel').required = showResponsible;
+            document.getElementById('unitVacina').required = showServices;
+            document.getElementById('unitOdonto').required = showServices;
+            document.getElementById('unitFarmacia').required = showServices;
+        }
 
-        async init(){
-            await UI.cache();
-            UI.loadTheme();
-            UI.bindUIActions();
-            if(AuthService.isLogged()){
-                UI.openAdmin();
-            } else {
-                UI.elements.logoutBtn.style.display = 'none';
-            }
-            await this.refreshAll();
-        },
-
-        async refreshAll(){
-            this.units = await DataService.getUnits();
-            this.units.forEach(u=> u.favorite = this.favorites.includes(u.id));
-            UI.renderContacts(this.units, 'all');
-            UI.renderContacts(this.units.filter(u=> this.favorites.includes(u.id)), 'favorites');
-            UI.renderUnitsList(this.units);
-            UI.setCounts(this.units.length, this.favorites.length);
-        },
-
-        async toggleFavorite(unitId){
-            const idx = this.units.findIndex(u=>u.id===unitId);
-            if(idx===-1) return;
-            this.units[idx].favorite = !this.units[idx].favorite;
-            if(this.units[idx].favorite){
-                if(!this.favorites.includes(unitId)) this.favorites.push(unitId);
-            } else {
-                const pos = this.favorites.indexOf(unitId);
-                if(pos>-1) this.favorites.splice(pos,1);
-            }
-            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            await DataService.saveUnit(this.units[idx]);
-            await this.refreshAll();
-        },
-
-        async filterContacts(filter){
-            let filtered = this.units.slice();
-            if(filter && filter !== 'all') filtered = filtered.filter(u=> u.type === filter);
+        async function handleUnitSubmit(e) {
+            e.preventDefault();
             
-            const vaccineBtn = document.querySelector('.service-toggle-btn[data-service="vaccine"]');
-            const dentalBtn = document.querySelector('.service-toggle-btn[data-service="dental"]');
-            const pharmacyBtn = document.querySelector('.service-toggle-btn[data-service="pharmacy"]');
-            
-            const vaccine = vaccineBtn.getAttribute('data-value');
-            const dental = dentalBtn.getAttribute('data-value');
-            const pharmacy = pharmacyBtn.getAttribute('data-value');
-            
-            if(vaccine) filtered = filtered.filter(u=> u.vacina === vaccine);
-            if(dental) filtered = filtered.filter(u=> u.odonto === dental);
-            if(pharmacy) filtered = filtered.filter(u=> u.farmacia === pharmacy);
-            
-            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
-            if(term) filtered = filtered.filter(u=> {
-                return (u.name||'').toLowerCase().includes(term) ||
-                       (u.phone||'').includes(term) ||
-                       (u.address||'').toLowerCase().includes(term) ||
-                       (u.bairro||'').toLowerCase().includes(term) ||
-                       (u.enfermeiro||'').toLowerCase().includes(term) ||
-                       (u.gerente||'').toLowerCase().includes(term) ||
-                       (u.responsavel||'').toLowerCase().includes(term);
-            });
-            
-            UI.renderContacts(filtered,'all');
-            UI.setCounts(filtered.length, this.favorites.length);
-        },
-
-        async performSearch(){
-            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
-            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-            await this.filterContacts(activeFilter);
-        },
-
-        async editUnit(id){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            const unit = this.units.find(u=>u.id===id);
-            if(!unit) return;
-            document.getElementById('unitName').value = unit.name;
-            document.getElementById('unitType').value = unit.type;
-            document.getElementById('unitAddress').value = unit.address;
-            document.getElementById('unitBairro').value = unit.bairro;
-            document.getElementById('unitPhone').value = unit.phone;
-            document.getElementById('unitEmail').value = unit.email || '';
-            document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
-            document.getElementById('unitGerente').value = unit.gerente || '';
-            document.getElementById('unitVacina').value = unit.vacina || 'Não';
-            document.getElementById('unitOdonto').value = unit.odonto || 'Não';
-            document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
-            document.getElementById('unitResponsavel').value = unit.responsavel || '';
-            
-            UI.elements.formTitle.textContent = 'Editar Unidade';
-            UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
-            UI.elements.cancelEditBtn.style.display = 'inline-flex';
-            UI.elements.formUnit.setAttribute('data-edit-id', id);
-            
-            setTimeout(() => {
-                UI.setupConditionalFormLogic();
-            }, 100);
-            
-            UI.elements.adminTabs.forEach(t=> t.classList.remove('active'));
-            document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
-            document.querySelectorAll('.admin-content').forEach(c=> c.classList.remove('active'));
-            document.getElementById('add-content').classList.add('active');
-            UI.openAdmin();
-        },
-
-        async deleteUnit(id){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            if(!confirm('Tem certeza que deseja excluir esta unidade?')) return;
-            await DataService.deleteUnit(id);
-            this.favorites = this.favorites.filter(f=>f!==id);
-            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            await this.refreshAll();
-            alert('Unidade excluída com sucesso!');
-        },
-
-        async saveUnitFromForm(){
-            if(!AuthService.isLogged()){ UI.showLogin(); return; }
-            const editId = UI.elements.formUnit.getAttribute('data-edit-id');
-            
-            const responsibleField = document.getElementById('unitResponsavel');
-            const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
-            
-            if (isResponsibleVisible && !responsibleField.value.trim()) {
-                alert('Por favor, preencha o campo Responsável!');
-                responsibleField.focus();
-                return;
-            }
-            
-            const unitData = {
-                id: editId ? parseInt(editId) : undefined,
+            const formData = {
                 name: document.getElementById('unitName').value,
                 type: document.getElementById('unitType').value,
                 address: document.getElementById('unitAddress').value,
                 bairro: document.getElementById('unitBairro').value,
                 phone: document.getElementById('unitPhone').value,
                 email: document.getElementById('unitEmail').value,
-                enfermeiro: document.getElementById('unitEnfermeiro').value,
-                gerente: document.getElementById('unitGerente').value,
+                responsavel: document.getElementById('unitResponsavel').value,
                 vacina: document.getElementById('unitVacina').value,
                 odonto: document.getElementById('unitOdonto').value,
                 farmacia: document.getElementById('unitFarmacia').value,
-                responsavel: document.getElementById('unitResponsavel').value,
-                favorite: editId ? (this.units.find(u=>u.id===parseInt(editId))?.favorite || false) : false
+                enfermeiro: document.getElementById('unitEnfermeiro').value,
+                gerente: document.getElementById('unitGerente').value
             };
             
-            await DataService.saveUnit(unitData);
-            await this.refreshAll();
-            UI.elements.formUnit.reset();
-            UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-            UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-            UI.elements.cancelEditBtn.style.display = 'none';
-            UI.elements.formUnit.removeAttribute('data-edit-id');
+            // Validação básica
+            if (!formData.name || !formData.type || !formData.address || !formData.bairro || !formData.phone) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
             
-            UI.setupConditionalFormLogic();
-            
-            alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
-        },
-
-        backupData(){
-            const data = { units:this.units };
-            const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'backup-telefonia-' + new Date().toISOString().split('T')[0] + '.json';
-            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-            alert('Backup realizado com sucesso!');
-        },
-
-        restoreData(file){
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e)=> {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if(data.units){
-                        if(confirm('Isso substituirá todos os dados atuais. Continuar?')){
-                            localStorage.setItem('units', JSON.stringify(data.units));
-                            await this.refreshAll();
-                            alert('Dados restaurados com sucesso!');
-                        }
-                    } else alert('Arquivo de backup inválido!');
-                } catch(err){
-                    alert('Erro ao ler arquivo: ' + err.message);
+            try {
+                if (state.editId) {
+                    // Editar unidade existente
+                    await updateUnit(state.editId, formData);
+                } else {
+                    // Adicionar nova unidade
+                    await addUnit(formData);
                 }
-            };
-            reader.readAsText(file);
-            UI.elements.restoreInput.value = '';
-        },
-
-        clearAllData(){
-            if(!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) return;
-            localStorage.removeItem('units');
-            localStorage.removeItem('telefonia_favorites');
-            localStorage.removeItem('telefonia_isLogged');
-            this.units = []; this.favorites = [];
-            this.refreshAll();
-            alert('Todos os dados foram apagados!');
+                
+                // Limpar formulário
+                document.getElementById('unitForm').reset();
+                cancelEdit();
+                
+                // Recarregar dados do GitHub para garantir sincronização
+                await loadDataFromGitHub();
+                
+                alert('Unidade salva com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar unidade:', error);
+                alert('Erro ao salvar unidade. Verifique o console para mais detalhes.');
+            }
         }
-    };
 
-    document.addEventListener('DOMContentLoaded', ()=> App.init());
+        async function addUnit(unitData) {
+            // Gerar ID único
+            unitData.id = 'unit_' + Date.now();
+            
+            // Adicionar à lista local
+            state.units.push(unitData);
+            
+            // Salvar no GitHub
+            await saveDataToGitHub();
+        }
 
-    window.App = App;
-    window.UI = UI;
-    window.DataService = DataService;
-    window.AuthService = AuthService;
+        async function updateUnit(id, unitData) {
+            // Atualizar na lista local
+            const index = state.units.findIndex(unit => unit.id === id);
+            if (index !== -1) {
+                unitData.id = id; // Manter o ID original
+                state.units[index] = unitData;
+                
+                // Salvar no GitHub
+                await saveDataToGitHub();
+            }
+        }
+
+        async function deleteUnit(id) {
+            if (!confirm('Tem certeza que deseja excluir esta unidade?')) {
+                return;
+            }
+            
+            // Remover da lista local
+            state.units = state.units.filter(unit => unit.id !== id);
+            
+            // Salvar no GitHub
+            await saveDataToGitHub();
+            
+            // Recarregar UI
+            updateUI();
+            renderUnitsList();
+        }
+
+        function editUnit(id) {
+            const unit = state.units.find(u => u.id === id);
+            if (!unit) return;
+            
+            // Preencher formulário
+            document.getElementById('unitName').value = unit.name;
+            document.getElementById('unitType').value = unit.type;
+            document.getElementById('unitAddress').value = unit.address;
+            document.getElementById('unitBairro').value = unit.bairro;
+            document.getElementById('unitPhone').value = unit.phone;
+            document.getElementById('unitEmail').value = unit.email || '';
+            document.getElementById('unitResponsavel').value = unit.responsavel || '';
+            document.getElementById('unitVacina').value = unit.vacina || 'Não';
+            document.getElementById('unitOdonto').value = unit.odonto || 'Não';
+            document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+            document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
+            document.getElementById('unitGerente').value = unit.gerente || '';
+            
+            // Atualizar campos condicionais
+            toggleConditionalFields();
+            
+            // Configurar modo de edição
+            state.editId = id;
+            document.getElementById('formTitle').textContent = 'Editar Unidade';
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Atualizar Unidade';
+            document.getElementById('cancelEdit').style.display = 'block';
+            
+            // Mudar para a aba de adicionar/editar
+            switchAdminTab('add');
+        }
+
+        function cancelEdit() {
+            state.editId = null;
+            document.getElementById('formTitle').textContent = 'Adicionar Nova Unidade';
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+            document.getElementById('cancelEdit').style.display = 'none';
+            document.getElementById('unitForm').reset();
+        }
+
+        // ====== GITHUB SYNC FUNCTIONS ======
+        async function saveDataToGitHub() {
+            if (!CONFIG.GITHUB_TOKEN) {
+                alert('Token do GitHub não configurado. Configure na aba GitHub Sync.');
+                return false;
+            }
+            
+            try {
+                // Preparar dados
+                const data = {
+                    units: state.units,
+                    ramais: state.ramais,
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                // Verificar se o arquivo já existe
+                const fileInfo = await getGitHubFileInfo();
+                
+                // Criar payload para a API do GitHub
+                const payload = {
+                    message: `Atualização de dados: ${new Date().toLocaleString('pt-BR')}`,
+                    content: btoa(JSON.stringify(data, null, 2)),
+                    branch: CONFIG.BRANCH
+                };
+                
+                // Se o arquivo já existe, precisamos do SHA para atualizar
+                if (fileInfo) {
+                    payload.sha = fileInfo.sha;
+                }
+                
+                // Fazer upload para o GitHub
+                const url = `https://api.github.com/repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/contents/${CONFIG.DATA_FILE}`;
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+                
+                console.log('Dados salvos no GitHub com sucesso');
+                showSyncStatus('Dados salvos no GitHub com sucesso', 'sync-success');
+                
+                // Atualizar timestamp
+                state.lastUpdateTime = new Date().toISOString();
+                localStorage.setItem('lastSync', state.lastUpdateTime);
+                
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar dados no GitHub:', error);
+                showSyncStatus('Erro ao salvar dados no GitHub', 'sync-error');
+                return false;
+            }
+        }
+
+        async function getGitHubFileInfo() {
+            try {
+                const url = `https://api.github.com/repos/${CONFIG.REPO_OWNER}/${CONFIG.REPO_NAME}/contents/${CONFIG.DATA_FILE}?ref=${CONFIG.BRANCH}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${CONFIG.GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (response.status === 404) {
+                    return null; // Arquivo não existe
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erro ao obter informações do arquivo:', error);
+                return null;
+            }
+        }
+
+        async function testGitHubConnection() {
+            const statusElement = document.getElementById('syncStatus');
+            statusElement.innerHTML = '<div class="sync-status sync-loading"><i class="fas fa-spinner loading"></i> Testando conexão...</div>';
+            
+            try {
+                const data = await fetchGitHubData();
+                
+                if (data) {
+                    statusElement.innerHTML = '<div class="sync-status sync-success"><i class="fas fa-check"></i> Conexão com GitHub estabelecida com sucesso!</div>';
+                } else {
+                    throw new Error('Não foi possível carregar dados');
+                }
+            } catch (error) {
+                statusElement.innerHTML = `<div class="sync-status sync-error"><i class="fas fa-times"></i> Erro na conexão: ${error.message}</div>`;
+            }
+        }
+
+        function saveGitHubConfig() {
+            const token = document.getElementById('githubToken').value;
+            const owner = document.getElementById('repoOwner').value;
+            const repo = document.getElementById('repoName').value;
+            const branch = document.getElementById('branchName').value;
+            
+            if (!token) {
+                alert('Por favor, insira um token do GitHub válido.');
+                return;
+            }
+            
+            // Atualizar configurações
+            CONFIG.GITHUB_TOKEN = token;
+            CONFIG.REPO_OWNER = owner;
+            CONFIG.REPO_NAME = repo;
+            CONFIG.BRANCH = branch;
+            
+            // Salvar no localStorage
+            localStorage.setItem('githubToken', token);
+            localStorage.setItem('repoOwner', owner);
+            localStorage.setItem('repoName', repo);
+            localStorage.setItem('branchName', branch);
+            
+            // Reiniciar sincronização automática
+            if (state.autoSyncInterval) {
+                clearInterval(state.autoSyncInterval);
+            }
+            initializeAutoSync();
+            
+            alert('Configurações do GitHub salvas com sucesso!');
+        }
+
+        async function forceSync() {
+            await loadDataFromGitHub();
+        }
+
+        function showSyncStatus(message, type) {
+            const statusElement = document.getElementById('syncStatus');
+            statusElement.innerHTML = `<div class="sync-status ${type}">${message}</div>`;
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (statusElement.innerHTML.includes(message)) {
+                    statusElement.innerHTML = '';
+                }
+            }, 5000);
+        }
+
+        // ====== CONFIGURAÇÕES ======
+        function loadSavedSettings() {
+            document.getElementById('githubToken').value = CONFIG.GITHUB_TOKEN;
+            document.getElementById('repoOwner').value = CONFIG.REPO_OWNER;
+            document.getElementById('repoName').value = CONFIG.REPO_NAME;
+            document.getElementById('branchName').value = CONFIG.BRANCH;
+            document.getElementById('autoSync').value = CONFIG.AUTO_SYNC.toString();
+            document.getElementById('syncInterval').value = CONFIG.SYNC_INTERVAL;
+            document.getElementById('notifyUpdates').value = CONFIG.NOTIFY_UPDATES.toString();
+        }
+
+        function saveSettings() {
+            const autoSync = document.getElementById('autoSync').value === 'true';
+            const syncInterval = parseInt(document.getElementById('syncInterval').value);
+            const notifyUpdates = document.getElementById('notifyUpdates').value === 'true';
+            
+            // Atualizar configurações
+            CONFIG.AUTO_SYNC = autoSync;
+            CONFIG.SYNC_INTERVAL = syncInterval;
+            CONFIG.NOTIFY_UPDATES = notifyUpdates;
+            
+            // Salvar no localStorage
+            localStorage.setItem('autoSync', autoSync.toString());
+            localStorage.setItem('syncInterval', syncInterval.toString());
+            localStorage.setItem('notifyUpdates', notifyUpdates.toString());
+            
+            // Reiniciar sincronização automática se necessário
+            if (state.autoSyncInterval) {
+                clearInterval(state.autoSyncInterval);
+            }
+            
+            if (autoSync && CONFIG.GITHUB_TOKEN) {
+                initializeAutoSync();
+            }
+            
+            alert('Configurações salvas com sucesso!');
+        }
+
+        // ====== NOTIFICAÇÕES ======
+        function showUpdateNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'update-notification';
+            notification.innerHTML = `
+                <i class="fas fa-sync"></i>
+                <span>Dados atualizados! A página foi atualizada automaticamente.</span>
+                <button onclick="this.parentElement.remove()">OK</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remover após 10 segundos
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+
+        function showLiveUpdatesIndicator() {
+            const indicator = document.getElementById('liveUpdatesIndicator');
+            indicator.style.display = 'flex';
+            
+            // Esconder após alguns segundos
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 5000);
+        }
     </script>
 </body>
 </html>
