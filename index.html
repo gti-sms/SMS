@@ -494,6 +494,32 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
+        
+        /* Live Updates Indicator */
+        .live-updates-indicator {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        .live-updates-indicator .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body>
@@ -532,6 +558,7 @@
                         <i class="fas fa-phone-alt"></i>
                         <div>
                             <h1>Telefonia - SMS</h1>
+                            <small style="font-size: 0.8rem; opacity: 0.8;">Atualizações automáticas ativas</small>
                         </div>
                     </div>
                     <div class="header-actions">
@@ -772,7 +799,7 @@
 
     <script>
     // =============================================
-    // DATA SERVICE - VERSÃO DEFINITIVA COM SYNC AUTOMÁTICO
+    // DATA SERVICE - VERSÃO DEFINITIVA COM SYNC AUTOMÁTICO E ATUALIZAÇÕES EM TEMPO REAL
     // =============================================
     const DataService = {
         githubToken: '',
@@ -780,6 +807,7 @@
         repoName: 'SMS', 
         filePath: 'data/units.json',
         autoSyncEnabled: false,
+        lastGitHubHash: null, // Para detectar mudanças
 
         // Carregar unidades - SEMPRE DO GITHUB PRIMEIRO
         async getUnits() {
@@ -853,6 +881,40 @@
             } catch (error) {
                 console.log('🌐 Erro de rede:', error.message);
                 return [];
+            }
+        },
+
+        // VERIFICAR SE HOUVE MUDANÇAS NO GITHUB
+        async checkForUpdates() {
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/commits?path=${this.filePath}&per_page=1`,
+                    {
+                        headers: {
+                            'Accept': 'application/vnd.github.v3+json',
+                            ...(this.githubToken && { 'Authorization': `Bearer ${this.githubToken}` })
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const commits = await response.json();
+                    if (commits && commits.length > 0) {
+                        const latestHash = commits[0].sha;
+                        
+                        if (this.lastGitHubHash && this.lastGitHubHash !== latestHash) {
+                            console.log('🔄 Mudanças detectadas no GitHub!');
+                            this.lastGitHubHash = latestHash;
+                            return true;
+                        }
+                        
+                        this.lastGitHubHash = latestHash;
+                    }
+                }
+                return false;
+            } catch (error) {
+                console.log('❌ Erro ao verificar atualizações:', error);
+                return false;
             }
         },
 
@@ -1054,6 +1116,11 @@
                 console.log('📡 Resposta do GitHub:', response.status, result);
 
                 if (response.ok) {
+                    // Atualizar último hash conhecido
+                    if (result.commit) {
+                        this.lastGitHubHash = result.commit.sha;
+                    }
+                    
                     return { 
                         success: true, 
                         message: sha ? 'Dados sincronizados com sucesso!' : 'Arquivo criado e sincronizado!'
@@ -1121,18 +1188,14 @@
             const button = document.getElementById('enableAutoSync');
             if (button) {
                 const icon = button.querySelector('i');
-                const text = button.querySelector('span') || document.createElement('span');
+                const text = button.querySelector('span') || button.querySelector('span:last-child');
                 
                 if (enabled) {
                     icon.className = 'fas fa-sync-alt';
-                    text.textContent = ' Desativar Sincronização Automática';
+                    button.innerHTML = '<i class="fas fa-sync-alt"></i> Desativar Sincronização Automática' + button.innerHTML;
                 } else {
                     icon.className = 'fas fa-sync';
-                    text.textContent = ' Ativar Sincronização Automática';
-                }
-                
-                if (!button.contains(text)) {
-                    button.appendChild(text);
+                    button.innerHTML = '<i class="fas fa-sync"></i> Ativar Sincronização Automática' + button.innerHTML;
                 }
             }
         },
@@ -1625,15 +1688,36 @@
         hideLoading() {
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('telefonia-container').style.display = 'block';
+        },
+
+        // NOVO: Mostrar indicador de atualizações em tempo real
+        showLiveUpdatesIndicator() {
+            if (document.getElementById('liveUpdatesIndicator')) return;
+            
+            const indicator = document.createElement('div');
+            indicator.id = 'liveUpdatesIndicator';
+            indicator.className = 'live-updates-indicator';
+            indicator.innerHTML = `
+                <div class="pulse-dot"></div>
+                Atualizações automáticas ativas
+            `;
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => {
+                if (indicator.parentElement) {
+                    indicator.remove();
+                }
+            }, 5000);
         }
     };
 
     // =============================================
-    // MAIN APPLICATION - VERSÃO DEFINITIVA COM SYNC AUTOMÁTICO
+    // MAIN APPLICATION - VERSÃO DEFINITIVA COM ATUALIZAÇÕES EM TEMPO REAL
     // =============================================
     const App = {
         units: [],
         favorites: [],
+        autoUpdateInterval: null,
 
         async init() {
             console.log('🚀 Iniciando aplicação Telefonia SMS...');
@@ -1644,8 +1728,8 @@
                 this.loadFavorites();
                 await this.refreshAll();
                 
-                // Configurar verificações automáticas
-                this.setupAutoRefresh();
+                // Configurar verificações automáticas EM TEMPO REAL
+                this.setupRealTimeUpdates();
                 
             } catch (error) {
                 console.error('💥 Erro na inicialização:', error);
@@ -1678,22 +1762,49 @@
             UI.setCounts(this.units.length, this.favorites.length);
         },
 
-        // NOVO: Configurar atualização automática
-        setupAutoRefresh() {
-            // Verificar atualizações a cada 2 minutos
-            setInterval(async () => {
+        // NOVO: Configurar atualização em tempo real
+        setupRealTimeUpdates() {
+            // Verificar atualizações a cada 30 segundos (tempo real)
+            this.autoUpdateInterval = setInterval(async () => {
                 console.log('⏰ Verificando atualizações no GitHub...');
                 try {
-                    const remoteData = await DataService.loadFromGitHubRaw();
-                    if (remoteData && remoteData.length !== this.units.length) {
+                    const hasUpdates = await DataService.checkForUpdates();
+                    if (hasUpdates) {
                         console.log('🔄 Atualizações encontradas! Recarregando...');
                         await this.refreshAll();
                         this.showUpdateNotification();
+                        UI.showLiveUpdatesIndicator();
                     }
                 } catch (error) {
                     console.log('❌ Erro na verificação automática:', error);
                 }
-            }, 120000); // 2 minutos
+            }, 30000); // 30 segundos - TEMPO REAL
+
+            // Também verificar quando a página ganha foco
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    console.log('📱 Página visível, verificando atualizações...');
+                    this.checkForUpdatesSilently();
+                }
+            });
+
+            // Verificar quando o usuário volta online
+            window.addEventListener('online', () => {
+                console.log('🌐 Conexão restaurada, verificando atualizações...');
+                this.checkForUpdatesSilently();
+            });
+        },
+
+        async checkForUpdatesSilently() {
+            try {
+                const hasUpdates = await DataService.checkForUpdates();
+                if (hasUpdates) {
+                    console.log('🔄 Atualizações encontradas (silencioso)! Recarregando...');
+                    await this.refreshAll();
+                }
+            } catch (error) {
+                console.log('❌ Erro na verificação silenciosa:', error);
+            }
         },
 
         showUpdateNotification() {
