@@ -1,2049 +1,1145 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval' blob:">
-    <title>Telefonia - Secretaria Municipal de Saúde PMPF</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* ====== VARS & RESET ====== */
-        :root{
-            --primary:#2c6aa0;--primary-dark:#1e4a73;--secondary:#4caf50;
-            --danger:#e74c3c;--warning:#f39c12;--light:#f8f9fa;
-            --dark:#343a40;--gray:#6c757d;--border:#dee2e6;
-            --shadow:0 4px 12px rgba(0,0,0,.1);--transition:all .3s ease;
-            --radius:12px;--radius-sm:8px;
-        }
-        *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
-        html,body{width:100%;height:100%;background:#f5f7fa;color:var(--dark);line-height:1.6;overflow-x:hidden}
-        
-        /* Container & Layout */
-        .container{max-width:1400px;margin:0 auto;padding:0 20px;width:100%}
-        
-        /* Header Improvements */
-        header{
-            background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-            color:#fff;padding:15px 0;box-shadow:var(--shadow);
-            position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px);
-        }
-        .header-content{display:flex;justify-content:space-between;align-items:center;width:100%}
-        .logo{display:flex;align-items:center;gap:15px}
-        .logo i{font-size:2.2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
-        .logo h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.5px}
-        .header-actions{display:flex;gap:12px;align-items:center}
-        .theme-toggle,.admin-toggle{
-            background:rgba(255,255,255,.25);border:0;color:#fff;
-            width:44px;height:44px;border-radius:50%;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;
-            transition:var(--transition);backdrop-filter:blur(10px);
-        }
-        .theme-toggle:hover,.admin-toggle:hover{
-            background:rgba(255,255,255,.4);transform:scale(1.05);
-        }
-        
-        /* Modal Improvements */
-        .login-modal{
-            display:none;position:fixed;inset:0;
-            background:rgba(0,0,0,.6);z-index:2000;
-            align-items:center;justify-content:center;backdrop-filter:blur(5px);
-        }
-        .login-modal.active{display:flex}
-        .login-form{
-            background:#fff;padding:35px;border-radius:var(--radius);
-            box-shadow:0 20px 40px rgba(0,0,0,.3);width:100%;
-            max-width:420px;transform:translateY(-20px);animation:slideUp .3s ease forwards;
-        }
-        @keyframes slideUp{to{transform:translateY(0)}}
-        .login-form h2{margin-bottom:25px;color:var(--primary-dark);text-align:center;font-weight:600}
-        
-        /* Form Improvements */
-        .form-group{margin-bottom:20px}
-        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--dark)}
-        .form-control{
-            width:100%;padding:12px 16px;border:2px solid var(--border);
-            border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);
-            background:#fff;
-        }
-        .form-control:focus{
-            outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);
-            transform:translateY(-1px);
-        }
-        .btn{
-            padding:12px 24px;border:0;border-radius:var(--radius-sm);cursor:pointer;
-            font-weight:600;transition:var(--transition);display:flex;
-            align-items:center;gap:10px;font-size:0.95rem;
-        }
-        .btn-primary{background:var(--primary);color:#fff}
-        .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.3)}
-        .btn-secondary{background:var(--gray);color:#fff}
-        .btn-success{background:var(--secondary);color:#fff}
-        .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,.3)}
-        .btn-danger{background:var(--danger);color:#fff}
-        .btn-warning{background:var(--warning);color:#fff}
-        
-        /* Admin Panel Improvements */
-        .admin-panel{
-            display:none;background:#fff;border-radius:var(--radius);
-            padding:30px;margin:30px 0;box-shadow:var(--shadow);width:100%;
-            border:1px solid rgba(0,0,0,.05);
-        }
-        .admin-panel.active{display:block;animation:fadeIn .3s ease}
-        @keyframes fadeIn{from{opacity:0} to{opacity:1}}
-        .admin-header{
-            display:flex;justify-content:space-between;align-items:center;
-            margin-bottom:25px;padding-bottom:20px;
-            border-bottom:3px solid var(--primary);
-        }
-        .admin-title{font-size:1.6rem;font-weight:700;color:var(--primary-dark)}
-        .admin-tabs{
-            display:flex;gap:5px;margin-bottom:25px;border-bottom:2px solid var(--border);
-            background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);
-        }
-        .admin-tab{
-            padding:12px 24px;cursor:pointer;border-radius:var(--radius-sm);
-            transition:var(--transition);font-weight:500;flex:1;text-align:center;
-        }
-        .admin-tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
-        .admin-content{display:none}
-        .admin-content.active{display:block;animation:slideIn .3s ease}
-        @keyframes slideIn{from{transform:translateX(10px);opacity:0} to{transform:translateX(0);opacity:1}}
-        .form-grid{
-            display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-            gap:25px;margin-bottom:25px;
-        }
-        .form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:30px}
-        .units-list{display:flex;flex-direction:column;gap:15px;max-height:500px;overflow-y:auto;padding:5px}
-        .unit-item{
-            background:var(--light);border-radius:var(--radius-sm);padding:20px;
-            border-left:5px solid var(--primary);display:flex;
-            justify-content:space-between;align-items:center;transition:var(--transition);
-        }
-        .unit-item:hover{transform:translateX(5px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
-        .unit-actions{display:flex;gap:10px}
-        
-        /* Search & Cards Improvements */
-        .search-container{
-            background:#fff;border-radius:var(--radius);padding:30px;
-            margin:30px 0;box-shadow:var(--shadow);width:100%;
-            border:1px solid rgba(0,0,0,.05);
-        }
-        .search-box{display:flex;gap:12px;margin-bottom:25px;width:100%}
-        .search-input{
-            flex:1;padding:16px 20px;border:2px solid var(--border);
-            border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);
-            background:#fff;
-        }
-        .search-input:focus{
-            border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);
-            transform:translateY(-1px);
-        }
-        .search-btn{
-            background:var(--primary);color:#fff;border:0;
-            border-radius:var(--radius-sm);padding:0 30px;cursor:pointer;
-            transition:var(--transition);font-weight:600;font-size:1rem;
-        }
-        .search-btn:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.3)}
-        .filter-options{display:flex;gap:12px;flex-wrap:wrap;width:100%}
-        .filter-btn{
-            background:#fff;border:2px solid var(--border);border-radius:25px;
-            padding:10px 20px;cursor:pointer;display:flex;align-items:center;
-            gap:8px;transition:var(--transition);font-weight:500;font-size:0.9rem;
-        }
-        .filter-btn.active{
-            background:var(--primary);color:#fff;border-color:var(--primary);
-            transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
-        }
-        .filter-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
-        .service-filters{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;width:100%}
-        
-        /* Service Toggle Buttons */
-        .service-toggle-btn{
-            background:#fff;border:2px solid var(--border);border-radius:25px;
-            padding:12px 20px;cursor:pointer;display:flex;align-items:center;
-            gap:10px;transition:var(--transition);font-size:0.9rem;color:var(--gray);
-            font-weight:500;
-        }
-        .service-toggle-btn.active{
-            background:var(--primary);color:#fff;border-color:var(--primary);
-            transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
-        }
-        .service-toggle-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
-        .service-toggle-btn i{font-size:1rem}
-        
-        /* Tabs & Content */
-        .tabs{
-            display:flex;border-bottom:2px solid var(--border);margin-bottom:25px;
-            flex-wrap:wrap;background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);
-        }
-        .tab{
-            padding:14px 28px;cursor:pointer;border-radius:var(--radius-sm);
-            transition:var(--transition);font-weight:600;flex:1;text-align:center;
-        }
-        .tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
-        .content{display:none;width:100%}
-        .content.active{display:block;animation:fadeIn .4s ease}
-        .results-count{
-            margin-bottom:20px;color:var(--gray);font-size:.95rem;width:100%;
-            padding:12px 0;font-weight:500;
-        }
-        
-        /* Contact Cards Improvements */
-        .contact-grid{
-            display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
-            gap:25px;width:100%;
-        }
-        .contact-card{
-            background:#fff;border-radius:var(--radius);padding:25px;
-            box-shadow:var(--shadow);transition:var(--transition);
-            border-left:5px solid var(--primary);display:flex;flex-direction:column;
-            min-height:420px;position:relative;border:1px solid rgba(0,0,0,.05);
-        }
-        .contact-card:hover{
-            transform:translateY(-5px);box-shadow:0 12px 24px rgba(0,0,0,.15);
-        }
-        .favorite-btn{
-            position:absolute;top:20px;right:20px;background:none;border:0;
-            font-size:1.4rem;color:var(--gray);cursor:pointer;z-index:10;
-            transition:var(--transition);
-        }
-        .favorite-btn:hover{transform:scale(1.2)}
-        .favorite-btn.active{color:var(--warning)}
-        .contact-header{
-            display:flex;justify-content:space-between;align-items:flex-start;
-            margin-bottom:20px;width:100%;
-        }
-        .contact-name{font-size:1.3rem;font-weight:700;color:var(--primary-dark);line-height:1.3}
-        .contact-type{
-            background:rgba(44,106,160,.1);color:var(--primary);padding:6px 14px;
-            border-radius:20px;font-size:.85rem;font-weight:600;
-        }
-        .contact-info{
-            display:flex;flex-direction:column;gap:14px;width:100%;flex-grow:1;
-        }
-        .contact-item{
-            display:flex;align-items:flex-start;gap:12px;width:100%;
-            padding:8px 0;
-        }
-        .contact-item i{width:20px;color:var(--primary);margin-top:2px;font-size:1.1rem}
-        .contact-services{
-            display:flex;justify-content:space-between;margin-top:20px;
-            padding-top:20px;border-top:2px solid var(--border);width:100%;
-        }
-        .service{
-            display:flex;flex-direction:column;align-items:center;text-align:center;
-            transition:var(--transition);
-        }
-        .service i{font-size:1.4rem;margin-bottom:.4rem;transition:var(--transition)}
-        .service.available{color:var(--secondary)}
-        .service.available i{transform:scale(1.1)}
-        .service.unavailable{color:var(--gray);opacity:.6}
-        .service-label{font-size:.75rem;margin-top:.3rem;font-weight:600}
-        .contact-actions{
-            display:flex;gap:12px;margin-top:20px;width:100%;
-        }
-        .action-btn{
-            flex:1;padding:12px;border:0;border-radius:var(--radius-sm);
-            cursor:pointer;font-weight:600;display:flex;align-items:center;
-            justify-content:center;gap:8px;transition:var(--transition);
-            font-size:0.9rem;
-        }
-        .action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
-        .call-btn{background:var(--secondary);color:#fff}
-        .whatsapp-btn{background:#25D366;color:#fff}
-        .location-btn{background:transparent;border:2px solid var(--border);color:var(--gray)}
-        .location-btn:hover{background:var(--border);color:var(--dark)}
-        
-        .no-results{
-            text-align:center;padding:50px;color:var(--gray);width:100%;
-            background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
-        }
-        .no-results i{font-size:3rem;margin-bottom:20px;color:var(--primary);opacity:.5}
-        
-        /* Footer */
-        .footer{
-            background:var(--dark);color:#fff;text-align:center;padding:25px 0;
-            position:fixed;bottom:0;left:0;width:100%;z-index:100;
-            backdrop-filter:blur(10px);background:rgba(52,58,64,.95);
-        }
-        
-        /* Dark Mode */
-        body.dark-mode{
-            background:#1a1d23;color:#e9ecef;
-        }
-        body.dark-mode .search-container,
-        body.dark-mode .contact-card,
-        body.dark-mode .filter-btn,
-        body.dark-mode .service-toggle-btn,
-        body.dark-mode .admin-panel,
-        body.dark-mode .unit-item,
-        body.dark-mode .login-form{
-            background:#2d3239;color:#e9ecef;border-color:#3d434b;
-        }
-        body.dark-mode .search-input,
-        body.dark-mode .filter-btn,
-        body.dark-mode .service-toggle-btn,
-        body.dark-mode .form-control{
-            background:#343a40;border-color:#495057;color:#e9ecef;
-        }
-        body.dark-mode .search-input:focus,
-        body.dark-mode .form-control:focus{
-            border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
-        }
-        body.dark-mode .service-toggle-btn{
-            background:#343a40;border-color:#495057;color:#e9ecef;
-        }
-        body.dark-mode .service-toggle-btn.active{
-            background:var(--primary);color:#fff;border-color:var(--primary);
-        }
-        body.dark-mode .service-toggle-btn:hover:not(.active){
-            border-color:var(--primary);
-        }
-        
-        /* CLASSES PARA LÓGICA CONDICIONAL */
-        .hidden {
-            display: none !important;
-        }
-        
-        /* GitHub Sync Status */
-        .sync-status {
-            padding: 15px;
-            border-radius: var(--radius-sm);
-            margin: 10px 0;
-            text-align: center;
-        }
-        .sync-success {
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-        }
-        .sync-error {
-            background: rgba(231, 76, 60, 0.1);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-        }
-        .sync-loading {
-            background: rgba(44, 106, 160, 0.1);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        /* Enhanced Responsive Design */
-        @media (max-width:1200px){
-            .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
-            .form-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-        }
-        
-        @media (max-width:992px){
-            .contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-            .admin-tabs,.tabs{flex-wrap:wrap}
-            .admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}
-        }
-        
-        @media (max-width:768px){
-            .header-content{flex-direction:column;gap:15px;text-align:center}
-            .contact-grid,.ramais-container{grid-template-columns:1fr}
-            .search-box{flex-direction:column}
-            .filter-options,.service-filters{justify-content:center}
-            .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
-            .form-grid{grid-template-columns:1fr}
-            .unit-item{flex-direction:column;align-items:flex-start;gap:15px}
-            .unit-actions{width:100%;justify-content:flex-end}
-            .admin-tabs,.tabs{padding:3px}
-            .admin-tab,.tab{padding:10px 16px;font-size:0.9rem}
-            .contact-card{min-height:380px;padding:20px}
-            .contact-actions{flex-direction:column}
-            .action-btn{width:100%}
-            .form-actions{flex-direction:column}
-            .btn{width:100%;justify-content:center}
-        }
-        
-        @media (max-width:480px){
-            .logo h1{font-size:1.5rem}
-            .logo i{font-size:1.8rem}
-            .tab{padding:10px 12px;font-size:.85rem}
-            .service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
-            .filter-btn{padding:8px 15px;font-size:0.8rem}
-            .search-input{padding:14px 16px}
-            .contact-grid{gap:15px}
-            .container{padding:0 15px}
-            .search-container,.admin-panel{padding:20px}
-            .contact-card{padding:18px;min-height:360px}
-            .contact-name{font-size:1.2rem}
-            .contact-item{gap:10px;padding:6px 0}
-            .contact-services{margin-top:15px;padding-top:15px}
-        }
-        
-        @media (max-width:360px){
-            .contact-grid{grid-template-columns:1fr}
-            .admin-tab,.tab{flex:1 1 100%;min-width:100%}
-            .filter-options,.service-filters{gap:8px}
-            .filter-btn,.service-toggle-btn{padding:8px 12px;font-size:0.75rem}
-        }
-        
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Smooth Scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        /* Selection Color */
-        ::selection {
-            background: rgba(44,106,160,.2);
-            color: var(--primary-dark);
-        }
-        
-        /* Update Notification */
-        .update-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--warning);
-            color: white;
-            padding: 15px 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideInRight 0.3s ease;
-        }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .update-notification button {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: bold;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval' blob:">
+  <title>Telefonia - Secretaria Municipal de Saúde PMPF</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ====== VARS & RESET ====== */
+    :root{
+        --primary:#2c6aa0;--primary-dark:#1e4a73;--secondary:#4caf50;
+        --danger:#e74c3c;--warning:#f39c12;--light:#f8f9fa;
+        --dark:#343a40;--gray:#6c757d;--border:#dee2e6;
+        --shadow:0 4px 12px rgba(0,0,0,.1);--transition:all .3s ease;
+        --radius:12px;--radius-sm:8px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+    html,body{width:100%;height:100%;background:#f5f7fa;color:var(--dark);line-height:1.6;overflow-x:hidden}
+    .container{max-width:1400px;margin:0 auto;padding:0 20px;width:100%}
+    header{
+        background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+        color:#fff;padding:15px 0;box-shadow:var(--shadow);
+        position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px);
+    }
+    .header-content{display:flex;justify-content:space-between;align-items:center;width:100%}
+    .logo{display:flex;align-items:center;gap:15px}
+    .logo i{font-size:2.2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+    .logo h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.5px}
+    .header-actions{display:flex;gap:12px;align-items:center}
+    .theme-toggle,.admin-toggle{
+        background:rgba(255,255,255,.25);border:0;color:#fff;
+        width:44px;height:44px;border-radius:50%;cursor:pointer;
+        display:flex;align-items:center;justify-content:center;
+        transition:var(--transition);backdrop-filter:blur(10px);
+    }
+    .theme-toggle:hover,.admin-toggle:hover{
+        background:rgba(255,255,255,.4);transform:scale(1.05);
+    }
 
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--primary);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            color: white;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 20px;
-        }
-        
-        /* Auto Sync Button */
-        .auto-sync-btn {
-            position: relative;
-        }
-        
-        .auto-sync-status {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--secondary);
-            border: 2px solid white;
-        }
-        
-        .auto-sync-status.inactive {
-            background: var(--gray);
-        }
-        
-        .auto-sync-status.syncing {
-            background: var(--warning);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-    </style>
+    /* Modal Improvements */
+    .login-modal{
+        display:none;position:fixed;inset:0;
+        background:rgba(0,0,0,.6);z-index:2000;
+        align-items:center;justify-content:center;backdrop-filter:blur(5px);
+    }
+    .login-modal.active{display:flex}
+    .login-form{
+        background:#fff;padding:35px;border-radius:var(--radius);
+        box-shadow:0 20px 40px rgba(0,0,0,.3);width:100%;
+        max-width:420px;transform:translateY(-20px);animation:slideUp .3s ease forwards;
+    }
+    @keyframes slideUp{to{transform:translateY(0)}}
+    .login-form h2{margin-bottom:25px;color:var(--primary-dark);text-align:center;font-weight:600}
+
+    /* Form */
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block;margin-bottom:8px;font-weight:600;color:var(--dark)}
+    .form-control{
+        width:100%;padding:12px 16px;border:2px solid var(--border);
+        border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);
+        background:#fff;
+    }
+    .form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);transform:translateY(-1px);}
+
+    .btn{padding:12px 24px;border:0;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;transition:var(--transition);display:flex;align-items:center;gap:10px;font-size:0.95rem;}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.3)}
+    .btn-secondary{background:var(--gray);color:#fff}
+    .btn-success{background:var(--secondary);color:#fff}
+    .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,.3)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-warning{background:var(--warning);color:#fff}
+
+    /* Admin Panel */
+    .admin-panel{display:none;background:#fff;border-radius:var(--radius);padding:30px;margin:30px 0;box-shadow:var(--shadow);width:100%;border:1px solid rgba(0,0,0,.05);}
+    .admin-panel.active{display:block;animation:fadeIn .3s ease}
+    @keyframes fadeIn{from{opacity:0} to{opacity:1}}
+    .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:20px;border-bottom:3px solid var(--primary);}
+    .admin-title{font-size:1.6rem;font-weight:700;color:var(--primary-dark)}
+    .admin-tabs{display:flex;gap:5px;margin-bottom:25px;border-bottom:2px solid var(--border);background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);}
+    .admin-tab{padding:12px 24px;cursor:pointer;border-radius:var(--radius-sm);transition:var(--transition);font-weight:500;flex:1;text-align:center;}
+    .admin-tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+    .admin-content{display:none}
+    .admin-content.active{display:block;animation:slideIn .3s ease}
+    @keyframes slideIn{from{transform:translateX(10px);opacity:0} to{transform:translateX(0);opacity:1}}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:25px;margin-bottom:25px;}
+    .form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:30px}
+    .units-list{display:flex;flex-direction:column;gap:15px;max-height:500px;overflow-y:auto;padding:5px}
+    .unit-item{background:var(--light);border-radius:var(--radius-sm);padding:20px;border-left:5px solid var(--primary);display:flex;justify-content:space-between;align-items:center;transition:var(--transition);}
+    .unit-item:hover{transform:translateX(5px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    .unit-actions{display:flex;gap:10px}
+
+    /* Search & Cards */
+    .search-container{background:#fff;border-radius:var(--radius);padding:30px;margin:30px 0;box-shadow:var(--shadow);width:100%;border:1px solid rgba(0,0,0,.05);}
+    .search-box{display:flex;gap:12px;margin-bottom:25px;width:100%}
+    .search-input{flex:1;padding:16px 20px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:1rem;transition:var(--transition);background:#fff;}
+    .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.15);transform:translateY(-1px);}
+    .search-btn{background:var(--primary);color:#fff;border:0;border-radius:var(--radius-sm);padding:0 30px;cursor:pointer;transition:var(--transition);font-weight:600;font-size:1rem;}
+    .filter-options{display:flex;gap:12px;flex-wrap:wrap;width:100%}
+    .filter-btn{background:#fff;border:2px solid var(--border);border-radius:25px;padding:10px 20px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:var(--transition);font-weight:500;font-size:0.9rem;}
+    .filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);}
+    .filter-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
+    .service-filters{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;width:100%}
+    .service-toggle-btn{background:#fff;border:2px solid var(--border);border-radius:25px;padding:12px 20px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:var(--transition);font-size:0.9rem;color:var(--gray);font-weight:500;}
+    .service-toggle-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);}
+    .service-toggle-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
+    .service-toggle-btn i{font-size:1rem}
+
+    .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:25px;flex-wrap:wrap;background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);}
+    .tab{padding:14px 28px;cursor:pointer;border-radius:var(--radius-sm);transition:var(--transition);font-weight:600;flex:1;text-align:center;}
+    .tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow)}
+    .content{display:none;width:100%}
+    .content.active{display:block;animation:fadeIn .4s ease}
+    .results-count{margin-bottom:20px;color:var(--gray);font-size:.95rem;width:100%;padding:12px 0;font-weight:500}
+
+    .contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:25px;width:100%}
+    .contact-card{background:#fff;border-radius:var(--radius);padding:25px;box-shadow:var(--shadow);transition:var(--transition);border-left:5px solid var(--primary);display:flex;flex-direction:column;min-height:420px;position:relative;border:1px solid rgba(0,0,0,.05);}
+    .favorite-btn{position:absolute;top:20px;right:20px;background:none;border:0;font-size:1.4rem;color:var(--gray);cursor:pointer;z-index:10;transition:var(--transition);}
+    .favorite-btn:hover{transform:scale(1.2)}
+    .favorite-btn.active{color:var(--warning)}
+    .contact-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;width:100%}
+    .contact-name{font-size:1.3rem;font-weight:700;color:var(--primary-dark);line-height:1.3}
+    .contact-type{background:rgba(44,106,160,.1);color:var(--primary);padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:600}
+    .contact-info{display:flex;flex-direction:column;gap:14px;width:100%;flex-grow:1}
+    .contact-item{display:flex;align-items:flex-start;gap:12px;width:100%;padding:8px 0}
+    .contact-item i{width:20px;color:var(--primary);margin-top:2px;font-size:1.1rem}
+    .contact-services{display:flex;justify-content:space-between;margin-top:20px;padding-top:20px;border-top:2px solid var(--border);width:100%}
+    .service{display:flex;flex-direction:column;align-items:center;text-align:center;transition:var(--transition)}
+    .service i{font-size:1.4rem;margin-bottom:.4rem;transition:var(--transition)}
+    .service.available{color:var(--secondary)}
+    .service.available i{transform:scale(1.1)}
+    .service.unavailable{color:var(--gray);opacity:.6}
+    .service-label{font-size:.75rem;margin-top:.3rem;font-weight:600}
+    .contact-actions{display:flex;gap:12px;margin-top:20px;width:100%}
+    .action-btn{flex:1;padding:12px;border:0;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition);font-size:0.9rem;}
+    .action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .call-btn{background:var(--secondary);color:#fff}
+    .whatsapp-btn{background:#25D366;color:#fff}
+    .location-btn{background:transparent;border:2px solid var(--border);color:var(--gray)}
+    .location-btn:hover{background:var(--border);color:var(--dark)}
+
+    .no-results{text-align:center;padding:50px;color:var(--gray);width:100%;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .no-results i{font-size:3rem;margin-bottom:20px;color:var(--primary);opacity:.5}
+
+    .footer{background:var(--dark);color:#fff;text-align:center;padding:25px 0;position:fixed;bottom:0;left:0;width:100%;z-index:100;backdrop-filter:blur(10px);background:rgba(52,58,64,.95);}
+
+    body.dark-mode{background:#1a1d23;color:#e9ecef}
+    body.dark-mode .search-container, body.dark-mode .contact-card, body.dark-mode .filter-btn, body.dark-mode .service-toggle-btn, body.dark-mode .admin-panel, body.dark-mode .unit-item, body.dark-mode .login-form{background:#2d3239;color:#e9ecef;border-color:#3d434b}
+    body.dark-mode .search-input, body.dark-mode .filter-btn, body.dark-mode .service-toggle-btn, body.dark-mode .form-control{background:#343a40;border-color:#495057;color:#e9ecef}
+    body.dark-mode .search-input:focus, body.dark-mode .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3)}
+    body.dark-mode .service-toggle-btn{background:#343a40;border-color:#495057;color:#e9ecef}
+    body.dark-mode .service-toggle-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .hidden { display: none !important; }
+
+    /* Git Sync UI */
+    .sync-status{padding:15px;border-radius:var(--radius-sm);margin:10px 0;text-align:center}
+    .sync-success{background:rgba(76,175,80,0.1);border:1px solid var(--secondary);color:var(--secondary)}
+    .sync-error{background:rgba(231,76,60,0.1);border:1px solid var(--danger);color:var(--danger)}
+    .sync-loading{background:rgba(44,106,160,0.1);border:1px solid var(--primary);color:var(--primary)}
+
+    /* Update notification & Loading */
+    .update-notification{position:fixed;top:20px;right:20px;background:var(--warning);color:white;padding:15px 20px;border-radius:var(--radius);box-shadow:var(--shadow);z-index:10000;display:flex;align-items:center;gap:10px;animation:slideInRight .3s ease}
+    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .loading-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--primary);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;color:white}
+    .loading-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:white;animation:spin 1s ease-in-out infinite;margin-bottom:20px}
+    @keyframes spin{ to { transform: rotate(360deg); } }
+
+    .auto-sync-btn{position:relative}
+    .auto-sync-status{position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:var(--secondary);border:2px solid white}
+    .auto-sync-status.inactive{background:var(--gray)}
+    .auto-sync-status.syncing{background:var(--warning);animation:pulse 1.5s infinite}
+    @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+
+    @media (max-width:1200px){.contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}.form-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+    @media (max-width:992px){.contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}.admin-tabs,.tabs{flex-wrap:wrap}.admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}}
+    @media (max-width:768px){.header-content{flex-direction:column;gap:15px;text-align:center}.contact-grid,.ramais-container{grid-template-columns:1fr}.search-box{flex-direction:column}.filter-options,.service-filters{justify-content:center}.tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}.form-grid{grid-template-columns:1fr}.unit-item{flex-direction:column;align-items:flex-start;gap:15px}.unit-actions{width:100%;justify-content:flex-end}.admin-tabs,.tabs{padding:3px}.admin-tab,.tab{padding:10px 16px;font-size:0.9rem}.contact-card{min-height:380px;padding:20px}.contact-actions{flex-direction:column}.action-btn{width:100%}.form-actions{flex-direction:column}.btn{width:100%;justify-content:center}}
+    @media (max-width:480px){.logo h1{font-size:1.5rem}.logo i{font-size:1.8rem}.tab{padding:10px 12px;font-size:.85rem}.service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}.filter-btn{padding:8px 15px;font-size:0.8rem}.search-input{padding:14px 16px}.contact-grid{gap:15px}.container{padding:0 15px}.search-container,.admin-panel{padding:20px}.contact-card{padding:18px;min-height:360px}.contact-name{font-size:1.2rem}.contact-item{gap:10px;padding:6px 0}.contact-services{margin-top:15px;padding-top:15px}}
+  </style>
 </head>
 <body>
-    <!-- LOADING SCREEN -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-spinner"></div>
-        <h2>Carregando dados...</h2>
-        <p id="loadingStatus">Conectando ao GitHub</p>
-    </div>
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loadingScreen" style="display:none">
+    <div class="loading-spinner"></div>
+    <h2>Carregando dados...</h2>
+    <p id="loadingStatus">Preparando</p>
+  </div>
 
-    <!-- LOGIN MODAL -->
-    <div class="login-modal" id="loginModal" aria-hidden="true">
-        <div class="login-form" role="dialog" aria-labelledby="loginTitle">
-            <h2 id="loginTitle"><i class="fas fa-lock"></i> Acesso Administrativo</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="loginUsername">Usuário:</label>
-                    <input type="text" id="loginUsername" class="form-control" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Senha:</label>
-                    <input type="password" id="loginPassword" class="form-control" required autocomplete="current-password">
-                </div>
-                <div class="form-actions" style="justify-content:center;">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
-                </div>
-            </form>
+  <!-- LOGIN MODAL -->
+  <div class="login-modal" id="loginModal" aria-hidden="true">
+    <div class="login-form" role="dialog" aria-labelledby="loginTitle">
+      <h2 id="loginTitle"><i class="fas fa-lock"></i> Acesso Administrativo</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Usuário:</label>
+          <input type="text" id="loginUsername" class="form-control" required autocomplete="username" value="">
         </div>
+        <div class="form-group">
+          <label for="loginPassword">Senha:</label>
+          <input type="password" id="loginPassword" class="form-control" required autocomplete="current-password" value="">
+        </div>
+        <div class="form-actions" style="justify-content:center;">
+          <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <div id="telefonia-container" style="display:none;">
-        <header>
-            <div class="container">
-                <div class="header-content">
-                    <div class="logo">
-                        <i class="fas fa-phone-alt"></i>
-                        <div>
-                            <h1>Telefonia - SMS</h1>
-                        </div>
-                    </div>
-                    <div class="header-actions">
-                        <button class="admin-toggle" id="adminToggle" title="Painel Administrativo"><i class="fas fa-cogs"></i></button>
-                        <button class="theme-toggle" id="themeToggle" title="Alternar tema"><i class="fas fa-moon"></i></button>
-                    </div>
-                </div>
+  <div id="telefonia-container" style="display:block;">
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <i class="fas fa-phone-alt"></i>
+            <div>
+              <h1>Telefonia - SMS</h1>
             </div>
-        </header>
+          </div>
+          <div class="header-actions">
+            <button class="admin-toggle" id="adminToggle" title="Painel Administrativo"><i class="fas fa-cogs"></i></button>
+            <button class="theme-toggle" id="themeToggle" title="Alternar tema"><i class="fas fa-moon"></i></button>
+          </div>
+        </div>
+      </div>
+    </header>
 
-        <!-- ADMIN PANEL -->
-        <div class="admin-panel" id="adminPanel" aria-hidden="true">
-            <div class="container">
-                <div class="admin-header">
-                    <h2 class="admin-title">Painel Administrativo</h2>
-                    <div>
-                        <button class="btn btn-secondary" id="closeAdmin"><i class="fas fa-times"></i> Fechar</button>
-                        <button class="btn btn-danger" id="logoutBtn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
-                    </div>
-                </div>
-
-                <div class="admin-tabs" role="tablist">
-                    <div class="admin-tab active" data-tab="units" role="tab">Gerenciar Unidades</div>
-                    <div class="admin-tab" data-tab="add" role="tab">Adicionar Unidade</div>
-                    <div class="admin-tab" data-tab="github" role="tab">GitHub Sync</div>
-                    <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
-                </div>
-
-                <!-- UNITS -->
-                <div class="admin-content active" id="units-content">
-                    <h3>Unidades Cadastradas</h3>
-                    <div class="units-list" id="unitsList"></div>
-                </div>
-
-                <!-- ADD / EDIT UNIT -->
-                <div class="admin-content" id="add-content">
-                    <h3 id="formTitle">Adicionar Nova Unidade</h3>
-                    <form id="unitForm">
-                        <div class="form-grid">
-                            <div class="form-group"><label for="unitName">Nome da Unidade *</label><input type="text" id="unitName" class="form-control" required></div>
-                            <div class="form-group"><label for="unitType">Tipo *</label>
-                                <select id="unitType" class="form-control" required>
-                                    <option value="">Selecione o tipo</option>
-                                    <option value="promocao">Promoção</option>
-                                    <option value="recuperacao">Recuperação</option>
-                                    <option value="administrativo">Administrativo</option>
-                                    <option value="vigilancia">Vigilância</option>
-                                    <option value="capne">Capne</option>
-                                    <option value="outros">Outros</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label for="unitAddress">Endereço *</label><input type="text" id="unitAddress" class="form-control" required placeholder="Ex: Rua Exemplo, 123"><small class="form-text">O link do Google Maps será gerado automaticamente</small></div>
-                            <div class="form-group"><label for="unitBairro">Bairro *</label><input type="text" id="unitBairro" class="form-control" required placeholder="Ex: Centro"></div>
-                            <div class="form-group"><label for="unitPhone">Telefone *</label><input type="text" id="unitPhone" class="form-control" required placeholder="Ex: 3314-1234"><small class="form-text">O link do WhatsApp será gerado automaticamente</small></div>
-                            <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
-                            
-                            <!-- Campo Responsável (será exibido condicionalmente) -->
-                            <div class="form-group hidden" id="responsibleFieldContainer">
-                                <label for="unitResponsavel">Responsável *</label>
-                                <input type="text" id="unitResponsavel" class="form-control" placeholder="Nome do responsável pela unidade">
-                            </div>
-                            
-                            <!-- CAMPOS DE SERVIÇOS - AGORA VISÍVEIS PARA PROMOÇÃO E RECUPERAÇÃO -->
-                            <div class="form-group" id="vacinaField">
-                                <label for="unitVacina">Sala de Vacina</label>
-                                <select id="unitVacina" class="form-control">
-                                    <option value="Não">Não</option>
-                                    <option value="Sim">Sim</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="odontoField">
-                                <label for="unitOdonto">Consultório Odontológico</label>
-                                <select id="unitOdonto" class="form-control">
-                                    <option value="Não">Não</option>
-                                    <option value="Sim">Sim</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="farmaciaField">
-                                <label for="unitFarmacia">Farmácia</label>
-                                <select id="unitFarmacia" class="form-control">
-                                    <option value="Não">Não</option>
-                                    <option value="Sim">Sim</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Campos específicos para promoção e recuperação -->
-                            <div class="form-group" id="enfermeiroField">
-                                <label for="unitEnfermeiro">Enfermeiro Responsável</label>
-                                <input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável">
-                            </div>
-                            <div class="form-group" id="gerenteField">
-                                <label for="unitGerente">Gerente Responsável</label>
-                                <input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável">
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
-                            <button type="reset" class="btn btn-secondary"><i class="fas fa-eraser"></i> Limpar</button>
-                            <button type="submit" class="btn btn-success" id="submitBtn"><i class="fas fa-plus"></i> Adicionar Unidade</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- GITHUB SYNC -->
-                <div class="admin-content" id="github-content">
-                    <h3><i class="fab fa-github"></i> Sincronização com GitHub</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="githubToken">Token do GitHub *</label>
-                            <input type="password" id="githubToken" class="form-control" 
-                                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                            <small class="form-text">
-                                <a href="https://github.com/settings/tokens" target="_blank">Gerar token</a> 
-                                (precisa das permissões: repo)
-                            </small>
-                        </div>
-                        <div class="form-group">
-                            <label for="repoOwner">Proprietário do Repositório</label>
-                            <input type="text" id="repoOwner" class="form-control" 
-                                   placeholder="seu-usuario" value="gti-sms">
-                        </div>
-                        <div class="form-group">
-                            <label for="repoName">Nome do Repositório</label>
-                            <input type="text" id="repoName" class="form-control" 
-                                   placeholder="telefonia-sms" value="SMS">
-                        </div>
-                        <div class="form-group">
-                            <label for="filePath">Caminho do Arquivo</label>
-                            <input type="text" id="filePath" class="form-control" 
-                                   placeholder="data/units.json" value="data/units.json">
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-primary" id="saveGitHubConfig">
-                            <i class="fas fa-save"></i> Salvar Configuração
-                        </button>
-                        <button type="button" class="btn btn-success" id="syncToGitHub">
-                            <i class="fas fa-cloud-upload-alt"></i> Sincronizar para GitHub
-                        </button>
-                        <button type="button" class="btn btn-warning" id="pullFromGitHub">
-                            <i class="fas fa-cloud-download-alt"></i> Puxar do GitHub
-                        </button>
-                        <button type="button" class="btn btn-info" id="testConnection">
-                            <i class="fas fa-plug"></i> Testar Conexão
-                        </button>
-                        <button type="button" class="btn btn-secondary auto-sync-btn" id="enableAutoSync">
-                            <i class="fas fa-sync"></i> Ativar Sincronização Automática
-                            <div class="auto-sync-status inactive" id="autoSyncStatus"></div>
-                        </button>
-                    </div>
-                    <div id="syncStatus" style="margin-top: 20px;"></div>
-                    
-                    <!-- Instruções de configuração -->
-                    <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: var(--radius-sm);">
-                        <h4><i class="fas fa-info-circle"></i> Instruções de Configuração:</h4>
-                        <ol style="margin-left: 20px; margin-top: 10px;">
-                            <li>Vá para <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings > Tokens</a></li>
-                            <li>Clique em "Generate new token"</li>
-                            <li>Dê um nome descritivo (ex: "Telefonia SMS")</li>
-                            <li>Selecione a permissão <strong>"repo"</strong></li>
-                            <li>Clique em "Generate token"</li>
-                            <li>Cole o token no campo acima e clique em "Salvar Configuração"</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- CONFIG -->
-                <div class="admin-content" id="config-content">
-                    <h3>Configurações do Sistema</h3>
-                    <div class="form-grid">
-                        <div class="form-group"><label for="backupData">Backup de Dados</label><button type="button" id="backupData" class="btn btn-primary"><i class="fas fa-download"></i> Fazer Backup</button></div>
-                        <div class="form-group"><label for="restoreData">Restaurar Dados</label><input type="file" id="restoreData" class="form-control" accept=".json"></div>
-                        <div class="form-group"><label for="clearData">Limpar Dados</label><button type="button" id="clearData" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
-                        <div class="form-group"><label for="autoSave">Salvamento Automático</label><select id="autoSave" class="form-control"><option value="true">Ativado</option><option value="false">Desativado</option></select></div>
-                    </div>
-                </div>
-            </div>
+    <!-- ADMIN PANEL -->
+    <div class="admin-panel" id="adminPanel" aria-hidden="true">
+      <div class="container">
+        <div class="admin-header">
+          <h2 class="admin-title">Painel Administrativo</h2>
+          <div>
+            <button class="btn btn-secondary" id="closeAdmin"><i class="fas fa-times"></i> Fechar</button>
+            <button class="btn btn-danger" id="logoutBtn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Sair</button>
+          </div>
         </div>
 
-        <!-- MAIN -->
-        <main class="container" style="padding-bottom:120px;">
-            <div class="search-container">
-                <div class="search-box">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
-                    <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
-                </div>
+        <div class="admin-tabs" role="tablist">
+          <div class="admin-tab active" data-tab="units" role="tab">Gerenciar Unidades</div>
+          <div class="admin-tab" data-tab="add" role="tab">Adicionar Unidade</div>
+          <div class="admin-tab" data-tab="github" role="tab">GitHub Sync</div>
+          <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
+        </div>
 
-                <div class="filter-options">
-                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
-                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
-                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
-                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
-                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
-                    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
-                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
-                </div>
+        <!-- UNITS -->
+        <div class="admin-content active" id="units-content">
+          <h3>Unidades Cadastradas</h3>
+          <div class="units-list" id="unitsList"></div>
+        </div>
 
-                <div class="service-filters">
-                    <!-- Botão Toggle para Sala de Vacina -->
-                    <button class="service-toggle-btn" data-service="vaccine" data-value="">
-                        <i class="fas fa-syringe"></i>Com sala de vacina
-                    </button>
-                    
-                    <!-- Botão Toggle para Consultório Odontológico -->
-                    <button class="service-toggle-btn" data-service="dental" data-value="">
-                        <i class="fas fa-tooth"></i>Com consultório odontológico
-                    </button>
-                    
-                    <!-- Botão Toggle para Farmácia -->
-                    <button class="service-toggle-btn" data-service="pharmacy" data-value="">
-                        <i class="fas fa-pills"></i>Com farmácia
-                    </button>
-                </div>
+        <!-- ADD / EDIT UNIT -->
+        <div class="admin-content" id="add-content">
+          <h3 id="formTitle">Adicionar Nova Unidade</h3>
+          <form id="unitForm">
+            <div class="form-grid">
+              <div class="form-group"><label for="unitName">Nome da Unidade *</label><input type="text" id="unitName" class="form-control" required></div>
+              <div class="form-group"><label for="unitType">Tipo *</label>
+                <select id="unitType" class="form-control" required>
+                  <option value="">Selecione o tipo</option>
+                  <option value="promocao">Promoção</option>
+                  <option value="recuperacao">Recuperação</option>
+                  <option value="administrativo">Administrativo</option>
+                  <option value="vigilancia">Vigilância</option>
+                  <option value="capne">Capne</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+              <div class="form-group"><label for="unitAddress">Endereço *</label><input type="text" id="unitAddress" class="form-control" required placeholder="Ex: Rua Exemplo, 123"><small class="form-text">O link do Google Maps será gerado automaticamente</small></div>
+              <div class="form-group"><label for="unitBairro">Bairro *</label><input type="text" id="unitBairro" class="form-control" required placeholder="Ex: Centro"></div>
+              <div class="form-group"><label for="unitPhone">Telefone *</label><input type="text" id="unitPhone" class="form-control" required placeholder="Ex: 3314-1234"><small class="form-text">O link do WhatsApp será gerado automaticamente</small></div>
+              <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
+
+              <div class="form-group hidden" id="responsibleFieldContainer">
+                <label for="unitResponsavel">Responsável *</label>
+                <input type="text" id="unitResponsavel" class="form-control" placeholder="Nome do responsável pela unidade">
+              </div>
+
+              <div class="form-group" id="vacinaField">
+                <label for="unitVacina">Sala de Vacina</label>
+                <select id="unitVacina" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+              </div>
+              <div class="form-group" id="odontoField">
+                <label for="unitOdonto">Consultório Odontológico</label>
+                <select id="unitOdonto" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+              </div>
+              <div class="form-group" id="farmaciaField">
+                <label for="unitFarmacia">Farmácia</label>
+                <select id="unitFarmacia" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+              </div>
+
+              <div class="form-group" id="enfermeiroField">
+                <label for="unitEnfermeiro">Enfermeiro Responsável</label><input type="text" id="unitEnfermeiro" class="form-control" placeholder="Nome do enfermeiro responsável">
+              </div>
+              <div class="form-group" id="gerenteField">
+                <label for="unitGerente">Gerente Responsável</label><input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável">
+              </div>
             </div>
 
-            <div class="tabs" role="tablist">
-                <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
-                <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
+              <button type="reset" class="btn btn-secondary"><i class="fas fa-eraser"></i> Limpar</button>
+              <button type="submit" class="btn btn-success" id="submitBtn"><i class="fas fa-plus"></i> Adicionar Unidade</button>
             </div>
+          </form>
+        </div>
 
-            <div class="content active" id="all-content">
-                <div class="results-count" id="all-count">Mostrando todos os contatos</div>
-                <div class="contact-grid" id="all-contacts"></div>
+        <!-- GITHUB SYNC -->
+        <div class="admin-content" id="github-content">
+          <h3><i class="fab fa-github"></i> Sincronização com GitHub</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="githubToken">Token do GitHub *</label>
+              <input type="password" id="githubToken" class="form-control" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+              <small class="form-text">
+                <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Gerar token</a> (permissão mínima: <strong>repo</strong>)
+              </small>
+              <div style="margin-top:8px;color:#6b7280;font-size:13px;">
+                Aviso: este token é usado localmente apenas pelo administrador para publicar alterações.
+              </div>
             </div>
+            <div class="form-group">
+              <label for="repoOwner">Proprietário do Repositório</label>
+              <input type="text" id="repoOwner" class="form-control" placeholder="seu-usuario" value="gti-sms">
+            </div>
+            <div class="form-group">
+              <label for="repoName">Nome do Repositório</label>
+              <input type="text" id="repoName" class="form-control" placeholder="telefonia-sms" value="SMS">
+            </div>
+            <div class="form-group">
+              <label for="filePath">Caminho do Arquivo</label>
+              <input type="text" id="filePath" class="form-control" placeholder="data/units.json" value="data/units.json">
+            </div>
+          </div>
 
-            <div class="content" id="favorites-content">
-                <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
-                <div class="contact-grid" id="favorites-contacts"></div>
-            </div>
-        </main>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" id="saveGitHubConfig"><i class="fas fa-save"></i> Salvar Configuração</button>
+            <button type="button" class="btn btn-success" id="syncToGitHub"><i class="fas fa-cloud-upload-alt"></i> Sincronizar para GitHub</button>
+            <button type="button" class="btn btn-warning" id="pullFromGitHub"><i class="fas fa-cloud-download-alt"></i> Puxar do GitHub</button>
+            <button type="button" class="btn btn-info" id="testConnection"><i class="fas fa-plug"></i> Testar Conexão</button>
+            <button type="button" class="btn btn-secondary auto-sync-btn" id="enableAutoSync"><i class="fas fa-sync"></i><span> Ativar Sincronização Automática</span> <div class="auto-sync-status inactive" id="autoSyncStatus"></div></button>
+          </div>
 
-        <footer class="footer">
-            <div class="container footer-content">
-                <p>Secretaria Municipal de Saúde - Prefeitura de Passo Fundo</p>
-            </div>
-        </footer>
+          <div id="syncStatus" style="margin-top: 20px;"></div>
+
+          <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: var(--radius-sm);">
+            <h4><i class="fas fa-info-circle"></i> Instruções rápidas:</h4>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+              <li>Gerar token em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub Settings → Tokens</a>.</li>
+              <li>Escolher permissão <strong>repo</strong> e salvar token no campo acima.</li>
+              <li>Adicionar/editar unidades no painel e clicar <strong>Sincronizar para GitHub</strong>.</li>
+              <li>Use <strong>Puxar do GitHub</strong> em outra máquina para obter as publicações mais recentes.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- CONFIG -->
+        <div class="admin-content" id="config-content">
+          <h3>Configurações do Sistema</h3>
+          <div class="form-grid">
+            <div class="form-group"><label for="backupData">Backup de Dados</label><button type="button" id="backupData" class="btn btn-primary"><i class="fas fa-download"></i> Fazer Backup</button></div>
+            <div class="form-group"><label for="restoreData">Restaurar Dados</label><input type="file" id="restoreData" class="form-control" accept=".json"></div>
+            <div class="form-group"><label for="clearData">Limpar Dados</label><button type="button" id="clearData" class="btn btn-danger"><i class="fas fa-trash"></i> Limpar Tudo</button></div>
+            <div class="form-group"><label for="autoSave">Salvamento Automático</label><select id="autoSave" class="form-control"><option value="true">Ativado</option><option value="false">Desativado</option></select></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script>
-    // =============================================
-    // DATA SERVICE - VERSÃO DEFINITIVA COM SYNC AUTOMÁTICO
-    // =============================================
+    <!-- MAIN -->
+    <main class="container" style="padding-bottom:120px;">
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
+          <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
+        </div>
+
+        <div class="filter-options">
+          <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
+          <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
+          <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
+          <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
+          <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
+          <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
+          <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
+        </div>
+
+        <div class="service-filters">
+          <button class="service-toggle-btn" data-service="vaccine" data-value=""><i class="fas fa-syringe"></i>Com sala de vacina</button>
+          <button class="service-toggle-btn" data-service="dental" data-value=""><i class="fas fa-tooth"></i>Com consultório odontológico</button>
+          <button class="service-toggle-btn" data-service="pharmacy" data-value=""><i class="fas fa-pills"></i>Com farmácia</button>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
+        <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
+      </div>
+
+      <div class="content active" id="all-content">
+        <div class="results-count" id="all-count">Mostrando todos os contatos</div>
+        <div class="contact-grid" id="all-contacts"></div>
+      </div>
+
+      <div class="content" id="favorites-content">
+        <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
+        <div class="contact-grid" id="favorites-contacts"></div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-content">
+        <p>Secretaria Municipal de Saúde - Prefeitura de Passo Fundo</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /* ===============================
+       UTILIDADES (encoding/decoding safe unicode)
+       =============================== */
+    function utf8_to_b64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+    function b64_to_utf8(b64) {
+      return decodeURIComponent(escape(atob(b64)));
+    }
+
+    /* ===============================
+       DATA SERVICE: manipula local + GitHub
+       =============================== */
     const DataService = {
-        githubToken: '',
-        repoOwner: 'gti-sms',
-        repoName: 'SMS', 
-        filePath: 'data/units.json',
-        autoSyncEnabled: false,
+      githubToken: '',
+      repoOwner: 'gti-sms',
+      repoName: 'SMS',
+      filePath: 'data/units.json',
+      branch: 'main',
+      autoSyncEnabled: false,
 
-        // Carregar unidades - SEMPRE DO GITHUB PRIMEIRO
-        async getUnits() {
-            try {
-                console.log('🔄 Iniciando carregamento de dados...');
-                
-                // PRIMEIRO: Tentar carregar do GitHub
-                const remoteData = await this.loadFromGitHubRaw();
-                if (remoteData && remoteData.length > 0) {
-                    console.log('✅ Dados carregados do GitHub:', remoteData.length, 'unidades');
-                    
-                    // Salvar localmente como cache
-                    this.saveUnits(remoteData);
-                    return remoteData;
-                }
-                
-                console.log('❌ GitHub vazio ou indisponível, tentando dados locais...');
-                
-                // SEGUNDO: Fallback para dados locais
-                const localUnits = this.getUnitsSync();
-                if (localUnits && localUnits.length > 0) {
-                    console.log('📁 Usando dados locais em cache:', localUnits.length, 'unidades');
-                    return localUnits;
-                }
-                
-                // TERCEIRO: Se tudo falhar, array vazio
-                console.log('💡 Nenhum dado encontrado, iniciando com array vazio');
-                return [];
-                
-            } catch (error) {
-                console.error('💥 Erro crítico ao carregar unidades:', error);
-                return this.getUnitsSync() || [];
-            }
-        },
-
-        // CARREGAR DO GITHUB - VERSÃO ROBUSTA
-        async loadFromGitHubRaw() {
-            try {
-                const rawUrl = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/main/${this.filePath}?t=${Date.now()}`;
-                console.log('🌐 Acessando:', rawUrl);
-                
-                const response = await fetch(rawUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    cache: 'no-cache'
-                });
-                
-                console.log('📡 Status:', response.status);
-                
-                if (response.ok) {
-                    const text = await response.text();
-                    
-                    if (!text.trim()) {
-                        console.log('📭 Arquivo vazio no GitHub');
-                        return [];
-                    }
-                    
-                    const data = JSON.parse(text);
-                    console.log('✅ Dados parseados:', Array.isArray(data) ? data.length : 'não é array');
-                    
-                    return Array.isArray(data) ? data : [];
-                } else if (response.status === 404) {
-                    console.log('❌ Arquivo não encontrado no GitHub');
-                    return [];
-                } else {
-                    console.log('❌ Erro HTTP:', response.status);
-                    return [];
-                }
-            } catch (error) {
-                console.log('🌐 Erro de rede:', error.message);
-                return [];
-            }
-        },
-
-        saveUnits(units) {
-            try {
-                localStorage.setItem('units', JSON.stringify(units));
-                console.log('💾 Dados salvos localmente:', units.length, 'unidades');
-                return true;
-            } catch (error) {
-                console.error('❌ Erro ao salvar unidades:', error);
-                return false;
-            }
-        },
-
-        // Adicionar/editar unidade com sync automático
-        async saveUnit(unit) {
-            const units = this.getUnitsSync();
-            
-            if (unit.id) {
-                // Editar unidade existente
-                const index = units.findIndex(u => u.id === unit.id);
-                if (index !== -1) {
-                    units[index] = unit;
-                    console.log('✏️ Unidade editada:', unit.id, unit.name);
-                }
-            } else {
-                // Nova unidade
-                unit.id = units.length > 0 ? Math.max(...units.map(u => u.id)) + 1 : 1;
-                units.push(unit);
-                console.log('➕ Nova unidade:', unit.id, unit.name);
-            }
-            
-            const success = this.saveUnits(units);
-            
-            // Sincronização automática com GitHub
-            if (success && this.autoSyncEnabled && this.githubToken) {
-                console.log('🔄 Sincronização automática ativada, enviando para GitHub...');
-                try {
-                    await this.syncToGitHub();
-                    console.log('✅ Sincronização automática concluída');
-                } catch (error) {
-                    console.error('❌ Erro na sincronização automática:', error);
-                }
-            }
-            
-            return success ? unit : null;
-        },
-
-        // Versão síncrona para uso interno
-        getUnitsSync() {
-            try {
-                const unitsJson = localStorage.getItem('units');
-                if (!unitsJson) return [];
-                
-                const units = JSON.parse(unitsJson);
-                return Array.isArray(units) ? units : [];
-            } catch (error) {
-                console.error('❌ Erro ao carregar unidades locais:', error);
-                return [];
-            }
-        },
-
-        // Excluir unidade com sync automático
-        async deleteUnit(id) {
-            const units = this.getUnitsSync().filter(unit => unit.id !== id);
-            const success = this.saveUnits(units);
-            
-            // Sincronização automática com GitHub
-            if (success && this.autoSyncEnabled && this.githubToken) {
-                console.log('🔄 Sincronização automática ativada, enviando para GitHub...');
-                try {
-                    await this.syncToGitHub();
-                    console.log('✅ Sincronização automática concluída');
-                } catch (error) {
-                    console.error('❌ Erro na sincronização automática:', error);
-                }
-            }
-            
-            return success;
-        },
-
-        // ========== GITHUB SYNC - VERSÃO CORRIGIDA ==========
-        
-        async testGitHubConnection() {
-            if (!this.githubToken) {
-                return { success: false, message: 'Token do GitHub não configurado' };
-            }
-
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${this.githubToken}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    return { success: true, message: 'Conexão com GitHub estabelecida!' };
-                } else {
-                    const error = await response.json();
-                    return { success: false, message: error.message || 'Erro na conexão' };
-                }
-            } catch (error) {
-                return { success: false, message: 'Erro de rede: ' + error.message };
-            }
-        },
-
-        async getGitHubFile() {
-            if (!this.githubToken) return null;
-
-            try {
-                const response = await fetch(
-                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${this.githubToken}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    }
-                );
-
-                if (response.status === 404) {
-                    return { exists: false, message: 'Arquivo não encontrado' };
-                }
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return { exists: true, data: data };
-                }
-
-                return null;
-            } catch (error) {
-                console.error('Erro ao buscar arquivo:', error);
-                return null;
-            }
-        },
-
-        async syncToGitHub() {
-            if (!this.githubToken) {
-                return { success: false, message: 'Token do GitHub não configurado' };
-            }
-
-            try {
-                // Obter dados atuais
-                const units = this.getUnitsSync();
-                const content = JSON.stringify(units, null, 2);
-                
-                // Codificar para base64 (correto)
-                const contentBase64 = btoa(unescape(encodeURIComponent(content)));
-                
-                // Obter informações do arquivo atual (para pegar o SHA)
-                const fileInfo = await this.getGitHubFile();
-                let sha = null;
-
-                if (fileInfo && fileInfo.exists) {
-                    sha = fileInfo.data.sha;
-                    console.log('📝 Arquivo existe, SHA:', sha);
-                } else {
-                    console.log('📝 Arquivo não existe, será criado novo');
-                }
-
-                // Preparar payload
-                const payload = {
-                    message: `Sync: Atualização automática - ${new Date().toLocaleString('pt-BR')}`,
-                    content: contentBase64,
-                    branch: 'main'
-                };
-
-                // Adicionar SHA se o arquivo já existe
-                if (sha) {
-                    payload.sha = sha;
-                }
-
-                console.log('🔄 Enviando para GitHub...', {
-                    repo: `${this.repoOwner}/${this.repoName}`,
-                    path: this.filePath,
-                    units: units.length,
-                    sha: sha ? 'sim' : 'não'
-                });
-
-                // Fazer a requisição para a API do GitHub
-                const response = await fetch(
-                    `https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${this.githubToken}`,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/vnd.github.v3+json'
-                        },
-                        body: JSON.stringify(payload)
-                    }
-                );
-
-                const result = await response.json();
-                console.log('📡 Resposta do GitHub:', response.status, result);
-
-                if (response.ok) {
-                    return { 
-                        success: true, 
-                        message: sha ? 'Dados sincronizados com sucesso!' : 'Arquivo criado e sincronizado!'
-                    };
-                } else {
-                    return { 
-                        success: false, 
-                        message: result.message || `Erro HTTP ${response.status} na sincronização` 
-                    };
-                }
-            } catch (error) {
-                console.error('Erro ao sincronizar:', error);
-                return { 
-                    success: false, 
-                    message: 'Erro de rede: ' + error.message 
-                };
-            }
-        },
-
-        async pullFromGitHub() {
-            if (!this.githubToken) {
-                return { success: false, message: 'Token do GitHub não configurado' };
-            }
-
-            try {
-                const fileInfo = await this.getGitHubFile();
-
-                if (!fileInfo || !fileInfo.exists) {
-                    return { success: false, message: 'Arquivo não encontrado no GitHub' };
-                }
-
-                const content = JSON.parse(decodeURIComponent(escape(atob(fileInfo.data.content))));
-                
-                if (this.saveUnits(content)) {
-                    return { 
-                        success: true, 
-                        message: `Dados carregados! ${content.length} unidades.`,
-                        data: content
-                    };
-                } else {
-                    return { success: false, message: 'Erro ao salvar dados localmente' };
-                }
-            } catch (error) {
-                console.error('Erro ao puxar dados:', error);
-                return { 
-                    success: false, 
-                    message: 'Erro ao carregar dados: ' + error.message 
-                };
-            }
-        },
-
-        // Configurar sincronização automática
-        setAutoSync(enabled) {
-            this.autoSyncEnabled = enabled;
-            localStorage.setItem('github_auto_sync', enabled.toString());
-            console.log('🔄 Sincronização automática:', enabled ? 'ATIVADA' : 'DESATIVADA');
-            
-            // Atualizar status visual
-            const statusEl = document.getElementById('autoSyncStatus');
-            if (statusEl) {
-                statusEl.className = `auto-sync-status ${enabled ? 'syncing' : 'inactive'}`;
-            }
-            
-            // Atualizar texto do botão
-            const button = document.getElementById('enableAutoSync');
-            if (button) {
-                const icon = button.querySelector('i');
-                const text = button.querySelector('span') || document.createElement('span');
-                
-                if (enabled) {
-                    icon.className = 'fas fa-sync-alt';
-                    text.textContent = ' Desativar Sincronização Automática';
-                } else {
-                    icon.className = 'fas fa-sync';
-                    text.textContent = ' Ativar Sincronização Automática';
-                }
-                
-                if (!button.contains(text)) {
-                    button.appendChild(text);
-                }
-            }
-        },
-
-        // Carregar configuração de auto sync
-        loadAutoSyncConfig() {
-            const autoSync = localStorage.getItem('github_auto_sync');
-            this.autoSyncEnabled = autoSync === 'true';
-            this.setAutoSync(this.autoSyncEnabled);
+      async getUnits() {
+        // Tenta remote -> fallback local
+        try {
+          const remote = await this.loadFromGitHubRaw();
+          if (Array.isArray(remote) && remote.length > 0) {
+            this.saveUnits(remote);
+            return remote;
+          }
+        } catch (e) {
+          console.warn('Erro carregando remoto:', e.message);
         }
+        return this.getUnitsSync();
+      },
+
+      async loadFromGitHubRaw() {
+        // tenta carregar via raw.githubusercontent (mais simples e cache bust)
+        const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?t=${Date.now()}`;
+        try {
+          const res = await fetch(url, {cache: 'no-cache'});
+          if (res.ok) {
+            const text = await res.text();
+            if (!text.trim()) return [];
+            const data = JSON.parse(text);
+            return Array.isArray(data) ? data : [];
+          } else {
+            if (res.status === 404) {
+              console.info('Arquivo raw não encontrado (404).');
+              return [];
+            }
+            console.warn('raw fetch status', res.status);
+            return [];
+          }
+        } catch (err) {
+          console.warn('Erro fetch raw:', err.message);
+          return [];
+        }
+      },
+
+      saveUnits(units) {
+        try {
+          localStorage.setItem('units', JSON.stringify(units));
+          return true;
+        } catch (e) {
+          console.error('Erro salvar local:', e);
+          return false;
+        }
+      },
+
+      getUnitsSync() {
+        try {
+          const s = localStorage.getItem('units');
+          if (!s) return [];
+          const parsed = JSON.parse(s);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          console.error('Erro parse local units:', e);
+          return [];
+        }
+      },
+
+      async saveUnit(unit) {
+        const units = this.getUnitsSync();
+        if (unit.id) {
+          const idx = units.findIndex(u => u.id === unit.id);
+          if (idx !== -1) units[idx] = unit;
+        } else {
+          unit.id = units.length > 0 ? Math.max(...units.map(u => u.id || 0)) + 1 : 1;
+          units.push(unit);
+        }
+        const ok = this.saveUnits(units);
+        return ok;
+      },
+
+      async deleteUnit(id) {
+        const units = this.getUnitsSync().filter(u => u.id !== id);
+        return this.saveUnits(units);
+      },
+
+      // GitHub API helpers
+      async testGitHubConnection() {
+        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+        try {
+          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}`, {
+            headers: { Authorization: `Bearer ${this.githubToken}`, Accept: 'application/vnd.github.v3+json' }
+          });
+          if (res.ok) return { success: true, message: 'Conexão OK' };
+          const j = await res.json();
+          return { success: false, message: j.message || 'Erro' };
+        } catch (e) {
+          return { success: false, message: 'Erro de rede: ' + e.message };
+        }
+      },
+
+      async getGitHubFile() {
+        if (!this.githubToken) return null;
+        try {
+          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}?ref=${this.branch}`, {
+            headers: { Authorization: `Bearer ${this.githubToken}`, Accept: 'application/vnd.github.v3+json' }
+          });
+          if (res.status === 404) return { exists: false };
+          if (!res.ok) {
+            const err = await res.json().catch(()=>({message:'Erro'}));
+            console.warn('getGitHubFile error', err);
+            return null;
+          }
+          const data = await res.json();
+          return { exists: true, data };
+        } catch (e) {
+          console.error('Erro getGitHubFile:', e);
+          return null;
+        }
+      },
+
+      async syncToGitHub() {
+        // Operação manual: pega units locais, converte e faz PUT na API
+        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+        try {
+          const units = this.getUnitsSync();
+          const content = JSON.stringify(units, null, 2);
+          const b64 = utf8_to_b64(content);
+
+          const fileInfo = await this.getGitHubFile();
+          let sha = null;
+          if (fileInfo && fileInfo.exists && fileInfo.data && fileInfo.data.sha) {
+            sha = fileInfo.data.sha;
+          }
+
+          const payload = { message: `Sync: atualização - ${new Date().toLocaleString('pt-BR')}`, content: b64, branch: this.branch };
+          if (sha) payload.sha = sha;
+
+          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${this.githubToken}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github.v3+json' },
+            body: JSON.stringify(payload)
+          });
+
+          const j = await res.json();
+          if (res.ok) {
+            return { success: true, message: 'Dados sincronizados com sucesso!' };
+          } else {
+            return { success: false, message: j.message || `Erro HTTP ${res.status}` };
+          }
+        } catch (e) {
+          console.error('Erro syncToGitHub:', e);
+          return { success: false, message: 'Erro de rede: ' + e.message };
+        }
+      },
+
+      async pullFromGitHub() {
+        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+        try {
+          const fileInfo = await this.getGitHubFile();
+          if (!fileInfo || !fileInfo.exists) return { success: false, message: 'Arquivo não encontrado no repo' };
+          const contentB64 = fileInfo.data.content;
+          const content = b64_to_utf8(contentB64);
+          const parsed = JSON.parse(content);
+          if (!Array.isArray(parsed)) return { success: false, message: 'Formato inválido no repositório' };
+          this.saveUnits(parsed);
+          return { success: true, message: `Dados carregados: ${parsed.length} unidades`, data: parsed };
+        } catch (e) {
+          console.error('Erro pullFromGitHub:', e);
+          return { success: false, message: 'Erro ao puxar dados: ' + e.message };
+        }
+      },
+
+      setAutoSync(enabled) {
+        this.autoSyncEnabled = enabled;
+        localStorage.setItem('github_auto_sync', enabled ? 'true' : 'false');
+        const statusEl = document.getElementById('autoSyncStatus');
+        if (statusEl) {
+          statusEl.className = 'auto-sync-status ' + (enabled ? 'syncing' : 'inactive');
+        }
+      },
+
+      loadAutoSyncConfig() {
+        const s = localStorage.getItem('github_auto_sync');
+        this.autoSyncEnabled = s === 'true';
+        this.setAutoSync(this.autoSyncEnabled);
+      }
     };
 
-    // =============================================
-    // AUTH SERVICE
-    // =============================================
+    /* ===============================
+       AUTH SERVICE
+       =============================== */
     const AuthService = {
-        adminUser: 'admin',
-        adminPass: 'admin123',
-        
-        login(username, password) {
-            if (username === this.adminUser && password === this.adminPass) {
-                localStorage.setItem('telefonia_isLogged', 'true');
-                return { success: true };
-            }
-            return { success: false, message: 'Usuário ou senha incorretos' };
-        },
-
-        logout() {
-            localStorage.removeItem('telefonia_isLogged');
-        },
-
-        isLogged() {
-            return localStorage.getItem('telefonia_isLogged') === 'true';
+      adminUser: 'admin',
+      adminPass: '987654321',
+      login(username, password) {
+        if (username === this.adminUser && password === this.adminPass) {
+          localStorage.setItem('telefonia_isLogged', 'true');
+          return { success: true };
         }
+        return { success: false, message: 'Usuário ou senha incorretos' };
+      },
+      logout() {
+        localStorage.removeItem('telefonia_isLogged');
+      },
+      isLogged() {
+        return localStorage.getItem('telefonia_isLogged') === 'true';
+      }
     };
 
-    // =============================================
-    // UI CONTROLLER
-    // =============================================
+    /* ===============================
+       UI
+       =============================== */
     const UI = {
-        elements: {},
+      elements: {},
+      init() {
+        this.cacheElements();
+        this.bindEvents();
+        this.loadTheme();
+        this.loadGitHubConfig();
+        DataService.loadAutoSyncConfig();
+      },
+      cacheElements() {
+        this.elements = {
+          loginModal: document.getElementById('loginModal'),
+          loginForm: document.getElementById('loginForm'),
+          loginUsername: document.getElementById('loginUsername'),
+          loginPassword: document.getElementById('loginPassword'),
+          adminToggle: document.getElementById('adminToggle'),
+          themeToggle: document.getElementById('themeToggle'),
+          adminPanel: document.getElementById('adminPanel'),
+          closeAdmin: document.getElementById('closeAdmin'),
+          logoutBtn: document.getElementById('logoutBtn'),
+          adminTabs: document.querySelectorAll('.admin-tab'),
+          allContacts: document.getElementById('all-contacts'),
+          favoritesContacts: document.getElementById('favorites-contacts'),
+          unitsList: document.getElementById('unitsList'),
+          allCount: document.getElementById('all-count'),
+          favoritesCount: document.getElementById('favorites-count'),
+          unitForm: document.getElementById('unitForm'),
+          submitBtn: document.getElementById('submitBtn'),
+          cancelEdit: document.getElementById('cancelEdit'),
+          formTitle: document.getElementById('formTitle'),
+          searchInput: document.getElementById('searchInput'),
+          searchBtn: document.getElementById('searchBtn'),
+          filterBtns: document.querySelectorAll('.filter-btn'),
+          tabs: document.querySelectorAll('.tab'),
+          githubToken: document.getElementById('githubToken'),
+          repoOwner: document.getElementById('repoOwner'),
+          repoName: document.getElementById('repoName'),
+          filePath: document.getElementById('filePath'),
+          saveGitHubConfig: document.getElementById('saveGitHubConfig'),
+          syncToGitHub: document.getElementById('syncToGitHub'),
+          pullFromGitHub: document.getElementById('pullFromGitHub'),
+          testConnection: document.getElementById('testConnection'),
+          syncStatus: document.getElementById('syncStatus'),
+          enableAutoSync: document.getElementById('enableAutoSync'),
+          autoSyncStatus: document.getElementById('autoSyncStatus'),
+          backupBtn: document.getElementById('backupData'),
+          restoreInput: document.getElementById('restoreData'),
+          clearAllBtn: document.getElementById('clearData'),
+          unitType: document.getElementById('unitType'),
+          responsibleField: document.getElementById('responsibleFieldContainer'),
+          enfermeiroField: document.getElementById('enfermeiroField'),
+          gerenteField: document.getElementById('gerenteField')
+        };
+      },
 
-        init() {
-            this.cacheElements();
-            this.loadTheme();
-            this.bindEvents();
-            this.setupConditionalFormLogic();
-            
-            if (AuthService.isLogged()) {
-                this.elements.logoutBtn.style.display = 'inline-flex';
+      bindEvents() {
+        this.elements.adminToggle.addEventListener('click', () => {
+          if (AuthService.isLogged()) this.openAdmin(); else this.showLogin();
+        });
+        this.elements.closeAdmin.addEventListener('click', () => this.closeAdmin());
+        this.elements.logoutBtn.addEventListener('click', () => { AuthService.logout(); this.elements.logoutBtn.style.display = 'none'; this.closeAdmin(); alert('Desconectado'); });
+        this.elements.loginForm.addEventListener('submit', (e) => { e.preventDefault(); const u = this.elements.loginUsername.value.trim(); const p = this.elements.loginPassword.value; const r = AuthService.login(u,p); if (r.success) { this.hideLogin(); this.openAdmin(); this.elements.logoutBtn.style.display = 'inline-flex'; App.refreshAll(); } else { alert(r.message); }});
+        this.elements.themeToggle.addEventListener('click', ()=>this.toggleTheme());
+        this.elements.searchBtn.addEventListener('click', ()=>App.performSearch());
+        this.elements.searchInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') App.performSearch(); });
+
+        this.elements.filterBtns.forEach(btn => {
+          btn.addEventListener('click', function(){ UI.elements.filterBtns.forEach(b=>b.classList.remove('active')); this.classList.add('active'); App.filterContacts(this.dataset.filter); });
+        });
+
+        document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
+          btn.addEventListener('click', function(){ this.classList.toggle('active'); const v = this.classList.contains('active') ? 'Sim' : ''; this.setAttribute('data-value', v); App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter); });
+        });
+
+        this.elements.tabs.forEach(tab => {
+          tab.addEventListener('click', function(){ UI.elements.tabs.forEach(t=>t.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.content').forEach(c=>c.classList.remove('active')); document.getElementById(`${this.dataset.tab}-content`).classList.add('active');});
+        });
+
+        this.elements.adminTabs.forEach(tab => {
+          tab.addEventListener('click', function(){ UI.elements.adminTabs.forEach(t=>t.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active')); document.getElementById(`${this.dataset.tab}-content`).classList.add('active'); });
+        });
+
+        this.elements.unitForm.addEventListener('submit', (e)=>{ e.preventDefault(); App.saveUnitFromForm(); });
+        this.elements.cancelEdit.addEventListener('click', ()=>{ this.elements.unitForm.reset(); this.elements.formTitle.textContent='Adicionar Nova Unidade'; this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade'; this.elements.cancelEdit.style.display='none'; this.elements.unitForm.removeAttribute('data-edit-id'); this.setupConditionalFormLogic(); });
+
+        // GitHub events
+        this.elements.saveGitHubConfig.addEventListener('click', ()=>App.saveGitHubConfig());
+        this.elements.syncToGitHub.addEventListener('click', ()=>App.syncToGitHub());
+        this.elements.pullFromGitHub.addEventListener('click', ()=>App.pullFromGitHub());
+        this.elements.testConnection.addEventListener('click', ()=>App.testGitHubConnection());
+        this.elements.enableAutoSync.addEventListener('click', ()=>App.toggleAutoSync());
+
+        // config events
+        this.elements.backupBtn.addEventListener('click', ()=>App.backupData());
+        this.elements.restoreInput.addEventListener('change', (e)=>App.restoreData(e.target.files[0]));
+        this.elements.clearAllBtn.addEventListener('click', ()=>App.clearAllData());
+
+        // conditional form logic
+        this.setupConditionalFormLogic();
+      },
+
+      setupConditionalFormLogic() {
+        const conditionalTypes = ['administrativo','vigilancia','capne','outros'];
+        const check = ()=> {
+          const type = this.elements.unitType.value;
+          const isConditional = conditionalTypes.includes(type);
+          this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
+          this.elements.gerenteField.classList.toggle('hidden', isConditional);
+          this.elements.responsibleField.classList.toggle('hidden', !isConditional);
+          const resp = document.getElementById('unitResponsavel');
+          if (resp) resp.required = isConditional;
+        };
+        this.elements.unitType.addEventListener('change', check);
+        check();
+      },
+
+      showLogin() { this.elements.loginModal.classList.add('active'); this.elements.loginModal.setAttribute('aria-hidden','false'); this.elements.loginUsername.focus(); },
+      hideLogin() { this.elements.loginModal.classList.remove('active'); this.elements.loginModal.setAttribute('aria-hidden','true'); this.elements.loginForm.reset(); },
+      openAdmin() { this.elements.adminPanel.classList.add('active'); this.elements.adminPanel.setAttribute('aria-hidden','false'); },
+      closeAdmin() { this.elements.adminPanel.classList.remove('active'); this.elements.adminPanel.setAttribute('aria-hidden','true'); },
+
+      toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const icon = this.elements.themeToggle.querySelector('i');
+        if (document.body.classList.contains('dark-mode')) { icon.className='fas fa-sun'; localStorage.setItem('telefonia_theme','dark'); } else { icon.className='fas fa-moon'; localStorage.setItem('telefonia_theme','light'); }
+      },
+      loadTheme() { const t = localStorage.getItem('telefonia_theme'); if (t==='dark') { document.body.classList.add('dark-mode'); this.elements.themeToggle.querySelector('i').className='fas fa-sun'; } },
+
+      loadGitHubConfig() {
+        const c = localStorage.getItem('github_config');
+        if (c) {
+          try {
+            const parsed = JSON.parse(c);
+            DataService.githubToken = parsed.token || '';
+            DataService.repoOwner = parsed.owner || DataService.repoOwner;
+            DataService.repoName = parsed.repo || DataService.repoName;
+            DataService.filePath = parsed.filePath || DataService.filePath;
+            document.getElementById('repoOwner').value = DataService.repoOwner;
+            document.getElementById('repoName').value = DataService.repoName;
+            document.getElementById('filePath').value = DataService.filePath;
+            if (DataService.githubToken) {
+              this.elements.githubToken.placeholder = '•••••• (configurado)';
             }
-
-            this.loadGitHubConfig();
-            DataService.loadAutoSyncConfig();
-        },
-
-        cacheElements() {
-            // Modal de login
-            this.elements.loginModal = document.getElementById('loginModal');
-            this.elements.loginForm = document.getElementById('loginForm');
-            this.elements.loginUsername = document.getElementById('loginUsername');
-            this.elements.loginPassword = document.getElementById('loginPassword');
-
-            // Header
-            this.elements.adminToggle = document.getElementById('adminToggle');
-            this.elements.themeToggle = document.getElementById('themeToggle');
-
-            // Painel administrativo
-            this.elements.adminPanel = document.getElementById('adminPanel');
-            this.elements.closeAdmin = document.getElementById('closeAdmin');
-            this.elements.logoutBtn = document.getElementById('logoutBtn');
-            this.elements.adminTabs = document.querySelectorAll('.admin-tab');
-            
-            // Conteúdo
-            this.elements.allContacts = document.getElementById('all-contacts');
-            this.elements.favoritesContacts = document.getElementById('favorites-contacts');
-            this.elements.unitsList = document.getElementById('unitsList');
-            this.elements.allCount = document.getElementById('all-count');
-            this.elements.favoritesCount = document.getElementById('favorites-count');
-
-            // Formulário de unidade
-            this.elements.unitForm = document.getElementById('unitForm');
-            this.elements.submitBtn = document.getElementById('submitBtn');
-            this.elements.cancelEdit = document.getElementById('cancelEdit');
-            this.elements.formTitle = document.getElementById('formTitle');
-
-            // Busca e filtros
-            this.elements.searchInput = document.getElementById('searchInput');
-            this.elements.searchBtn = document.getElementById('searchBtn');
-            this.elements.filterBtns = document.querySelectorAll('.filter-btn');
-            this.elements.tabs = document.querySelectorAll('.tab');
-
-            // GitHub Sync
-            this.elements.githubToken = document.getElementById('githubToken');
-            this.elements.repoOwner = document.getElementById('repoOwner');
-            this.elements.repoName = document.getElementById('repoName');
-            this.elements.filePath = document.getElementById('filePath');
-            this.elements.saveGitHubConfig = document.getElementById('saveGitHubConfig');
-            this.elements.syncToGitHub = document.getElementById('syncToGitHub');
-            this.elements.pullFromGitHub = document.getElementById('pullFromGitHub');
-            this.elements.testConnection = document.getElementById('testConnection');
-            this.elements.syncStatus = document.getElementById('syncStatus');
-            this.elements.enableAutoSync = document.getElementById('enableAutoSync');
-            this.elements.autoSyncStatus = document.getElementById('autoSyncStatus');
-
-            // Configurações
-            this.elements.backupBtn = document.getElementById('backupData');
-            this.elements.restoreInput = document.getElementById('restoreData');
-            this.elements.clearAllBtn = document.getElementById('clearData');
-
-            // Campos condicionais
-            this.elements.unitType = document.getElementById('unitType');
-            this.elements.responsibleField = document.getElementById('responsibleFieldContainer');
-            this.elements.enfermeiroField = document.getElementById('enfermeiroField');
-            this.elements.gerenteField = document.getElementById('gerenteField');
-        },
-
-        setupConditionalFormLogic() {
-            const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
-            
-            const checkFields = () => {
-                const type = this.elements.unitType.value;
-                const isConditional = conditionalTypes.includes(type);
-
-                this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
-                this.elements.gerenteField.classList.toggle('hidden', isConditional);
-                this.elements.responsibleField.classList.toggle('hidden', !isConditional);
-
-                document.getElementById('unitResponsavel').required = isConditional;
-            };
-
-            this.elements.unitType.addEventListener('change', checkFields);
-            checkFields();
-        },
-
-        bindEvents() {
-            // Toggle do painel admin
-            this.elements.adminToggle.addEventListener('click', () => {
-                if (AuthService.isLogged()) {
-                    this.openAdmin();
-                } else {
-                    this.showLogin();
-                }
-            });
-
-            // Fechar painel admin
-            this.elements.closeAdmin.addEventListener('click', () => this.closeAdmin());
-
-            // Logout
-            this.elements.logoutBtn.addEventListener('click', () => {
-                AuthService.logout();
-                this.elements.logoutBtn.style.display = 'none';
-                this.closeAdmin();
-                alert('Desconectado do painel administrativo');
-            });
-
-            // Login
-            this.elements.loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = this.elements.loginUsername.value.trim();
-                const password = this.elements.loginPassword.value;
-
-                const result = AuthService.login(username, password);
-                if (result.success) {
-                    this.hideLogin();
-                    this.openAdmin();
-                    this.elements.logoutBtn.style.display = 'inline-flex';
-                    App.refreshAll();
-                } else {
-                    alert(result.message);
-                }
-            });
-
-            // Toggle tema
-            this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
-
-            // Busca
-            this.elements.searchBtn.addEventListener('click', () => App.performSearch());
-            this.elements.searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') App.performSearch();
-            });
-
-            // Filtros
-            this.elements.filterBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    UI.elements.filterBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    App.filterContacts(this.dataset.filter);
-                });
-            });
-
-            // Toggle serviços
-            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                    const value = this.classList.contains('active') ? 'Sim' : '';
-                    this.setAttribute('data-value', value);
-                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
-                });
-            });
-
-            // Tabs principais
-            this.elements.tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    UI.elements.tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
-                });
-            });
-
-            // Tabs do admin
-            this.elements.adminTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    UI.elements.adminTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
-                });
-            });
-
-            // Formulário de unidade
-            this.elements.unitForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                App.saveUnitFromForm();
-            });
-
-            this.elements.cancelEdit.addEventListener('click', () => {
-                this.elements.unitForm.reset();
-                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                this.elements.cancelEdit.style.display = 'none';
-                this.elements.unitForm.removeAttribute('data-edit-id');
-                this.setupConditionalFormLogic();
-            });
-
-            // GitHub Sync
-            this.elements.saveGitHubConfig.addEventListener('click', () => App.saveGitHubConfig());
-            this.elements.syncToGitHub.addEventListener('click', () => App.syncToGitHub());
-            this.elements.pullFromGitHub.addEventListener('click', () => App.pullFromGitHub());
-            this.elements.testConnection.addEventListener('click', () => App.testGitHubConnection());
-            this.elements.enableAutoSync.addEventListener('click', () => App.toggleAutoSync());
-
-            // Configurações
-            this.elements.backupBtn.addEventListener('click', () => App.backupData());
-            this.elements.restoreInput.addEventListener('change', (e) => App.restoreData(e.target.files[0]));
-            this.elements.clearAllBtn.addEventListener('click', () => App.clearAllData());
-        },
-
-        // Métodos de UI
-        showLogin() {
-            this.elements.loginModal.classList.add('active');
-            this.elements.loginModal.setAttribute('aria-hidden', 'false');
-            this.elements.loginUsername.focus();
-        },
-
-        hideLogin() {
-            this.elements.loginModal.classList.remove('active');
-            this.elements.loginModal.setAttribute('aria-hidden', 'true');
-            this.elements.loginForm.reset();
-        },
-
-        openAdmin() {
-            this.elements.adminPanel.classList.add('active');
-            this.elements.adminPanel.setAttribute('aria-hidden', 'false');
-        },
-
-        closeAdmin() {
-            this.elements.adminPanel.classList.remove('active');
-            this.elements.adminPanel.setAttribute('aria-hidden', 'true');
-        },
-
-        toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const icon = this.elements.themeToggle.querySelector('i');
-            if (document.body.classList.contains('dark-mode')) {
-                icon.className = 'fas fa-sun';
-                localStorage.setItem('telefonia_theme', 'dark');
-            } else {
-                icon.className = 'fas fa-moon';
-                localStorage.setItem('telefonia_theme', 'light');
-            }
-        },
-
-        loadTheme() {
-            const theme = localStorage.getItem('telefonia_theme');
-            if (theme === 'dark') {
-                document.body.classList.add('dark-mode');
-                this.elements.themeToggle.querySelector('i').className = 'fas fa-sun';
-            }
-        },
-
-        loadGitHubConfig() {
-            const config = localStorage.getItem('github_config');
-            if (config) {
-                const { token, owner, repo, filePath } = JSON.parse(config);
-                DataService.githubToken = token;
-                DataService.repoOwner = owner;
-                DataService.repoName = repo;
-                DataService.filePath = filePath;
-
-                this.elements.repoOwner.value = owner;
-                this.elements.repoName.value = repo;
-                this.elements.filePath.value = filePath;
-
-                if (token) {
-                    this.elements.githubToken.placeholder = '•••••••••• (já configurado)';
-                }
-            }
-        },
-
-        showSyncStatus(message, type = 'info') {
-            const statusEl = this.elements.syncStatus;
-            statusEl.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
-            
-            if (type === 'success') {
-                setTimeout(() => statusEl.innerHTML = '', 5000);
-            }
-        },
-
-        // Renderização
-        renderContacts(contacts, container) {
-            const target = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
-            target.innerHTML = '';
-
-            if (!contacts || contacts.length === 0) {
-                target.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search"></i>
-                        <h3>Nenhum contato encontrado</h3>
-                        <p>Tente ajustar seus filtros ou termos de busca</p>
-                    </div>
-                `;
-                return;
-            }
-
-            contacts.forEach(contact => {
-                const card = this.createContactCard(contact);
-                target.appendChild(card);
-            });
-
-            this.attachFavoriteListeners();
-        },
-
-        createContactCard(contact) {
-            const phoneClean = contact.phone.replace(/\D/g, '');
-            const telLink = `tel:+55${phoneClean}`;
-            const whatsappLink = `https://wa.me/55${phoneClean}`;
-            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address + ', ' + contact.bairro + ', Passo Fundo, RS')}`;
-            
-            const typeLabel = this.getTypeLabel(contact.type);
-
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            card.innerHTML = `
-                <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar">
-                    <i class="fas fa-star"></i>
-                </button>
-                <div class="contact-header">
-                    <div>
-                        <h3 class="contact-name">${contact.name}</h3>
-                        <span class="contact-type">${typeLabel}</span>
-                    </div>
-                </div>
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${contact.address}, ${contact.bairro}</span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${contact.phone}</span>
-                    </div>
-                    ${contact.email ? `
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>${contact.email}</span>
-                    </div>` : ''}
-                    ${contact.enfermeiro ? `
-                    <div class="contact-item">
-                        <i class="fas fa-user-nurse"></i>
-                        <span>Enf. ${contact.enfermeiro}</span>
-                    </div>` : ''}
-                    ${contact.gerente ? `
-                    <div class="contact-item">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Gerente: ${contact.gerente}</span>
-                    </div>` : ''}
-                    ${contact.responsavel ? `
-                    <div class="contact-item">
-                        <i class="fas fa-user"></i>
-                        <span>Responsável: ${contact.responsavel}</span>
-                    </div>` : ''}
-                </div>
-                <div class="contact-services">
-                    <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}">
-                        <i class="fas fa-syringe"></i>
-                        <span class="service-label">Vacina</span>
-                    </div>
-                    <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}">
-                        <i class="fas fa-tooth"></i>
-                        <span class="service-label">Odonto</span>
-                    </div>
-                    <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}">
-                        <i class="fas fa-pills"></i>
-                        <span class="service-label">Farmácia</span>
-                    </div>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')">
-                        <i class="fas fa-phone"></i> Ligar
-                    </button>
-                    <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')">
-                        <i class="fab fa-whatsapp"></i> WhatsApp
-                    </button>
-                    <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')">
-                        <i class="fas fa-map"></i> Localização
-                    </button>
-                </div>
-            `;
-
-            return card;
-        },
-
-        attachFavoriteListeners() {
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = parseInt(btn.getAttribute('data-id'));
-                    await App.toggleFavorite(id);
-                });
-            });
-        },
-
-        renderUnitsList(units) {
-            this.elements.unitsList.innerHTML = '';
-
-            units.forEach(unit => {
-                const item = document.createElement('div');
-                item.className = 'unit-item';
-                item.innerHTML = `
-                    <div class="unit-info">
-                        <h4>${unit.name}</h4>
-                        <p>${this.getTypeLabel(unit.type)} - ${unit.phone}</p>
-                    </div>
-                    <div class="unit-actions">
-                        <button class="btn btn-warning edit-unit" data-id="${unit.id}">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button class="btn btn-danger delete-unit" data-id="${unit.id}">
-                            <i class="fas fa-trash"></i> Excluir
-                        </button>
-                    </div>
-                `;
-                this.elements.unitsList.appendChild(item);
-            });
-
-            document.querySelectorAll('.edit-unit').forEach(btn => {
-                btn.addEventListener('click', () => App.editUnit(parseInt(btn.dataset.id)));
-            });
-
-            document.querySelectorAll('.delete-unit').forEach(btn => {
-                btn.addEventListener('click', () => App.deleteUnit(parseInt(btn.dataset.id)));
-            });
-        },
-
-        getTypeLabel(type) {
-            const types = {
-                'promocao': 'Promoção',
-                'recuperacao': 'Recuperação', 
-                'administrativo': 'Administrativo',
-                'vigilancia': 'Vigilância',
-                'capne': 'Capne',
-                'outros': 'Outros'
-            };
-            return types[type] || type;
-        },
-
-        setCounts(allCount, favoritesCount) {
-            this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
-            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
-        },
-
-        // NOVO: Mostrar/ocultar loading
-        showLoading(message = 'Carregando dados...') {
-            document.getElementById('loadingScreen').style.display = 'flex';
-            document.getElementById('loadingStatus').textContent = message;
-            document.getElementById('telefonia-container').style.display = 'none';
-        },
-
-        hideLoading() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('telefonia-container').style.display = 'block';
+          } catch(e){ console.warn('git config parse err', e); }
         }
+      },
+
+      showSyncStatus(message, type='info') {
+        const el = this.elements.syncStatus;
+        let cls='sync-loading';
+        if (type==='success') cls='sync-success';
+        if (type==='error') cls='sync-error';
+        el.innerHTML = `<div class="sync-status ${cls}">${message}</div>`;
+        if (type==='success') setTimeout(()=>{ el.innerHTML=''; },5000);
+      },
+
+      renderContacts(contacts, containerKind='all') {
+        const target = containerKind==='all' ? this.elements.allContacts : this.elements.favoritesContacts;
+        target.innerHTML='';
+        if (!contacts || contacts.length===0) {
+          target.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>Nenhum contato encontrado</h3><p>Tente ajustar filtros</p></div>`;
+          return;
+        }
+        contacts.forEach(c => {
+          const card = this.createContactCard(c);
+          target.appendChild(card);
+        });
+        this.attachFavoriteListeners();
+      },
+
+      createContactCard(contact) {
+        const phoneClean = (contact.phone || '').replace(/\D/g,'');
+        const telLink = `tel:+55${phoneClean}`;
+        const whatsappLink = `https://wa.me/55${phoneClean}`;
+        const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
+        const typeLabel = this.getTypeLabel(contact.type);
+
+        const card = document.createElement('div');
+        card.className='contact-card';
+        card.innerHTML = `
+          <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar"><i class="fas fa-star"></i></button>
+          <div class="contact-header">
+            <div>
+              <h3 class="contact-name">${contact.name || ''}</h3>
+              <span class="contact-type">${typeLabel}</span>
+            </div>
+          </div>
+          <div class="contact-info">
+            <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${contact.address || ''}, ${contact.bairro || ''}</span></div>
+            <div class="contact-item"><i class="fas fa-phone"></i><span>${contact.phone || ''}</span></div>
+            ${contact.email ? `<div class="contact-item"><i class="fas fa-envelope"></i><span>${contact.email}</span></div>` : ''}
+            ${contact.enfermeiro ? `<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${contact.enfermeiro}</span></div>` : ''}
+            ${contact.gerente ? `<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${contact.gerente}</span></div>` : ''}
+            ${contact.responsavel ? `<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${contact.responsavel}</span></div>` : ''}
+          </div>
+          <div class="contact-services">
+            <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-syringe"></i><span class="service-label">Vacina</span></div>
+            <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-tooth"></i><span class="service-label">Odonto</span></div>
+            <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-pills"></i><span class="service-label">Farmácia</span></div>
+          </div>
+          <div class="contact-actions">
+            <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
+            <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+            <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
+          </div>
+        `;
+        return card;
+      },
+
+      attachFavoriteListeners() {
+        document.querySelectorAll('.favorite-btn').forEach(btn=>{
+          btn.addEventListener('click', async ()=>{
+            const id = parseInt(btn.dataset.id);
+            await App.toggleFavorite(id);
+            App.refreshAll();
+          });
+        });
+      },
+
+      renderUnitsList(units) {
+        this.elements.unitsList.innerHTML='';
+        units.forEach(unit=>{
+          const item = document.createElement('div');
+          item.className='unit-item';
+          item.innerHTML = `<div class="unit-info"><h4>${unit.name}</h4><p>${this.getTypeLabel(unit.type)} - ${unit.phone || ''}</p></div>
+            <div class="unit-actions">
+              <button class="btn btn-warning edit-unit" data-id="${unit.id}"><i class="fas fa-edit"></i> Editar</button>
+              <button class="btn btn-danger delete-unit" data-id="${unit.id}"><i class="fas fa-trash"></i> Excluir</button>
+            </div>`;
+          this.elements.unitsList.appendChild(item);
+        });
+
+        document.querySelectorAll('.edit-unit').forEach(btn => btn.addEventListener('click', ()=>App.editUnit(parseInt(btn.dataset.id))));
+        document.querySelectorAll('.delete-unit').forEach(btn => btn.addEventListener('click', ()=>App.deleteUnit(parseInt(btn.dataset.id))));
+      },
+
+      getTypeLabel(type){
+        const types = {'promocao':'Promoção','recuperacao':'Recuperação','administrativo':'Administrativo','vigilancia':'Vigilância','capne':'Capne','outros':'Outros'};
+        return types[type]||type;
+      },
+
+      setCounts(allCount,favoritesCount){
+        this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
+        this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
+      },
+
+      showLoading(msg='Carregando dados...'){ document.getElementById('loadingScreen').style.display='flex'; document.getElementById('loadingStatus').textContent=msg; document.getElementById('telefonia-container').style.display='none'; },
+      hideLoading(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('telefonia-container').style.display='block'; }
     };
 
-    // =============================================
-    // MAIN APPLICATION - VERSÃO DEFINITIVA COM SYNC AUTOMÁTICO
-    // =============================================
+    /* ===============================
+       APP: lógica principal
+       =============================== */
     const App = {
-        units: [],
-        favorites: [],
+      units: [],
+      favorites: [],
 
-        async init() {
-            console.log('🚀 Iniciando aplicação Telefonia SMS...');
-            UI.showLoading('Conectando ao GitHub...');
-            
-            try {
-                UI.init();
-                this.loadFavorites();
-                await this.refreshAll();
-                
-                // Configurar verificações automáticas
-                this.setupAutoRefresh();
-                
-            } catch (error) {
-                console.error('💥 Erro na inicialização:', error);
-                UI.showSyncStatus('Erro ao carregar dados. Verifique o console.', 'error');
-            } finally {
-                UI.hideLoading();
-            }
-        },
-
-        loadFavorites() {
-            const favs = localStorage.getItem('telefonia_favorites');
-            this.favorites = favs ? JSON.parse(favs) : [];
-        },
-
-        async refreshAll() {
-            console.log('🔄 Atualizando dados da aplicação...');
-            
-            // SEMPRE carregar do GitHub primeiro
-            this.units = await DataService.getUnits();
-            console.log('📊 Unidades carregadas:', this.units.length);
-            
-            // Atualizar favoritos
-            this.units.forEach(unit => {
-                unit.favorite = this.favorites.includes(unit.id);
-            });
-
-            UI.renderContacts(this.units, 'all');
-            UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
-            UI.renderUnitsList(this.units);
-            UI.setCounts(this.units.length, this.favorites.length);
-        },
-
-        // NOVO: Configurar atualização automática
-        setupAutoRefresh() {
-            // Verificar atualizações a cada 2 minutos
-            setInterval(async () => {
-                console.log('⏰ Verificando atualizações no GitHub...');
-                try {
-                    const remoteData = await DataService.loadFromGitHubRaw();
-                    if (remoteData && remoteData.length !== this.units.length) {
-                        console.log('🔄 Atualizações encontradas! Recarregando...');
-                        await this.refreshAll();
-                        this.showUpdateNotification();
-                    }
-                } catch (error) {
-                    console.log('❌ Erro na verificação automática:', error);
-                }
-            }, 120000); // 2 minutos
-        },
-
-        showUpdateNotification() {
-            const notification = document.createElement('div');
-            notification.className = 'update-notification';
-            notification.innerHTML = `
-                <i class="fas fa-sync-alt"></i>
-                <span>Dados atualizados carregados do GitHub!</span>
-                <button onclick="this.parentElement.remove()">✕</button>
-            `;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 5000);
-        },
-
-        async toggleFavorite(unitId) {
-            const index = this.favorites.indexOf(unitId);
-            
-            if (index === -1) {
-                this.favorites.push(unitId);
-            } else {
-                this.favorites.splice(index, 1);
-            }
-
-            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            
-            const unitIndex = this.units.findIndex(u => u.id === unitId);
-            if (unitIndex !== -1) {
-                this.units[unitIndex].favorite = !this.units[unitIndex].favorite;
-                await DataService.saveUnit(this.units[unitIndex]);
-            }
-
-            this.refreshAll();
-        },
-
-        async filterContacts(filter) {
-            let filtered = [...this.units];
-            
-            if (filter && filter !== 'all') {
-                filtered = filtered.filter(unit => unit.type === filter);
-            }
-
-            const vaccineFilter = document.querySelector('.service-toggle-btn[data-service="vaccine"]').getAttribute('data-value');
-            const dentalFilter = document.querySelector('.service-toggle-btn[data-service="dental"]').getAttribute('data-value');
-            const pharmacyFilter = document.querySelector('.service-toggle-btn[data-service="pharmacy"]').getAttribute('data-value');
-
-            if (vaccineFilter) {
-                filtered = filtered.filter(unit => unit.vacina === vaccineFilter);
-            }
-            if (dentalFilter) {
-                filtered = filtered.filter(unit => unit.odonto === dentalFilter);
-            }
-            if (pharmacyFilter) {
-                filtered = filtered.filter(unit => unit.farmacia === pharmacyFilter);
-            }
-
-            const searchTerm = UI.elements.searchInput.value.toLowerCase().trim();
-            if (searchTerm) {
-                filtered = filtered.filter(unit => 
-                    unit.name.toLowerCase().includes(searchTerm) ||
-                    unit.phone.includes(searchTerm) ||
-                    unit.address.toLowerCase().includes(searchTerm) ||
-                    unit.bairro.toLowerCase().includes(searchTerm) ||
-                    (unit.enfermeiro && unit.enfermeiro.toLowerCase().includes(searchTerm)) ||
-                    (unit.gerente && unit.gerente.toLowerCase().includes(searchTerm)) ||
-                    (unit.responsavel && unit.responsavel.toLowerCase().includes(searchTerm))
-                );
-            }
-
-            UI.renderContacts(filtered, 'all');
-            UI.setCounts(filtered.length, this.favorites.length);
-        },
-
-        performSearch() {
-            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-            this.filterContacts(activeFilter);
-        },
-
-        editUnit(id) {
-            if (!AuthService.isLogged()) {
-                UI.showLogin();
-                return;
-            }
-
-            const unit = this.units.find(u => u.id === id);
-            if (!unit) return;
-
-            document.getElementById('unitName').value = unit.name;
-            document.getElementById('unitType').value = unit.type;
-            document.getElementById('unitAddress').value = unit.address;
-            document.getElementById('unitBairro').value = unit.bairro;
-            document.getElementById('unitPhone').value = unit.phone;
-            document.getElementById('unitEmail').value = unit.email || '';
-            document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
-            document.getElementById('unitGerente').value = unit.gerente || '';
-            document.getElementById('unitVacina').value = unit.vacina || 'Não';
-            document.getElementById('unitOdonto').value = unit.odonto || 'Não';
-            document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
-            document.getElementById('unitResponsavel').value = unit.responsavel || '';
-
-            UI.elements.formTitle.textContent = 'Editar Unidade';
-            UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
-            UI.elements.cancelEdit.style.display = 'inline-flex';
-            UI.elements.unitForm.setAttribute('data-edit-id', id);
-
-            setTimeout(() => UI.setupConditionalFormLogic(), 100);
-
-            UI.elements.adminTabs.forEach(tab => tab.classList.remove('active'));
-            document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
-            document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
-            document.getElementById('add-content').classList.add('active');
-
-            UI.openAdmin();
-        },
-
-        async deleteUnit(id) {
-            if (!AuthService.isLogged()) {
-                UI.showLogin();
-                return;
-            }
-
-            if (!confirm('Tem certeza que deseja excluir esta unidade?')) {
-                return;
-            }
-
-            if (await DataService.deleteUnit(id)) {
-                this.favorites = this.favorites.filter(favId => favId !== id);
-                localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-                await this.refreshAll();
-                alert('Unidade excluída com sucesso!');
-            } else {
-                alert('Erro ao excluir unidade!');
-            }
-        },
-
-        async saveUnitFromForm() {
-            if (!AuthService.isLogged()) {
-                UI.showLogin();
-                return;
-            }
-
-            const editId = UI.elements.unitForm.getAttribute('data-edit-id');
-            const responsibleField = document.getElementById('unitResponsavel');
-            const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
-
-            if (isResponsibleVisible && !responsibleField.value.trim()) {
-                alert('Por favor, preencha o campo Responsável!');
-                responsibleField.focus();
-                return;
-            }
-
-            const unitData = {
-                id: editId ? parseInt(editId) : undefined,
-                name: document.getElementById('unitName').value,
-                type: document.getElementById('unitType').value,
-                address: document.getElementById('unitAddress').value,
-                bairro: document.getElementById('unitBairro').value,
-                phone: document.getElementById('unitPhone').value,
-                email: document.getElementById('unitEmail').value,
-                enfermeiro: document.getElementById('unitEnfermeiro').value,
-                gerente: document.getElementById('unitGerente').value,
-                vacina: document.getElementById('unitVacina').value,
-                odonto: document.getElementById('unitOdonto').value,
-                farmacia: document.getElementById('unitFarmacia').value,
-                responsavel: document.getElementById('unitResponsavel').value,
-                favorite: editId ? (this.units.find(u => u.id === parseInt(editId))?.favorite || false) : false
-            };
-
-            const savedUnit = await DataService.saveUnit(unitData);
-            if (savedUnit) {
-                await this.refreshAll();
-                UI.elements.unitForm.reset();
-                UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                UI.elements.cancelEdit.style.display = 'none';
-                UI.elements.unitForm.removeAttribute('data-edit-id');
-                UI.setupConditionalFormLogic();
-
-                alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
-            } else {
-                alert('Erro ao salvar unidade!');
-            }
-        },
-
-        // GitHub Sync
-        saveGitHubConfig() {
-            const token = UI.elements.githubToken.value.trim();
-            const owner = UI.elements.repoOwner.value.trim();
-            const repo = UI.elements.repoName.value.trim();
-            const filePath = UI.elements.filePath.value.trim();
-
-            if (!token || !owner || !repo || !filePath) {
-                alert('Preencha todos os campos!');
-                return;
-            }
-
-            DataService.githubToken = token;
-            DataService.repoOwner = owner;
-            DataService.repoName = repo;
-            DataService.filePath = filePath;
-
-            localStorage.setItem('github_config', JSON.stringify({
-                token,
-                owner, 
-                repo,
-                filePath
-            }));
-
-            UI.elements.githubToken.value = '';
-            UI.elements.githubToken.placeholder = '•••••••••• (configurado com sucesso)';
-            UI.showSyncStatus('Configuração do GitHub salva com sucesso!', 'success');
-        },
-
-        async syncToGitHub() {
-            UI.showSyncStatus('<div class="loading"></div> Sincronizando com GitHub...', 'loading');
-            
-            const result = await DataService.syncToGitHub();
-            
-            if (result.success) {
-                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
-            } else {
-                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
-            }
-        },
-
-        async pullFromGitHub() {
-            if (!confirm('Isso substituirá os dados locais pelos do GitHub. Continuar?')) {
-                return;
-            }
-
-            UI.showSyncStatus('<div class="loading"></div> Buscando dados do GitHub...', 'loading');
-            
-            const result = await DataService.pullFromGitHub();
-            
-            if (result.success) {
-                this.units = result.data;
-                await this.refreshAll();
-                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
-            } else {
-                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
-            }
-        },
-
-        async testGitHubConnection() {
-            UI.showSyncStatus('<div class="loading"></div> Testando conexão...', 'loading');
-            
-            const result = await DataService.testGitHubConnection();
-            
-            if (result.success) {
-                UI.showSyncStatus(`<i class="fas fa-check"></i> ${result.message}`, 'success');
-            } else {
-                UI.showSyncStatus(`<i class="fas fa-times"></i> ${result.message}`, 'error');
-            }
-        },
-
-        // Sincronização automática
-        toggleAutoSync() {
-            const newState = !DataService.autoSyncEnabled;
-            DataService.setAutoSync(newState);
-            
-            if (newState) {
-                UI.showSyncStatus('Sincronização automática ATIVADA - As alterações serão enviadas automaticamente para o GitHub', 'success');
-            } else {
-                UI.showSyncStatus('Sincronização automática DESATIVADA', 'warning');
-            }
-        },
-
-        // Backup e restore
-        backupData() {
-            const data = {
-                units: this.units,
-                favorites: this.favorites,
-                timestamp: new Date().toISOString()
-            };
-
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup-telefonia-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            alert('Backup realizado com sucesso!');
-        },
-
-        restoreData(file) {
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    if (!data.units) {
-                        alert('Arquivo de backup inválido!');
-                        return;
-                    }
-
-                    if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
-                        DataService.saveUnits(data.units);
-                        
-                        if (data.favorites) {
-                            this.favorites = data.favorites;
-                            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-                        }
-
-                        this.refreshAll();
-                        alert('Dados restaurados com sucesso!');
-                    }
-                } catch (error) {
-                    alert('Erro ao ler arquivo: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-            UI.elements.restoreInput.value = '';
-        },
-
-        clearAllData() {
-            if (!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) {
-                return;
-            }
-
-            localStorage.removeItem('units');
-            localStorage.removeItem('telefonia_favorites');
-            localStorage.removeItem('telefonia_isLogged');
-            localStorage.removeItem('github_config');
-            localStorage.removeItem('github_auto_sync');
-            
-            this.units = [];
-            this.favorites = [];
-            this.refreshAll();
-            
-            alert('Todos os dados foram apagados!');
+      async init() {
+        UI.init();
+        this.loadFavorites();
+        UI.showLoading('Conectando e carregando dados...');
+        try {
+          await this.refreshAll();
+          // check periodic remote updates (optional)
+          setInterval(()=>this.checkRemoteUpdates(), 120000); // 2min
+        } catch(e) {
+          console.error('init err', e);
+        } finally {
+          UI.hideLoading();
         }
+      },
+
+      loadFavorites() {
+        const f = localStorage.getItem('telefonia_favorites');
+        this.favorites = f ? JSON.parse(f) : [];
+      },
+
+      async refreshAll() {
+        const units = await DataService.getUnits();
+        this.units = units || [];
+        this.units.forEach(u => u.favorite = this.favorites.includes(u.id));
+        UI.renderContacts(this.units, 'all');
+        UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
+        UI.renderUnitsList(this.units);
+        UI.setCounts(this.units.length, this.favorites.length);
+      },
+
+      async checkRemoteUpdates() {
+        try {
+          const remote = await DataService.loadFromGitHubRaw();
+          if (Array.isArray(remote) && remote.length !== this.units.length) {
+            console.log('Atualização no GitHub detectada, recarregando...');
+            await this.refreshAll();
+            this.showUpdateNotification();
+          }
+        } catch(e) { console.warn('checkRemoteUpdates err', e); }
+      },
+
+      showUpdateNotification() {
+        const n = document.createElement('div');
+        n.className='update-notification';
+        n.innerHTML = `<i class="fas fa-sync-alt"></i><span>Dados atualizados carregados do GitHub!</span><button onclick="this.parentElement.remove()">✕</button>`;
+        document.body.appendChild(n);
+        setTimeout(()=>{ if(n.parentElement) n.remove(); },5000);
+      },
+
+      async toggleFavorite(id) {
+        const idx = this.favorites.indexOf(id);
+        if (idx === -1) this.favorites.push(id); else this.favorites.splice(idx,1);
+        localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+      },
+
+      performSearch() {
+        const q = UI.elements.searchInput.value.trim().toLowerCase();
+        const filtered = this.units.filter(u => {
+          if (!q) return true;
+          return (u.name||'').toLowerCase().includes(q) || (u.phone||'').toLowerCase().includes(q) || (u.address||'').toLowerCase().includes(q) || (u.enfermeiro||'').toLowerCase().includes(q) || (u.gerente||'').toLowerCase().includes(q);
+        });
+        UI.renderContacts(filtered, 'all');
+      },
+
+      filterContacts(filter) {
+        let filtered = this.units.slice();
+        if (filter && filter !== 'all') filtered = filtered.filter(u => u.type === filter);
+        // apply service filters
+        document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
+          const sv = btn.getAttribute('data-service');
+          const val = btn.getAttribute('data-value');
+          if (val === 'Sim') {
+            if (sv === 'vaccine') filtered = filtered.filter(u => (u.vacina||'') === 'Sim');
+            if (sv === 'dental') filtered = filtered.filter(u => (u.odonto||'') === 'Sim');
+            if (sv === 'pharmacy') filtered = filtered.filter(u => (u.farmacia||'') === 'Sim');
+          }
+        });
+        UI.renderContacts(filtered, 'all');
+      },
+
+      async saveUnitFromForm() {
+        const form = document.getElementById('unitForm');
+        // collect fields
+        const unit = {
+          name: document.getElementById('unitName').value.trim(),
+          type: document.getElementById('unitType').value,
+          address: document.getElementById('unitAddress').value.trim(),
+          bairro: document.getElementById('unitBairro').value.trim(),
+          phone: document.getElementById('unitPhone').value.trim(),
+          email: document.getElementById('unitEmail').value.trim(),
+          vacina: document.getElementById('unitVacina').value,
+          odonto: document.getElementById('unitOdonto').value,
+          farmacia: document.getElementById('unitFarmacia').value,
+          enfermeiro: document.getElementById('unitEnfermeiro').value.trim(),
+          gerente: document.getElementById('unitGerente').value.trim(),
+          responsavel: document.getElementById('unitResponsavel') ? document.getElementById('unitResponsavel').value.trim() : ''
+        };
+        const editId = form.getAttribute('data-edit-id');
+        if (editId) unit.id = parseInt(editId);
+
+        const ok = await DataService.saveUnit(unit);
+        if (ok) {
+          UI.showSyncStatus('Unidade salva localmente.', 'success');
+          await this.refreshAll();
+        } else {
+          UI.showSyncStatus('Erro ao salvar localmente.', 'error');
+        }
+      },
+
+      editUnit(id) {
+        const unit = this.units.find(u=>u.id===id);
+        if (!unit) return alert('Unidade não encontrada');
+        document.getElementById('unitName').value = unit.name || '';
+        document.getElementById('unitType').value = unit.type || '';
+        document.getElementById('unitAddress').value = unit.address || '';
+        document.getElementById('unitBairro').value = unit.bairro || '';
+        document.getElementById('unitPhone').value = unit.phone || '';
+        document.getElementById('unitEmail').value = unit.email || '';
+        document.getElementById('unitVacina').value = unit.vacina || 'Não';
+        document.getElementById('unitOdonto').value = unit.odonto || 'Não';
+        document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+        document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
+        document.getElementById('unitGerente').value = unit.gerente || '';
+        if (document.getElementById('unitResponsavel')) document.getElementById('unitResponsavel').value = unit.responsavel || '';
+        const form = document.getElementById('unitForm');
+        form.setAttribute('data-edit-id', String(unit.id));
+        UI.elements.formTitle.textContent = 'Editar Unidade';
+        UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+        UI.elements.cancelEdit.style.display = 'inline-flex';
+        UI.setupConditionalFormLogic();
+        UI.openAdmin();
+      },
+
+      async deleteUnit(id) {
+        if (!confirm('Confirma exclusão da unidade?')) return;
+        const ok = await DataService.deleteUnit(id);
+        if (ok) {
+          UI.showSyncStatus('Unidade excluída localmente.', 'success');
+          await this.refreshAll();
+        } else {
+          UI.showSyncStatus('Erro ao excluir unidade.', 'error');
+        }
+      },
+
+      async saveGitHubConfig() {
+        const token = document.getElementById('githubToken').value.trim();
+        const owner = document.getElementById('repoOwner').value.trim();
+        const repo = document.getElementById('repoName').value.trim();
+        const file = document.getElementById('filePath').value.trim();
+        if (!token || !owner || !repo || !file) return alert('Preencha token, proprietário, repo e caminho do arquivo.');
+        DataService.githubToken = token;
+        DataService.repoOwner = owner;
+        DataService.repoName = repo;
+        DataService.filePath = file;
+        localStorage.setItem('github_config', JSON.stringify({ token, owner, repo, filePath: file }));
+        UI.showSyncStatus('Configuração salva localmente. Token armazenado no seu navegador.', 'success');
+        document.getElementById('githubToken').value = '';
+        document.getElementById('githubToken').placeholder = '•••••• (configurado)';
+      },
+
+      async testGitHubConnection() {
+        UI.showSyncStatus('Testando conexão...', 'info');
+        const result = await DataService.testGitHubConnection();
+        if (result.success) UI.showSyncStatus(result.message, 'success'); else UI.showSyncStatus(result.message, 'error');
+      },
+
+      async syncToGitHub() {
+        UI.showSyncStatus('Sincronizando para o GitHub...', 'info');
+        const result = await DataService.syncToGitHub();
+        if (result.success) {
+          UI.showSyncStatus(result.message, 'success');
+          // após envio, opcional: puxar para atualizar sha local e notificar
+        } else {
+          UI.showSyncStatus(result.message, 'error');
+        }
+      },
+
+      async pullFromGitHub() {
+        UI.showSyncStatus('Puxando dados do GitHub...', 'info');
+        const result = await DataService.pullFromGitHub();
+        if (result.success) {
+          UI.showSyncStatus(result.message, 'success');
+          await this.refreshAll();
+        } else {
+          UI.showSyncStatus(result.message, 'error');
+        }
+      },
+
+      async toggleAutoSync() {
+        const enabled = !DataService.autoSyncEnabled;
+        DataService.setAutoSync(enabled);
+        UI.showSyncStatus(enabled ? 'Sincronização automática ativada (verificações).' : 'Sincronização automática desativada.', 'success');
+      },
+
+      async testGitHubConnection() {
+        // wrapper for UI
+        UI.showSyncStatus('Testando conexão...', 'info');
+        const r = await DataService.testGitHubConnection();
+        if (r.success) UI.showSyncStatus(r.message, 'success'); else UI.showSyncStatus(r.message, 'error');
+      },
+
+      backupData() {
+        const data = JSON.stringify(DataService.getUnitsSync(),null,2);
+        const blob = new Blob([data], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'units-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      },
+
+      restoreData(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (!Array.isArray(parsed)) return alert('Arquivo inválido: deve ser um array JSON de unidades');
+            DataService.saveUnits(parsed);
+            UI.showSyncStatus('Dados restaurados localmente.', 'success');
+            this.refreshAll();
+          } catch (err) {
+            alert('Erro ao ler arquivo: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      clearAllData() {
+        if (!confirm('Tem certeza que deseja limpar todos os dados locais?')) return;
+        localStorage.removeItem('units');
+        UI.showSyncStatus('Dados locais removidos.', 'success');
+        this.refreshAll();
+      }
     };
 
-    // Inicializar aplicação
-    document.addEventListener('DOMContentLoaded', () => App.init());
+    /* ===============================
+       Inicialização
+       =============================== */
+    window.addEventListener('load', ()=>{ App.init(); });
 
-    // Expor para debugging
-    window.App = App;
-    window.UI = UI;
-    window.DataService = DataService;
-    </script>
+    // expose helper on window for in-HTML onclick usage if needed
+    window.App = App; window.UI = UI; window.DataService = DataService;
+  </script>
 </body>
 </html>
