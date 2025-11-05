@@ -71,6 +71,7 @@
     .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,.3)}
     .btn-danger{background:var(--danger);color:#fff}
     .btn-warning{background:var(--warning);color:#fff}
+    .btn-info{background:#3498db;color:#fff}
 
     /* Admin Panel */
     .admin-panel{display:none;background:#fff;border-radius:var(--radius);padding:30px;margin:30px 0;box-shadow:var(--shadow);width:100%;border:1px solid rgba(0,0,0,.05);}
@@ -106,6 +107,9 @@
     .service-toggle-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);}
     .service-toggle-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
     .service-toggle-btn i{font-size:1rem}
+    .view-options .btn { padding: 8px 15px; font-size: 0.9rem; }
+    .view-options { margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; }
+    .view-options .btn.active { box-shadow: 0 4px 12px rgba(0,0,0,.2); }
 
     .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:25px;flex-wrap:wrap;background:#f8f9fa;padding:5px;border-radius:var(--radius-sm);}
     .tab{padding:14px 28px;cursor:pointer;border-radius:var(--radius-sm);transition:var(--transition);font-weight:600;flex:1;text-align:center;}
@@ -114,6 +118,7 @@
     .content.active{display:block;animation:fadeIn .4s ease}
     .results-count{margin-bottom:20px;color:var(--gray);font-size:.95rem;width:100%;padding:12px 0;font-weight:500}
 
+    /* Block View (Grid) */
     .contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:25px;width:100%}
     .contact-card{background:#fff;border-radius:var(--radius);padding:25px;box-shadow:var(--shadow);transition:var(--transition);border-left:5px solid var(--primary);display:flex;flex-direction:column;min-height:420px;position:relative;border:1px solid rgba(0,0,0,.05);}
     .favorite-btn{position:absolute;top:20px;right:20px;background:none;border:0;font-size:1.4rem;color:var(--gray);cursor:pointer;z-index:10;transition:var(--transition);}
@@ -127,9 +132,7 @@
     .contact-item i{width:20px;color:var(--primary);margin-top:2px;font-size:1.1rem}
     .contact-services{display:flex;justify-content:space-between;margin-top:20px;padding-top:20px;border-top:2px solid var(--border);width:100%}
     .service{display:flex;flex-direction:column;align-items:center;text-align:center;transition:var(--transition)}
-    .service i{font-size:1.4rem;margin-bottom:.4rem;transition:var(--transition)}
     .service.available{color:var(--secondary)}
-    .service.available i{transform:scale(1.1)}
     .service.unavailable{color:var(--gray);opacity:.6}
     .service-label{font-size:.75rem;margin-top:.3rem;font-weight:600}
     .contact-actions{display:flex;gap:12px;margin-top:20px;width:100%}
@@ -139,18 +142,37 @@
     .whatsapp-btn{background:#25D366;color:#fff}
     .location-btn{background:transparent;border:2px solid var(--border);color:var(--gray)}
     .location-btn:hover{background:var(--border);color:var(--dark)}
-
     .no-results{text-align:center;padding:50px;color:var(--gray);width:100%;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
     .no-results i{font-size:3rem;margin-bottom:20px;color:var(--primary);opacity:.5}
+
+    /* Table View Styles */
+    .contact-table-wrapper { display: block; width:100%; overflow-x: auto; }
+    .contact-table{width:100%;border-collapse:collapse;margin-top:5px;box-shadow:var(--shadow);border-radius:var(--radius);overflow:hidden;background:#fff;}
+    .contact-table th,.contact-table td{padding:15px;text-align:left;border-bottom:1px solid var(--border)}
+    .contact-table th{background:var(--primary);color:#fff;font-weight:600;text-transform:uppercase;font-size:0.9rem;white-space: nowrap;}
+    .contact-table tr:hover{background:var(--light);transition:background .3s ease}
+    .contact-table td{font-size:0.95rem;color:var(--dark);vertical-align:middle;padding:15px;}
+    .contact-table .unit-name{font-weight:600;color:var(--primary-dark);display:block;margin-bottom:5px;}
+    .contact-table .unit-type{font-size:0.8rem;background:rgba(44,106,160,.1);color:var(--primary);padding:4px 8px;border-radius:12px;font-weight:600}
+    .contact-table .table-actions{display:flex;gap:8px}
+    .contact-table .action-btn{padding:8px 12px;font-size:0.8rem;border-radius:var(--radius-sm)}
+    .contact-table .call-btn{background:var(--secondary)}
+    .contact-table .whatsapp-btn{background:#25D366}
+    .contact-table .location-btn{background:var(--gray)}
+    .contact-table .unit-ramal {color: var(--danger); font-weight: 700; font-size: 0.85rem;}
+    .contact-table .service-item { display: inline-flex; align-items: center; margin-right: 15px; font-size: 0.85rem; }
+    .contact-table .service-item i { margin-right: 5px; }
 
     .footer{background:var(--dark);color:#fff;text-align:center;padding:25px 0;position:fixed;bottom:0;left:0;width:100%;z-index:100;backdrop-filter:blur(10px);background:rgba(52,58,64,.95);}
 
     body.dark-mode{background:#1a1d23;color:#e9ecef}
-    body.dark-mode .search-container, body.dark-mode .contact-card, body.dark-mode .filter-btn, body.dark-mode .service-toggle-btn, body.dark-mode .admin-panel, body.dark-mode .unit-item, body.dark-mode .login-form{background:#2d3239;color:#e9ecef;border-color:#3d434b}
+    body.dark-mode .search-container, body.dark-mode .contact-card, body.dark-mode .filter-btn, body.dark-mode .service-toggle-btn, body.dark-mode .admin-panel, body.dark-mode .unit-item, body.dark-mode .login-form, body.dark-mode .contact-table{background:#2d3239;color:#e9ecef;border-color:#3d434b}
     body.dark-mode .search-input, body.dark-mode .filter-btn, body.dark-mode .service-toggle-btn, body.dark-mode .form-control{background:#343a40;border-color:#495057;color:#e9ecef}
     body.dark-mode .search-input:focus, body.dark-mode .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3)}
     body.dark-mode .service-toggle-btn{background:#343a40;border-color:#495057;color:#e9ecef}
     body.dark-mode .service-toggle-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    body.dark-mode .contact-table th { background: var(--primary-dark); }
+    body.dark-mode .contact-table tr:hover { background: #3d434b; }
     .hidden { display: none !important; }
 
     /* Git Sync UI */
@@ -173,20 +195,30 @@
     @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
 
     @media (max-width:1200px){.contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}.form-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
-    @media (max-width:992px){.contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}.admin-tabs,.tabs{flex-wrap:wrap}.admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}}
-    @media (max-width:768px){.header-content{flex-direction:column;gap:15px;text-align:center}.contact-grid,.ramais-container{grid-template-columns:1fr}.search-box{flex-direction:column}.filter-options,.service-filters{justify-content:center}.tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}.form-grid{grid-template-columns:1fr}.unit-item{flex-direction:column;align-items:flex-start;gap:15px}.unit-actions{width:100%;justify-content:flex-end}.admin-tabs,.tabs{padding:3px}.admin-tab,.tab{padding:10px 16px;font-size:0.9rem}.contact-card{min-height:380px;padding:20px}.contact-actions{flex-direction:column}.action-btn{width:100%}.form-actions{flex-direction:column}.btn{width:100%;justify-content:center}}
+    @media (max-width:992px){
+        .contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}.admin-tabs,.tabs{flex-wrap:wrap}.admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}
+        /* Mobile Table View */
+        .contact-table { border: none; }
+        .contact-table thead, .contact-table tbody, .contact-table th, .contact-table td, .contact-table tr { display: block; }
+        .contact-table thead { display: none; }
+        .contact-table tr { border: 1px solid var(--border); margin-bottom: 10px; border-radius: var(--radius-sm); overflow: hidden; background: #fff; box-shadow: var(--shadow); }
+        .contact-table td { border-bottom: none; position: relative; padding-left: 50%; text-align: right; }
+        .contact-table td:before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: 600; color: var(--gray); font-size: 0.9rem; }
+        .contact-table .table-actions { justify-content: flex-end; }
+        .contact-table .table-actions .action-btn { flex: 1; }
+        .contact-table .service-item { display: block; text-align: right; }
+    }
+    @media (max-width:768px){.header-content{flex-direction:column;gap:15px;text-align:center}.contact-grid{grid-template-columns:1fr}.search-box{flex-direction:column}.filter-options,.service-filters{justify-content:center}.tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}.form-grid{grid-template-columns:1fr}.unit-item{flex-direction:column;align-items:flex-start;gap:15px}.unit-actions{width:100%;justify-content:flex-end}.admin-tabs,.tabs{padding:3px}.admin-tab,.tab{padding:10px 16px;font-size:0.9rem}.contact-card{min-height:380px;padding:20px}.contact-actions{flex-direction:column}.action-btn{width:100%}.form-actions{flex-direction:column}.btn{width:100%;justify-content:center}}
     @media (max-width:480px){.logo h1{font-size:1.5rem}.logo i{font-size:1.8rem}.tab{padding:10px 12px;font-size:.85rem}.service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}.filter-btn{padding:8px 15px;font-size:0.8rem}.search-input{padding:14px 16px}.contact-grid{gap:15px}.container{padding:0 15px}.search-container,.admin-panel{padding:20px}.contact-card{padding:18px;min-height:360px}.contact-name{font-size:1.2rem}.contact-item{gap:10px;padding:6px 0}.contact-services{margin-top:15px;padding-top:15px}}
   </style>
 </head>
 <body>
-  <!-- LOADING SCREEN -->
   <div class="loading-screen" id="loadingScreen" style="display:none">
     <div class="loading-spinner"></div>
     <h2>Carregando dados...</h2>
     <p id="loadingStatus">Preparando</p>
   </div>
 
-  <!-- LOGIN MODAL -->
   <div class="login-modal" id="loginModal" aria-hidden="true">
     <div class="login-form" role="dialog" aria-labelledby="loginTitle">
       <h2 id="loginTitle"><i class="fas fa-lock"></i> Acesso Administrativo</h2>
@@ -224,7 +256,6 @@
       </div>
     </header>
 
-    <!-- ADMIN PANEL -->
     <div class="admin-panel" id="adminPanel" aria-hidden="true">
       <div class="container">
         <div class="admin-header">
@@ -242,13 +273,11 @@
           <div class="admin-tab" data-tab="config" role="tab">Configurações</div>
         </div>
 
-        <!-- UNITS -->
         <div class="admin-content active" id="units-content">
           <h3>Unidades Cadastradas</h3>
           <div class="units-list" id="unitsList"></div>
         </div>
 
-        <!-- ADD / EDIT UNIT -->
         <div class="admin-content" id="add-content">
           <h3 id="formTitle">Adicionar Nova Unidade</h3>
           <form id="unitForm">
@@ -268,6 +297,9 @@
               <div class="form-group"><label for="unitAddress">Endereço *</label><input type="text" id="unitAddress" class="form-control" required placeholder="Ex: Rua Exemplo, 123"><small class="form-text">O link do Google Maps será gerado automaticamente</small></div>
               <div class="form-group"><label for="unitBairro">Bairro *</label><input type="text" id="unitBairro" class="form-control" required placeholder="Ex: Centro"></div>
               <div class="form-group"><label for="unitPhone">Telefone *</label><input type="text" id="unitPhone" class="form-control" required placeholder="Ex: 3314-1234"><small class="form-text">O link do WhatsApp será gerado automaticamente</small></div>
+              
+              <div class="form-group"><label for="unitRamal">Ramal (Opcional)</label><input type="text" id="unitRamal" class="form-control" placeholder="Ex: 201"></div>
+              
               <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
 
               <div class="form-group hidden" id="responsibleFieldContainer">
@@ -304,7 +336,6 @@
           </form>
         </div>
 
-        <!-- GITHUB SYNC -->
         <div class="admin-content" id="github-content">
           <h3><i class="fab fa-github"></i> Sincronização com GitHub</h3>
           <div class="form-grid">
@@ -353,7 +384,6 @@
           </div>
         </div>
 
-        <!-- CONFIG -->
         <div class="admin-content" id="config-content">
           <h3>Configurações do Sistema</h3>
           <div class="form-grid">
@@ -366,11 +396,10 @@
       </div>
     </div>
 
-    <!-- MAIN -->
     <main class="container" style="padding-bottom:120px;">
       <div class="search-container">
         <div class="search-box">
-          <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
+          <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, ramal, endereço, enfermeiro ou gerente...">
           <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
         </div>
 
@@ -389,6 +418,11 @@
           <button class="service-toggle-btn" data-service="dental" data-value=""><i class="fas fa-tooth"></i>Com consultório odontológico</button>
           <button class="service-toggle-btn" data-service="pharmacy" data-value=""><i class="fas fa-pills"></i>Com farmácia</button>
         </div>
+
+        <div class="view-options">
+            <button class="btn btn-primary" id="viewBlock" title="Visualização em Blocos"><i class="fas fa-th-large"></i> Blocos</button>
+            <button class="btn btn-secondary" id="viewTable" title="Visualização em Tabela"><i class="fas fa-table"></i> Tabela</button>
+        </div>
       </div>
 
       <div class="tabs" role="tablist">
@@ -405,6 +439,7 @@
         <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
         <div class="contact-grid" id="favorites-contacts"></div>
       </div>
+
     </main>
 
     <footer class="footer">
@@ -413,724 +448,963 @@
       </div>
     </footer>
   </div>
-
+  
   <script>
-    /* ===============================
-       UTILIDADES (encoding/decoding safe unicode)
-       =============================== */
-    function utf8_to_b64(str) {
-      return btoa(unescape(encodeURIComponent(str)));
+    /* =============================== UTILIDADES (encoding/decoding safe unicode) =============================== */
+    function utf8_to_b64(str) { 
+        return btoa(unescape(encodeURIComponent(str))); 
     }
-    function b64_to_utf8(b64) {
-      return decodeURIComponent(escape(atob(b64)));
+    function b64_to_utf8(b64) { 
+        return decodeURIComponent(escape(atob(b64))); 
     }
 
-    /* ===============================
-       DATA SERVICE: manipula local + GitHub
-       =============================== */
+    /* =============================== DATA SERVICE: manipula local + GitHub =============================== */
     const DataService = {
-      githubToken: '',
-      repoOwner: 'gti-sms',
-      repoName: 'SMS',
-      filePath: 'data/units.json',
-      branch: 'main',
-      autoSyncEnabled: false,
+        githubToken: '',
+        repoOwner: 'gti-sms',
+        repoName: 'SMS',
+        filePath: 'data/units.json',
+        branch: 'main',
+        autoSyncEnabled: false,
 
-      async getUnits() {
-        // Tenta remote -> fallback local
-        try {
-          const remote = await this.loadFromGitHubRaw();
-          if (Array.isArray(remote) && remote.length > 0) {
-            this.saveUnits(remote);
-            return remote;
-          }
-        } catch (e) {
-          console.warn('Erro carregando remoto:', e.message);
-        }
-        return this.getUnitsSync();
-      },
-
-      async loadFromGitHubRaw() {
-        // tenta carregar via raw.githubusercontent (mais simples e cache bust)
-        const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?t=${Date.now()}`;
-        try {
-          const res = await fetch(url, {cache: 'no-cache'});
-          if (res.ok) {
-            const text = await res.text();
-            if (!text.trim()) return [];
-            const data = JSON.parse(text);
-            return Array.isArray(data) ? data : [];
-          } else {
-            if (res.status === 404) {
-              console.info('Arquivo raw não encontrado (404).');
-              return [];
+        async getUnits() {
+            // Tenta remote -> fallback local
+            try {
+                const remote = await this.loadFromGitHubRaw();
+                if (Array.isArray(remote) && remote.length > 0) {
+                    this.saveUnits(remote);
+                    return remote;
+                }
+            } catch (e) {
+                console.warn('Erro carregando remoto:', e.message);
             }
-            console.warn('raw fetch status', res.status);
-            return [];
-          }
-        } catch (err) {
-          console.warn('Erro fetch raw:', err.message);
-          return [];
+            return this.getUnitsSync();
+        },
+
+        async loadFromGitHubRaw() {
+            // tenta carregar via raw.githubusercontent (mais simples e cache bust)
+            const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?t=${Date.now()}`;
+            try {
+                const res = await fetch(url, {cache: 'no-cache'});
+                if (res.ok) {
+                    const text = await res.text();
+                    if (!text.trim()) return [];
+                    const data = JSON.parse(text);
+                    return Array.isArray(data) ? data : [];
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                console.error('Erro loadFromGitHubRaw:', e);
+                return null;
+            }
+        },
+
+        // NOVO: Adiciona ou atualiza uma unidade no localStorage
+        addOrUpdateUnit(unit) {
+            let units = this.getUnitsSync();
+            const index = units.findIndex(u => u.id === unit.id);
+
+            if (index !== -1) {
+                // Editar: mantém o status de favorito da unidade original
+                const existingFavorite = units[index].favorite;
+                units[index] = { ...unit, favorite: existingFavorite }; 
+            } else {
+                // Adicionar
+                units.push(unit);
+            }
+            
+            this.saveUnits(units);
+            return unit;
+        },
+
+        // NOVO: Função síncrona para obter unidades do localStorage (anteriormente apenas getUnitsSync)
+        getUnitsSync() {
+            try {
+                const units = JSON.parse(localStorage.getItem('units') || '[]');
+                return Array.isArray(units) ? units : [];
+            } catch (e) {
+                return [];
+            }
+        },
+
+        saveUnits(units) {
+            // Remove duplicatas por ID (segurança)
+            const uniqueUnits = units.filter((unit, index, self) => 
+                index === self.findIndex((t) => (
+                    t.id === unit.id
+                ))
+            );
+            localStorage.setItem('units', JSON.stringify(uniqueUnits));
+        },
+
+        loadGitHubConfig() {
+            this.githubToken = localStorage.getItem('github_token') || '';
+            this.repoOwner = localStorage.getItem('github_repoOwner') || this.repoOwner;
+            this.repoName = localStorage.getItem('github_repoName') || this.repoName;
+            this.filePath = localStorage.getItem('github_filePath') || this.filePath;
+        },
+
+        saveGitHubConfig(token, owner, name, path) {
+            this.githubToken = token;
+            this.repoOwner = owner;
+            this.repoName = name;
+            this.filePath = path;
+            localStorage.setItem('github_token', token);
+            localStorage.setItem('github_repoOwner', owner);
+            localStorage.setItem('github_repoName', name);
+            localStorage.setItem('github_filePath', path);
+        },
+
+        // ... helpers
+        async testGitHubConnection() {
+            if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+            try {
+                const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}`, {
+                    headers: {
+                        Authorization: `Bearer ${this.githubToken}`,
+                        Accept: 'application/vnd.github.v3+json'
+                    }
+                });
+                if (res.ok) return { success: true, message: 'Conexão OK' };
+                const j = await res.json();
+                return { success: false, message: j.message || 'Erro' };
+            } catch (e) {
+                return { success: false, message: 'Erro de rede: ' + e.message };
+            }
+        },
+
+        async getGitHubFile() {
+            if (!this.githubToken) return null;
+            try {
+                const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}?ref=${this.branch}`, {
+                    headers: {
+                        Authorization: `Bearer ${this.githubToken}`,
+                        Accept: 'application/vnd.github.v3+json'
+                    }
+                });
+                if (res.status === 404) return { exists: false };
+                if (!res.ok) {
+                    const err = await res.json().catch(()=>({message:'Erro'}));
+                    console.warn('getGitHubFile error', err);
+                    return null;
+                }
+                const data = await res.json();
+                return { exists: true, data };
+            } catch (e) {
+                console.error('Erro getGitHubFile:', e);
+                return null;
+            }
+        },
+
+        async syncToGitHub() {
+            // Operação manual: pega units locais, converte e faz PUT na API
+            if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+            try {
+                const units = this.getUnitsSync();
+                const content = JSON.stringify(units, null, 2);
+                const b64 = utf8_to_b64(content);
+                
+                const fileInfo = await this.getGitHubFile();
+                let sha = null;
+                if (fileInfo && fileInfo.exists && fileInfo.data && fileInfo.data.sha) {
+                    sha = fileInfo.data.sha;
+                }
+                
+                const payload = {
+                    message: `Sync: atualização - ${new Date().toLocaleString('pt-BR')}`,
+                    content: b64,
+                    branch: this.branch
+                };
+                if (sha) payload.sha = sha;
+
+                const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${this.githubToken}`,
+                        'Content-Type': 'application/json',
+                        Accept: 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const j = await res.json();
+                if (res.ok) {
+                    return { success: true, message: 'Dados sincronizados com sucesso!' };
+                } else {
+                    return { success: false, message: j.message || `Erro HTTP ${res.status}` };
+                }
+            } catch (e) {
+                console.error('Erro syncToGitHub:', e);
+                return { success: false, message: 'Erro de rede: ' + e.message };
+            }
+        },
+
+        async pullFromGitHub() {
+            if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+            try {
+                const fileInfo = await this.getGitHubFile();
+                if (!fileInfo || !fileInfo.exists) return { success: false, message: 'Arquivo não encontrado no repositório' };
+                
+                const content = b64_to_utf8(fileInfo.data.content);
+                const parsed = JSON.parse(content);
+                
+                if (!Array.isArray(parsed)) return { success: false, message: 'Conteúdo inválido do repositório' };
+
+                this.saveUnits(parsed);
+                return { success: true, message: `Dados carregados: ${parsed.length} unidades`, data: parsed };
+
+            } catch (e) {
+                console.error('Erro pullFromGitHub:', e);
+                return { success: false, message: 'Erro ao puxar dados: ' + e.message };
+            }
+        },
+
+        setAutoSync(enabled) {
+            this.autoSyncEnabled = enabled;
+            localStorage.setItem('github_auto_sync', enabled ? 'true' : 'false');
+            const statusEl = document.getElementById('autoSyncStatus');
+            if (statusEl) {
+                statusEl.className = 'auto-sync-status ' + (enabled ? 'syncing' : 'inactive');
+            }
+        },
+
+        loadAutoSyncConfig() {
+            const s = localStorage.getItem('github_auto_sync');
+            this.autoSyncEnabled = s === 'true';
+            this.setAutoSync(this.autoSyncEnabled);
         }
-      },
-
-      saveUnits(units) {
-        try {
-          localStorage.setItem('units', JSON.stringify(units));
-          return true;
-        } catch (e) {
-          console.error('Erro salvar local:', e);
-          return false;
-        }
-      },
-
-      getUnitsSync() {
-        try {
-          const s = localStorage.getItem('units');
-          if (!s) return [];
-          const parsed = JSON.parse(s);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-          console.error('Erro parse local units:', e);
-          return [];
-        }
-      },
-
-      async saveUnit(unit) {
-        const units = this.getUnitsSync();
-        if (unit.id) {
-          const idx = units.findIndex(u => u.id === unit.id);
-          if (idx !== -1) units[idx] = unit;
-        } else {
-          unit.id = units.length > 0 ? Math.max(...units.map(u => u.id || 0)) + 1 : 1;
-          units.push(unit);
-        }
-        const ok = this.saveUnits(units);
-        return ok;
-      },
-
-      async deleteUnit(id) {
-        const units = this.getUnitsSync().filter(u => u.id !== id);
-        return this.saveUnits(units);
-      },
-
-      // GitHub API helpers
-      async testGitHubConnection() {
-        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
-        try {
-          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}`, {
-            headers: { Authorization: `Bearer ${this.githubToken}`, Accept: 'application/vnd.github.v3+json' }
-          });
-          if (res.ok) return { success: true, message: 'Conexão OK' };
-          const j = await res.json();
-          return { success: false, message: j.message || 'Erro' };
-        } catch (e) {
-          return { success: false, message: 'Erro de rede: ' + e.message };
-        }
-      },
-
-      async getGitHubFile() {
-        if (!this.githubToken) return null;
-        try {
-          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}?ref=${this.branch}`, {
-            headers: { Authorization: `Bearer ${this.githubToken}`, Accept: 'application/vnd.github.v3+json' }
-          });
-          if (res.status === 404) return { exists: false };
-          if (!res.ok) {
-            const err = await res.json().catch(()=>({message:'Erro'}));
-            console.warn('getGitHubFile error', err);
-            return null;
-          }
-          const data = await res.json();
-          return { exists: true, data };
-        } catch (e) {
-          console.error('Erro getGitHubFile:', e);
-          return null;
-        }
-      },
-
-      async syncToGitHub() {
-        // Operação manual: pega units locais, converte e faz PUT na API
-        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
-        try {
-          const units = this.getUnitsSync();
-          const content = JSON.stringify(units, null, 2);
-          const b64 = utf8_to_b64(content);
-
-          const fileInfo = await this.getGitHubFile();
-          let sha = null;
-          if (fileInfo && fileInfo.exists && fileInfo.data && fileInfo.data.sha) {
-            sha = fileInfo.data.sha;
-          }
-
-          const payload = { message: `Sync: atualização - ${new Date().toLocaleString('pt-BR')}`, content: b64, branch: this.branch };
-          if (sha) payload.sha = sha;
-
-          const res = await fetch(`https://api.github.com/repos/${this.repoOwner}/${this.repoName}/contents/${this.filePath}`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${this.githubToken}`, 'Content-Type': 'application/json', Accept: 'application/vnd.github.v3+json' },
-            body: JSON.stringify(payload)
-          });
-
-          const j = await res.json();
-          if (res.ok) {
-            return { success: true, message: 'Dados sincronizados com sucesso!' };
-          } else {
-            return { success: false, message: j.message || `Erro HTTP ${res.status}` };
-          }
-        } catch (e) {
-          console.error('Erro syncToGitHub:', e);
-          return { success: false, message: 'Erro de rede: ' + e.message };
-        }
-      },
-
-      async pullFromGitHub() {
-        if (!this.githubToken) return { success: false, message: 'Token não configurado' };
-        try {
-          const fileInfo = await this.getGitHubFile();
-          if (!fileInfo || !fileInfo.exists) return { success: false, message: 'Arquivo não encontrado no repo' };
-          const contentB64 = fileInfo.data.content;
-          const content = b64_to_utf8(contentB64);
-          const parsed = JSON.parse(content);
-          if (!Array.isArray(parsed)) return { success: false, message: 'Formato inválido no repositório' };
-          this.saveUnits(parsed);
-          return { success: true, message: `Dados carregados: ${parsed.length} unidades`, data: parsed };
-        } catch (e) {
-          console.error('Erro pullFromGitHub:', e);
-          return { success: false, message: 'Erro ao puxar dados: ' + e.message };
-        }
-      },
-
-      setAutoSync(enabled) {
-        this.autoSyncEnabled = enabled;
-        localStorage.setItem('github_auto_sync', enabled ? 'true' : 'false');
-        const statusEl = document.getElementById('autoSyncStatus');
-        if (statusEl) {
-          statusEl.className = 'auto-sync-status ' + (enabled ? 'syncing' : 'inactive');
-        }
-      },
-
-      loadAutoSyncConfig() {
-        const s = localStorage.getItem('github_auto_sync');
-        this.autoSyncEnabled = s === 'true';
-        this.setAutoSync(this.autoSyncEnabled);
-      }
     };
 
-    /* ===============================
-       AUTH SERVICE
-       =============================== */
+    /* =============================== AUTH SERVICE =============================== */
     const AuthService = {
-      adminUser: 'admin',
-      adminPass: '987654321',
-      login(username, password) {
-        if (username === this.adminUser && password === this.adminPass) {
-          localStorage.setItem('telefonia_isLogged', 'true');
-          return { success: true };
-        }
-        return { success: false, message: 'Usuário ou senha incorretos' };
-      },
-      logout() {
-        localStorage.removeItem('telefonia_isLogged');
-      },
-      isLogged() {
-        return localStorage.getItem('telefonia_isLogged') === 'true';
-      }
-    };
+        adminUser: 'admin',
+        adminPass: '987654321',
 
-    /* ===============================
-       UI
-       =============================== */
-    const UI = {
-      elements: {},
-      init() {
-        this.cacheElements();
-        this.bindEvents();
-        this.loadTheme();
-        this.loadGitHubConfig();
-        DataService.loadAutoSyncConfig();
-      },
-      cacheElements() {
-        this.elements = {
-          loginModal: document.getElementById('loginModal'),
-          loginForm: document.getElementById('loginForm'),
-          loginUsername: document.getElementById('loginUsername'),
-          loginPassword: document.getElementById('loginPassword'),
-          adminToggle: document.getElementById('adminToggle'),
-          themeToggle: document.getElementById('themeToggle'),
-          adminPanel: document.getElementById('adminPanel'),
-          closeAdmin: document.getElementById('closeAdmin'),
-          logoutBtn: document.getElementById('logoutBtn'),
-          adminTabs: document.querySelectorAll('.admin-tab'),
-          allContacts: document.getElementById('all-contacts'),
-          favoritesContacts: document.getElementById('favorites-contacts'),
-          unitsList: document.getElementById('unitsList'),
-          allCount: document.getElementById('all-count'),
-          favoritesCount: document.getElementById('favorites-count'),
-          unitForm: document.getElementById('unitForm'),
-          submitBtn: document.getElementById('submitBtn'),
-          cancelEdit: document.getElementById('cancelEdit'),
-          formTitle: document.getElementById('formTitle'),
-          searchInput: document.getElementById('searchInput'),
-          searchBtn: document.getElementById('searchBtn'),
-          filterBtns: document.querySelectorAll('.filter-btn'),
-          tabs: document.querySelectorAll('.tab'),
-          githubToken: document.getElementById('githubToken'),
-          repoOwner: document.getElementById('repoOwner'),
-          repoName: document.getElementById('repoName'),
-          filePath: document.getElementById('filePath'),
-          saveGitHubConfig: document.getElementById('saveGitHubConfig'),
-          syncToGitHub: document.getElementById('syncToGitHub'),
-          pullFromGitHub: document.getElementById('pullFromGitHub'),
-          testConnection: document.getElementById('testConnection'),
-          syncStatus: document.getElementById('syncStatus'),
-          enableAutoSync: document.getElementById('enableAutoSync'),
-          autoSyncStatus: document.getElementById('autoSyncStatus'),
-          backupBtn: document.getElementById('backupData'),
-          restoreInput: document.getElementById('restoreData'),
-          clearAllBtn: document.getElementById('clearData'),
-          unitType: document.getElementById('unitType'),
-          responsibleField: document.getElementById('responsibleFieldContainer'),
-          enfermeiroField: document.getElementById('enfermeiroField'),
-          gerenteField: document.getElementById('gerenteField')
-        };
-      },
-
-      bindEvents() {
-        this.elements.adminToggle.addEventListener('click', () => {
-          if (AuthService.isLogged()) this.openAdmin(); else this.showLogin();
-        });
-        this.elements.closeAdmin.addEventListener('click', () => this.closeAdmin());
-        this.elements.logoutBtn.addEventListener('click', () => { AuthService.logout(); this.elements.logoutBtn.style.display = 'none'; this.closeAdmin(); alert('Desconectado'); });
-        this.elements.loginForm.addEventListener('submit', (e) => { e.preventDefault(); const u = this.elements.loginUsername.value.trim(); const p = this.elements.loginPassword.value; const r = AuthService.login(u,p); if (r.success) { this.hideLogin(); this.openAdmin(); this.elements.logoutBtn.style.display = 'inline-flex'; App.refreshAll(); } else { alert(r.message); }});
-        this.elements.themeToggle.addEventListener('click', ()=>this.toggleTheme());
-        this.elements.searchBtn.addEventListener('click', ()=>App.performSearch());
-        this.elements.searchInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') App.performSearch(); });
-
-        this.elements.filterBtns.forEach(btn => {
-          btn.addEventListener('click', function(){ UI.elements.filterBtns.forEach(b=>b.classList.remove('active')); this.classList.add('active'); App.filterContacts(this.dataset.filter); });
-        });
-
-        document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
-          btn.addEventListener('click', function(){ this.classList.toggle('active'); const v = this.classList.contains('active') ? 'Sim' : ''; this.setAttribute('data-value', v); App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter); });
-        });
-
-        this.elements.tabs.forEach(tab => {
-          tab.addEventListener('click', function(){ UI.elements.tabs.forEach(t=>t.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.content').forEach(c=>c.classList.remove('active')); document.getElementById(`${this.dataset.tab}-content`).classList.add('active');});
-        });
-
-        this.elements.adminTabs.forEach(tab => {
-          tab.addEventListener('click', function(){ UI.elements.adminTabs.forEach(t=>t.classList.remove('active')); this.classList.add('active'); document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active')); document.getElementById(`${this.dataset.tab}-content`).classList.add('active'); });
-        });
-
-        this.elements.unitForm.addEventListener('submit', (e)=>{ e.preventDefault(); App.saveUnitFromForm(); });
-        this.elements.cancelEdit.addEventListener('click', ()=>{ this.elements.unitForm.reset(); this.elements.formTitle.textContent='Adicionar Nova Unidade'; this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade'; this.elements.cancelEdit.style.display='none'; this.elements.unitForm.removeAttribute('data-edit-id'); this.setupConditionalFormLogic(); });
-
-        // GitHub events
-        this.elements.saveGitHubConfig.addEventListener('click', ()=>App.saveGitHubConfig());
-        this.elements.syncToGitHub.addEventListener('click', ()=>App.syncToGitHub());
-        this.elements.pullFromGitHub.addEventListener('click', ()=>App.pullFromGitHub());
-        this.elements.testConnection.addEventListener('click', ()=>App.testGitHubConnection());
-        this.elements.enableAutoSync.addEventListener('click', ()=>App.toggleAutoSync());
-
-        // config events
-        this.elements.backupBtn.addEventListener('click', ()=>App.backupData());
-        this.elements.restoreInput.addEventListener('change', (e)=>App.restoreData(e.target.files[0]));
-        this.elements.clearAllBtn.addEventListener('click', ()=>App.clearAllData());
-
-        // conditional form logic
-        this.setupConditionalFormLogic();
-      },
-
-      setupConditionalFormLogic() {
-        const conditionalTypes = ['administrativo','vigilancia','capne','outros'];
-        const check = ()=> {
-          const type = this.elements.unitType.value;
-          const isConditional = conditionalTypes.includes(type);
-          this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
-          this.elements.gerenteField.classList.toggle('hidden', isConditional);
-          this.elements.responsibleField.classList.toggle('hidden', !isConditional);
-          const resp = document.getElementById('unitResponsavel');
-          if (resp) resp.required = isConditional;
-        };
-        this.elements.unitType.addEventListener('change', check);
-        check();
-      },
-
-      showLogin() { this.elements.loginModal.classList.add('active'); this.elements.loginModal.setAttribute('aria-hidden','false'); this.elements.loginUsername.focus(); },
-      hideLogin() { this.elements.loginModal.classList.remove('active'); this.elements.loginModal.setAttribute('aria-hidden','true'); this.elements.loginForm.reset(); },
-      openAdmin() { this.elements.adminPanel.classList.add('active'); this.elements.adminPanel.setAttribute('aria-hidden','false'); },
-      closeAdmin() { this.elements.adminPanel.classList.remove('active'); this.elements.adminPanel.setAttribute('aria-hidden','true'); },
-
-      toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const icon = this.elements.themeToggle.querySelector('i');
-        if (document.body.classList.contains('dark-mode')) { icon.className='fas fa-sun'; localStorage.setItem('telefonia_theme','dark'); } else { icon.className='fas fa-moon'; localStorage.setItem('telefonia_theme','light'); }
-      },
-      loadTheme() { const t = localStorage.getItem('telefonia_theme'); if (t==='dark') { document.body.classList.add('dark-mode'); this.elements.themeToggle.querySelector('i').className='fas fa-sun'; } },
-
-      loadGitHubConfig() {
-        const c = localStorage.getItem('github_config');
-        if (c) {
-          try {
-            const parsed = JSON.parse(c);
-            DataService.githubToken = parsed.token || '';
-            DataService.repoOwner = parsed.owner || DataService.repoOwner;
-            DataService.repoName = parsed.repo || DataService.repoName;
-            DataService.filePath = parsed.filePath || DataService.filePath;
-            document.getElementById('repoOwner').value = DataService.repoOwner;
-            document.getElementById('repoName').value = DataService.repoName;
-            document.getElementById('filePath').value = DataService.filePath;
-            if (DataService.githubToken) {
-              this.elements.githubToken.placeholder = '•••••• (configurado)';
+        login(username, password) {
+            if (username === this.adminUser && password === this.adminPass) {
+                localStorage.setItem('telefonia_isLogged', 'true');
+                return { success: true };
             }
-          } catch(e){ console.warn('git config parse err', e); }
+            return { success: false, message: 'Usuário ou senha incorretos' };
+        },
+
+        logout() {
+            localStorage.removeItem('telefonia_isLogged');
+        },
+
+        isLogged() {
+            return localStorage.getItem('telefonia_isLogged') === 'true';
         }
-      },
-
-      showSyncStatus(message, type='info') {
-        const el = this.elements.syncStatus;
-        let cls='sync-loading';
-        if (type==='success') cls='sync-success';
-        if (type==='error') cls='sync-error';
-        el.innerHTML = `<div class="sync-status ${cls}">${message}</div>`;
-        if (type==='success') setTimeout(()=>{ el.innerHTML=''; },5000);
-      },
-
-      renderContacts(contacts, containerKind='all') {
-        const target = containerKind==='all' ? this.elements.allContacts : this.elements.favoritesContacts;
-        target.innerHTML='';
-        if (!contacts || contacts.length===0) {
-          target.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>Nenhum contato encontrado</h3><p>Tente ajustar filtros</p></div>`;
-          return;
-        }
-        contacts.forEach(c => {
-          const card = this.createContactCard(c);
-          target.appendChild(card);
-        });
-        this.attachFavoriteListeners();
-      },
-
-      createContactCard(contact) {
-        const phoneClean = (contact.phone || '').replace(/\D/g,'');
-        const telLink = `tel:+55${phoneClean}`;
-        const whatsappLink = `https://wa.me/55${phoneClean}`;
-        const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
-        const typeLabel = this.getTypeLabel(contact.type);
-
-        const card = document.createElement('div');
-        card.className='contact-card';
-        card.innerHTML = `
-          <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar"><i class="fas fa-star"></i></button>
-          <div class="contact-header">
-            <div>
-              <h3 class="contact-name">${contact.name || ''}</h3>
-              <span class="contact-type">${typeLabel}</span>
-            </div>
-          </div>
-          <div class="contact-info">
-            <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${contact.address || ''}, ${contact.bairro || ''}</span></div>
-            <div class="contact-item"><i class="fas fa-phone"></i><span>${contact.phone || ''}</span></div>
-            ${contact.email ? `<div class="contact-item"><i class="fas fa-envelope"></i><span>${contact.email}</span></div>` : ''}
-            ${contact.enfermeiro ? `<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${contact.enfermeiro}</span></div>` : ''}
-            ${contact.gerente ? `<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${contact.gerente}</span></div>` : ''}
-            ${contact.responsavel ? `<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${contact.responsavel}</span></div>` : ''}
-          </div>
-          <div class="contact-services">
-            <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-syringe"></i><span class="service-label">Vacina</span></div>
-            <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-tooth"></i><span class="service-label">Odonto</span></div>
-            <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}"><i class="fas fa-pills"></i><span class="service-label">Farmácia</span></div>
-          </div>
-          <div class="contact-actions">
-            <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
-            <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-            <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
-          </div>
-        `;
-        return card;
-      },
-
-      attachFavoriteListeners() {
-        document.querySelectorAll('.favorite-btn').forEach(btn=>{
-          btn.addEventListener('click', async ()=>{
-            const id = parseInt(btn.dataset.id);
-            await App.toggleFavorite(id);
-            App.refreshAll();
-          });
-        });
-      },
-
-      renderUnitsList(units) {
-        this.elements.unitsList.innerHTML='';
-        units.forEach(unit=>{
-          const item = document.createElement('div');
-          item.className='unit-item';
-          item.innerHTML = `<div class="unit-info"><h4>${unit.name}</h4><p>${this.getTypeLabel(unit.type)} - ${unit.phone || ''}</p></div>
-            <div class="unit-actions">
-              <button class="btn btn-warning edit-unit" data-id="${unit.id}"><i class="fas fa-edit"></i> Editar</button>
-              <button class="btn btn-danger delete-unit" data-id="${unit.id}"><i class="fas fa-trash"></i> Excluir</button>
-            </div>`;
-          this.elements.unitsList.appendChild(item);
-        });
-
-        document.querySelectorAll('.edit-unit').forEach(btn => btn.addEventListener('click', ()=>App.editUnit(parseInt(btn.dataset.id))));
-        document.querySelectorAll('.delete-unit').forEach(btn => btn.addEventListener('click', ()=>App.deleteUnit(parseInt(btn.dataset.id))));
-      },
-
-      getTypeLabel(type){
-        const types = {'promocao':'Promoção','recuperacao':'Recuperação','administrativo':'Administrativo','vigilancia':'Vigilância','capne':'Capne','outros':'Outros'};
-        return types[type]||type;
-      },
-
-      setCounts(allCount,favoritesCount){
-        this.elements.allCount.textContent = `Mostrando ${allCount} contatos`;
-        this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favoritesCount})`;
-      },
-
-      showLoading(msg='Carregando dados...'){ document.getElementById('loadingScreen').style.display='flex'; document.getElementById('loadingStatus').textContent=msg; document.getElementById('telefonia-container').style.display='none'; },
-      hideLoading(){ document.getElementById('loadingScreen').style.display='none'; document.getElementById('telefonia-container').style.display='block'; }
     };
 
-    /* ===============================
-       APP: lógica principal
-       =============================== */
+    /* =============================== UI =============================== */
+    const UI = {
+        elements: {},
+
+        init() {
+            this.cacheElements();
+            this.bindEvents();
+            this.loadTheme();
+            this.loadGitHubConfig();
+            DataService.loadAutoSyncConfig();
+        },
+
+        cacheElements() {
+            this.elements = {
+                loginModal: document.getElementById('loginModal'),
+                loginForm: document.getElementById('loginForm'),
+                loginUsername: document.getElementById('loginUsername'),
+                loginPassword: document.getElementById('loginPassword'),
+                adminToggle: document.getElementById('adminToggle'),
+                themeToggle: document.getElementById('themeToggle'),
+                adminPanel: document.getElementById('adminPanel'),
+                closeAdmin: document.getElementById('closeAdmin'),
+                logoutBtn: document.getElementById('logoutBtn'),
+                adminTabs: document.querySelectorAll('.admin-tab'),
+                allContacts: document.getElementById('all-contacts'),
+                favoritesContacts: document.getElementById('favorites-contacts'),
+                unitsList: document.getElementById('unitsList'),
+                allCount: document.getElementById('all-count'),
+                favoritesCount: document.getElementById('favorites-count'),
+                unitForm: document.getElementById('unitForm'),
+                submitBtn: document.getElementById('submitBtn'),
+                cancelEdit: document.getElementById('cancelEdit'),
+                formTitle: document.getElementById('formTitle'),
+                searchInput: document.getElementById('searchInput'),
+                searchBtn: document.getElementById('searchBtn'),
+                filterBtns: document.querySelectorAll('.filter-btn'),
+                tabs: document.querySelectorAll('.tab'),
+                githubToken: document.getElementById('githubToken'),
+                repoOwner: document.getElementById('repoOwner'),
+                repoName: document.getElementById('repoName'),
+                filePath: document.getElementById('filePath'),
+                saveGitHubConfig: document.getElementById('saveGitHubConfig'),
+                syncToGitHub: document.getElementById('syncToGitHub'),
+                pullFromGitHub: document.getElementById('pullFromGitHub'),
+                testConnection: document.getElementById('testConnection'),
+                syncStatus: document.getElementById('syncStatus'),
+                enableAutoSync: document.getElementById('enableAutoSync'),
+                autoSyncStatus: document.getElementById('autoSyncStatus'),
+                backupBtn: document.getElementById('backupData'),
+                restoreInput: document.getElementById('restoreData'),
+                clearAllBtn: document.getElementById('clearData'),
+                unitType: document.getElementById('unitType'),
+                responsibleField: document.getElementById('responsibleFieldContainer'),
+                enfermeiroField: document.getElementById('enfermeiroField'),
+                gerenteField: document.getElementById('gerenteField'),
+                vacinaField: document.getElementById('vacinaField'),
+                odontoField: document.getElementById('odontoField'),
+                farmaciaField: document.getElementById('farmaciaField'),
+                // Elementos da nova funcionalidade
+                viewBlockBtn: document.getElementById('viewBlock'),
+                viewTableBtn: document.getElementById('viewTable')
+            };
+        },
+
+        bindEvents() {
+            this.elements.adminToggle.addEventListener('click', () => {
+                if (AuthService.isLogged()) this.openAdmin();
+                else this.showLogin();
+            });
+            this.elements.closeAdmin.addEventListener('click', () => { this.closeAdmin(); });
+            this.elements.logoutBtn.addEventListener('click', () => { App.logout(); });
+            this.elements.themeToggle.addEventListener('click', () => { this.toggleTheme(); });
+            
+            this.elements.loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                App.login(this.elements.loginUsername.value, this.elements.loginPassword.value);
+            });
+
+            this.elements.filterBtns.forEach(btn => {
+                btn.addEventListener('click', function() { App.filterByType(this.dataset.filter); });
+            });
+            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() { App.toggleServiceFilter(this); });
+            });
+
+            this.elements.searchInput.addEventListener('input', () => { App.performSearch(); });
+            this.elements.searchBtn.addEventListener('click', () => { App.performSearch(); });
+
+            this.elements.tabs.forEach(tab => {
+                tab.addEventListener('click', function(){ 
+                    UI.elements.tabs.forEach(t=>t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                }); 
+            });
+
+            this.elements.adminTabs.forEach(tab => {
+                tab.addEventListener('click', function(){ 
+                    UI.elements.adminTabs.forEach(t=>t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active'));
+                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                }); 
+            });
+
+            this.elements.unitForm.addEventListener('submit', (e)=>{
+                e.preventDefault();
+                App.saveUnitFromForm();
+            });
+            this.elements.cancelEdit.addEventListener('click', ()=>{
+                this.resetFormToAdd();
+            });
+            
+            // GitHub events
+            this.elements.saveGitHubConfig.addEventListener('click', ()=>App.saveGitHubConfig());
+            this.elements.syncToGitHub.addEventListener('click', ()=>App.syncToGitHub());
+            this.elements.pullFromGitHub.addEventListener('click', ()=>App.pullFromGitHub());
+            this.elements.testConnection.addEventListener('click', ()=>App.testGitHubConnection());
+            this.elements.enableAutoSync.addEventListener('click', ()=>App.toggleAutoSync());
+
+            // View Toggle events
+            this.elements.viewBlockBtn.addEventListener('click', ()=>App.setViewMode('block'));
+            this.elements.viewTableBtn.addEventListener('click', ()=>App.setViewMode('table'));
+
+            // config events
+            this.elements.backupBtn.addEventListener('click', ()=>App.backupData());
+            this.elements.restoreInput.addEventListener('change', (e)=>App.restoreData(e.target.files[0]));
+            this.elements.clearAllBtn.addEventListener('click', ()=>App.clearAllData());
+
+            // conditional form logic
+            this.setupConditionalFormLogic();
+        },
+
+        setupConditionalFormLogic() {
+            // Quando o tipo estiver em conditionalTypes, ocultar vacina/odonto/farmacia
+            const conditionalTypes = ['administrativo','vigilancia','capne','outros'];
+            const check = ()=> {
+                const type = (this.elements.unitType && this.elements.unitType.value) ? this.elements.unitType.value : '';
+                const isConditional = conditionalTypes.includes(type);
+
+                // ocultar os campos de serviços quando for condicional
+                if (this.elements.vacinaField) this.elements.vacinaField.classList.toggle('hidden', isConditional);
+                if (this.elements.odontoField) this.elements.odontoField.classList.toggle('hidden', isConditional);
+                if (this.elements.farmaciaField) this.elements.farmaciaField.classList.toggle('hidden', isConditional);
+
+                // campos de responsável / enfermeiro / gerente
+                if (this.elements.enfermeiroField) this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
+                if (this.elements.gerenteField) this.elements.gerenteField.classList.toggle('hidden', isConditional);
+                if (this.elements.responsibleField) this.elements.responsibleField.classList.toggle('hidden', !isConditional);
+                
+                const resp = document.getElementById('unitResponsavel');
+                if (resp) resp.required = isConditional;
+            };
+
+            if (this.elements.unitType) {
+                this.elements.unitType.addEventListener('change', check);
+                // disparar verificação inicial
+                setTimeout(check, 0);
+            }
+        },
+
+        resetFormToAdd() {
+            this.elements.unitForm.reset();
+            this.elements.formTitle.textContent='Adicionar Nova Unidade';
+            this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+            this.elements.cancelEdit.style.display = 'none';
+            this.elements.unitForm.removeAttribute('data-edit-id');
+            this.setupConditionalFormLogic();
+        },
+
+        showLogin() {
+            this.elements.loginModal.classList.add('active');
+            this.elements.loginUsername.focus();
+        },
+
+        closeLogin() {
+            this.elements.loginModal.classList.remove('active');
+        },
+
+        openAdmin() {
+            this.elements.adminPanel.classList.add('active');
+            this.elements.adminToggle.style.display = 'none';
+            this.elements.logoutBtn.style.display = 'inline-block';
+            this.renderGitHubConfig();
+            App.refreshAdminLists();
+        },
+
+        closeAdmin() {
+            this.elements.adminPanel.classList.remove('active');
+            this.elements.adminToggle.style.display = 'flex';
+            this.elements.logoutBtn.style.display = 'none';
+        },
+
+        renderGitHubConfig() {
+            this.elements.githubToken.value = DataService.githubToken;
+            this.elements.repoOwner.value = DataService.repoOwner;
+            this.elements.repoName.value = DataService.repoName;
+            this.elements.filePath.value = DataService.filePath;
+            DataService.loadAutoSyncConfig(); // Atualiza o status do botão
+        },
+
+        showSyncStatus(message, type) {
+            this.elements.syncStatus.innerHTML = `<div class="sync-status sync-${type}">${message}</div>`;
+            setTimeout(() => { this.elements.syncStatus.innerHTML = ''; }, 5000);
+        },
+
+        loadTheme() {
+            if (localStorage.getItem('telefonia_theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-sun';
+            } else {
+                document.body.classList.remove('dark-mode');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-moon';
+            }
+        },
+
+        toggleTheme() {
+            if (document.body.classList.contains('dark-mode')) {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('telefonia_theme', 'light');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-moon';
+            } else {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('telefonia_theme', 'dark');
+                this.elements.themeToggle.querySelector('i').className = 'fas fa-sun';
+            }
+        },
+
+        renderContacts(contacts, type) {
+            const target = (type === 'all') ? this.elements.allContacts : this.elements.favoritesContacts;
+            const countEl = (type === 'all') ? this.elements.allCount : this.elements.favoritesCount;
+            const viewMode = App.viewMode;
+            
+            target.innerHTML = '';
+            countEl.textContent = `Mostrando ${contacts.length} contatos`;
+
+            if (contacts.length === 0) {
+                target.innerHTML = `<div class="no-results"><i class="fas fa-exclamation-triangle"></i><p>Nenhum contato encontrado. Tente ajustar filtros</p></div>`;
+                return;
+            }
+
+            if (viewMode === 'block') {
+                contacts.forEach(c => {
+                    const card = this.createContactCard(c);
+                    target.appendChild(card);
+                });
+            } else { 
+                // Table mode
+                const table = document.createElement('table');
+                table.className = 'contact-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Nome / Tipo</th>
+                            <th style="width: 30%;">Endereço</th>
+                            <th style="width: 15%;">Contato</th>
+                            <th style="width: 15%;">Serviços</th>
+                            <th style="width: 15%;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${contacts.map(c => this.createContactTableRow(c)).join('')}
+                    </tbody>
+                `;
+                target.appendChild(table);
+            }
+
+            this.attachFavoriteListeners();
+        },
+
+        createContactTableRow(contact) {
+            const phoneClean = (contact.phone || '').replace(/\D/g,'');
+            const telLink = `tel:+55${phoneClean}`;
+            const whatsappLink = `https://wa.me/55${phoneClean}`;
+            // CORREÇÃO: Link correto do Google Maps
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
+            
+            const typeLabel = this.getTypeLabel(contact.type);
+            
+            const vacinaHtml = contact.vacina === 'Sim' ? `<span class="service-item available"><i class="fas fa-check-circle"></i> Vacina</span>` : `<span class="service-item unavailable"><i class="fas fa-times-circle"></i> Vacina</span>`;
+            const odontoHtml = contact.odonto === 'Sim' ? `<span class="service-item available"><i class="fas fa-check-circle"></i> Odonto</span>` : `<span class="service-item unavailable"><i class="fas fa-times-circle"></i> Odonto</span>`;
+            const farmaciaHtml = contact.farmacia === 'Sim' ? `<span class="service-item available"><i class="fas fa-check-circle"></i> Farmácia</span>` : `<span class="service-item unavailable"><i class="fas fa-times-circle"></i> Farmácia</span>`;
+
+            return `
+                <tr data-id="${contact.id}">
+                    <td data-label="Unidade">
+                        <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar" style="position: static; margin-right: 10px; font-size: 1rem;"><i class="fas fa-star"></i></button>
+                        <span class="unit-name">${contact.name || ''}</span>
+                        <span class="unit-type">${typeLabel}</span>
+                    </td>
+                    <td data-label="Endereço">${contact.address || ''}, ${contact.bairro || ''}</td>
+                    <td data-label="Contato">
+                        ${contact.phone || ''}
+                        ${contact.ramal ? `<br><span class="unit-ramal"><i class="fas fa-headset"></i> ${contact.ramal}</span>` : ''}
+                    </td>
+                    <td data-label="Serviços">
+                        ${vacinaHtml}<br>
+                        ${odontoHtml}<br>
+                        ${farmaciaHtml}
+                    </td>
+                    <td data-label="Ações" class="table-actions">
+                        <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i></button>
+                        <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i></button>
+                        <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i></button>
+                    </td>
+                </tr>
+            `;
+        },
+
+        createContactCard(contact) {
+            const card = document.createElement('div');
+            card.className = 'contact-card';
+            card.setAttribute('data-id', contact.id);
+
+            const phoneClean = (contact.phone || '').replace(/\D/g,'');
+            const telLink = `tel:+55${phoneClean}`;
+            const whatsappLink = `https://wa.me/55${phoneClean}`;
+            // CORREÇÃO: Link correto do Google Maps
+            const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
+
+            card.innerHTML = `
+                <button class="favorite-btn ${contact.favorite ? 'active' : ''}" data-id="${contact.id}" title="Favoritar"><i class="fas fa-star"></i></button>
+                <div class="contact-header">
+                    <span class="contact-name">${contact.name || ''}</span>
+                    <span class="contact-type">${this.getTypeLabel(contact.type)}</span>
+                </div>
+                <div class="contact-info">
+                    <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>${contact.address || ''}, ${contact.bairro || ''}</span></div>
+                    <div class="contact-item"><i class="fas fa-phone"></i><span>${contact.phone || ''} ${contact.ramal ? `(Ramal: ${contact.ramal})` : ''}</span></div>
+                    ${contact.email ? `<div class="contact-item"><i class="fas fa-envelope"></i><span>${contact.email}</span></div>` : ''}
+                    ${contact.enfermeiro ? `<div class="contact-item"><i class="fas fa-user-nurse"></i><span>Enf. ${contact.enfermeiro}</span></div>` : ''}
+                    ${contact.gerente ? `<div class="contact-item"><i class="fas fa-user-tie"></i><span>Gerente: ${contact.gerente}</span></div>` : ''}
+                    ${contact.responsavel ? `<div class="contact-item"><i class="fas fa-user"></i><span>Responsável: ${contact.responsavel}</span></div>` : ''}
+                </div>
+                <div class="contact-services">
+                    <div class="service ${contact.vacina === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-syringe"></i><span class="service-label">Vacina: ${contact.vacina || 'Não'}</span>
+                    </div>
+                    <div class="service ${contact.odonto === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-tooth"></i><span class="service-label">Odonto: ${contact.odonto || 'Não'}</span>
+                    </div>
+                    <div class="service ${contact.farmacia === 'Sim' ? 'available' : 'unavailable'}">
+                        <i class="fas fa-pills"></i><span class="service-label">Farmácia: ${contact.farmacia || 'Não'}</span>
+                    </div>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')"><i class="fas fa-phone"></i> Ligar</button>
+                    <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                    <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')"><i class="fas fa-map"></i> Localização</button>
+                </div>
+            `;
+            return card;
+        },
+
+        attachFavoriteListeners() {
+            document.querySelectorAll('.favorite-btn').forEach(btn=>{
+                btn.addEventListener('click', async ()=>{
+                    const id = parseInt(btn.dataset.id);
+                    await App.toggleFavorite(id);
+                    App.refreshAll();
+                });
+            });
+        },
+
+        renderUnitsList(units) {
+            this.elements.unitsList.innerHTML='';
+            units.forEach(unit=>{
+                const item = document.createElement('div');
+                item.className='unit-item';
+                item.innerHTML = `<div class="unit-info"><h4>${unit.name}</h4><p>${this.getTypeLabel(unit.type)} - ${unit.phone || ''} ${unit.ramal ? `(Ramal: ${unit.ramal})` : ''}</p></div> <div class="unit-actions"> <button class="btn btn-warning edit-unit" data-id="${unit.id}"><i class="fas fa-edit"></i> Editar</button> <button class="btn btn-danger delete-unit" data-id="${unit.id}"><i class="fas fa-trash"></i> Excluir</button> </div>`;
+                this.elements.unitsList.appendChild(item);
+            });
+            document.querySelectorAll('.edit-unit').forEach(btn => btn.addEventListener('click', ()=>App.editUnit(parseInt(btn.dataset.id))));
+            document.querySelectorAll('.delete-unit').forEach(btn => btn.addEventListener('click', ()=>App.deleteUnit(parseInt(btn.dataset.id))));
+        },
+
+        getTypeLabel(type){
+            const types = {
+                promocao: 'Promoção',
+                recuperacao: 'Recuperação',
+                administrativo: 'Administrativo',
+                vigilancia: 'Vigilância',
+                capne: 'Capne',
+                outros: 'Outros'
+            };
+            return types[type] || 'Desconhecido';
+        }
+    };
+
+    /* =============================== APP LOGIC =============================== */
     const App = {
-      units: [],
-      favorites: [],
+        units: [],
+        favorites: [],
+        viewMode: localStorage.getItem('telefonia_viewMode') || 'block',
 
-      async init() {
-        UI.init();
-        this.loadFavorites();
-        UI.showLoading('Conectando e carregando dados...');
-        try {
-          await this.refreshAll();
-          // check periodic remote updates (optional)
-          setInterval(()=>this.checkRemoteUpdates(), 120000); // 2min
-        } catch(e) {
-          console.error('init err', e);
-        } finally {
-          UI.hideLoading();
-        }
-      },
-
-      loadFavorites() {
-        const f = localStorage.getItem('telefonia_favorites');
-        this.favorites = f ? JSON.parse(f) : [];
-      },
-
-      async refreshAll() {
-        const units = await DataService.getUnits();
-        this.units = units || [];
-        this.units.forEach(u => u.favorite = this.favorites.includes(u.id));
-        UI.renderContacts(this.units, 'all');
-        UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
-        UI.renderUnitsList(this.units);
-        UI.setCounts(this.units.length, this.favorites.length);
-      },
-
-      async checkRemoteUpdates() {
-        try {
-          const remote = await DataService.loadFromGitHubRaw();
-          if (Array.isArray(remote) && remote.length !== this.units.length) {
-            console.log('Atualização no GitHub detectada, recarregando...');
-            await this.refreshAll();
-            this.showUpdateNotification();
-          }
-        } catch(e) { console.warn('checkRemoteUpdates err', e); }
-      },
-
-      showUpdateNotification() {
-        const n = document.createElement('div');
-        n.className='update-notification';
-        n.innerHTML = `<i class="fas fa-sync-alt"></i><span>Dados atualizados carregados do GitHub!</span><button onclick="this.parentElement.remove()">✕</button>`;
-        document.body.appendChild(n);
-        setTimeout(()=>{ if(n.parentElement) n.remove(); },5000);
-      },
-
-      async toggleFavorite(id) {
-        const idx = this.favorites.indexOf(id);
-        if (idx === -1) this.favorites.push(id); else this.favorites.splice(idx,1);
-        localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-      },
-
-      performSearch() {
-        const q = UI.elements.searchInput.value.trim().toLowerCase();
-        const filtered = this.units.filter(u => {
-          if (!q) return true;
-          return (u.name||'').toLowerCase().includes(q) || (u.phone||'').toLowerCase().includes(q) || (u.address||'').toLowerCase().includes(q) || (u.enfermeiro||'').toLowerCase().includes(q) || (u.gerente||'').toLowerCase().includes(q);
-        });
-        UI.renderContacts(filtered, 'all');
-      },
-
-      filterContacts(filter) {
-        let filtered = this.units.slice();
-        if (filter && filter !== 'all') filtered = filtered.filter(u => u.type === filter);
-        // apply service filters
-        document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
-          const sv = btn.getAttribute('data-service');
-          const val = btn.getAttribute('data-value');
-          if (val === 'Sim') {
-            if (sv === 'vaccine') filtered = filtered.filter(u => (u.vacina||'') === 'Sim');
-            if (sv === 'dental') filtered = filtered.filter(u => (u.odonto||'') === 'Sim');
-            if (sv === 'pharmacy') filtered = filtered.filter(u => (u.farmacia||'') === 'Sim');
-          }
-        });
-        UI.renderContacts(filtered, 'all');
-      },
-
-      async saveUnitFromForm() {
-        const form = document.getElementById('unitForm');
-        // collect fields
-        const unit = {
-          name: document.getElementById('unitName').value.trim(),
-          type: document.getElementById('unitType').value,
-          address: document.getElementById('unitAddress').value.trim(),
-          bairro: document.getElementById('unitBairro').value.trim(),
-          phone: document.getElementById('unitPhone').value.trim(),
-          email: document.getElementById('unitEmail').value.trim(),
-          vacina: document.getElementById('unitVacina').value,
-          odonto: document.getElementById('unitOdonto').value,
-          farmacia: document.getElementById('unitFarmacia').value,
-          enfermeiro: document.getElementById('unitEnfermeiro').value.trim(),
-          gerente: document.getElementById('unitGerente').value.trim(),
-          responsavel: document.getElementById('unitResponsavel') ? document.getElementById('unitResponsavel').value.trim() : ''
-        };
-        const editId = form.getAttribute('data-edit-id');
-        if (editId) unit.id = parseInt(editId);
-
-        const ok = await DataService.saveUnit(unit);
-        if (ok) {
-          UI.showSyncStatus('Unidade salva localmente.', 'success');
-          await this.refreshAll();
-        } else {
-          UI.showSyncStatus('Erro ao salvar localmente.', 'error');
-        }
-      },
-
-      editUnit(id) {
-        const unit = this.units.find(u=>u.id===id);
-        if (!unit) return alert('Unidade não encontrada');
-        document.getElementById('unitName').value = unit.name || '';
-        document.getElementById('unitType').value = unit.type || '';
-        document.getElementById('unitAddress').value = unit.address || '';
-        document.getElementById('unitBairro').value = unit.bairro || '';
-        document.getElementById('unitPhone').value = unit.phone || '';
-        document.getElementById('unitEmail').value = unit.email || '';
-        document.getElementById('unitVacina').value = unit.vacina || 'Não';
-        document.getElementById('unitOdonto').value = unit.odonto || 'Não';
-        document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
-        document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
-        document.getElementById('unitGerente').value = unit.gerente || '';
-        if (document.getElementById('unitResponsavel')) document.getElementById('unitResponsavel').value = unit.responsavel || '';
-        const form = document.getElementById('unitForm');
-        form.setAttribute('data-edit-id', String(unit.id));
-        UI.elements.formTitle.textContent = 'Editar Unidade';
-        UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
-        UI.elements.cancelEdit.style.display = 'inline-flex';
-        UI.setupConditionalFormLogic();
-        UI.openAdmin();
-      },
-
-      async deleteUnit(id) {
-        if (!confirm('Confirma exclusão da unidade?')) return;
-        const ok = await DataService.deleteUnit(id);
-        if (ok) {
-          UI.showSyncStatus('Unidade excluída localmente.', 'success');
-          await this.refreshAll();
-        } else {
-          UI.showSyncStatus('Erro ao excluir unidade.', 'error');
-        }
-      },
-
-      async saveGitHubConfig() {
-        const token = document.getElementById('githubToken').value.trim();
-        const owner = document.getElementById('repoOwner').value.trim();
-        const repo = document.getElementById('repoName').value.trim();
-        const file = document.getElementById('filePath').value.trim();
-        if (!token || !owner || !repo || !file) return alert('Preencha token, proprietário, repo e caminho do arquivo.');
-        DataService.githubToken = token;
-        DataService.repoOwner = owner;
-        DataService.repoName = repo;
-        DataService.filePath = file;
-        localStorage.setItem('github_config', JSON.stringify({ token, owner, repo, filePath: file }));
-        UI.showSyncStatus('Configuração salva localmente. Token armazenado no seu navegador.', 'success');
-        document.getElementById('githubToken').value = '';
-        document.getElementById('githubToken').placeholder = '•••••• (configurado)';
-      },
-
-      async testGitHubConnection() {
-        UI.showSyncStatus('Testando conexão...', 'info');
-        const result = await DataService.testGitHubConnection();
-        if (result.success) UI.showSyncStatus(result.message, 'success'); else UI.showSyncStatus(result.message, 'error');
-      },
-
-      async syncToGitHub() {
-        UI.showSyncStatus('Sincronizando para o GitHub...', 'info');
-        const result = await DataService.syncToGitHub();
-        if (result.success) {
-          UI.showSyncStatus(result.message, 'success');
-          // após envio, opcional: puxar para atualizar sha local e notificar
-        } else {
-          UI.showSyncStatus(result.message, 'error');
-        }
-      },
-
-      async pullFromGitHub() {
-        UI.showSyncStatus('Puxando dados do GitHub...', 'info');
-        const result = await DataService.pullFromGitHub();
-        if (result.success) {
-          UI.showSyncStatus(result.message, 'success');
-          await this.refreshAll();
-        } else {
-          UI.showSyncStatus(result.message, 'error');
-        }
-      },
-
-      async toggleAutoSync() {
-        const enabled = !DataService.autoSyncEnabled;
-        DataService.setAutoSync(enabled);
-        UI.showSyncStatus(enabled ? 'Sincronização automática ativada (verificações).' : 'Sincronização automática desativada.', 'success');
-      },
-
-      async testGitHubConnection() {
-        // wrapper for UI
-        UI.showSyncStatus('Testando conexão...', 'info');
-        const r = await DataService.testGitHubConnection();
-        if (r.success) UI.showSyncStatus(r.message, 'success'); else UI.showSyncStatus(r.message, 'error');
-      },
-
-      backupData() {
-        const data = JSON.stringify(DataService.getUnitsSync(),null,2);
-        const blob = new Blob([data], {type:'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'units-backup.json'; document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
-      },
-
-      restoreData(file) {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const parsed = JSON.parse(e.target.result);
-            if (!Array.isArray(parsed)) return alert('Arquivo inválido: deve ser um array JSON de unidades');
-            DataService.saveUnits(parsed);
-            UI.showSyncStatus('Dados restaurados localmente.', 'success');
+        async init() {
+            UI.init();
+            this.showLoadingScreen('Carregando dados iniciais...');
+            
+            // 1. Carregar favoritos
+            this.loadFavorites();
+            // 2. Carregar unidades (do GitHub ou local)
+            this.units = await DataService.getUnits();
+            
+            // 3. Inicializar view mode
+            this.setViewMode(this.viewMode, false);
+            // 4. Renderizar tudo
             this.refreshAll();
-          } catch (err) {
-            alert('Erro ao ler arquivo: ' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      },
 
-      clearAllData() {
-        if (!confirm('Tem certeza que deseja limpar todos os dados locais?')) return;
-        localStorage.removeItem('units');
-        UI.showSyncStatus('Dados locais removidos.', 'success');
-        this.refreshAll();
-      }
+            if (AuthService.isLogged()) {
+                UI.openAdmin();
+            }
+
+            this.hideLoadingScreen();
+        },
+
+        async refreshAll() {
+            this.units = DataService.getUnitsSync(); // Sempre pega do local após o init
+            
+            // Renderiza o painel de administração
+            UI.renderUnitsList(this.units);
+            
+            // Atualiza a busca/filtros
+            this.performSearch();
+
+            // Renderiza Favoritos
+            const favUnits = this.units.filter(u=>this.favorites.includes(u.id));
+            UI.renderContacts(favUnits, 'favorites');
+        },
+
+        showLoadingScreen(message) {
+            const screen = document.getElementById('loadingScreen');
+            if(screen) {
+                document.getElementById('loadingStatus').textContent = message;
+                screen.style.display = 'flex';
+            }
+        },
+
+        hideLoadingScreen() {
+            const screen = document.getElementById('loadingScreen');
+            if(screen) screen.style.display = 'none';
+        },
+
+        loadFavorites() {
+            try {
+                this.favorites = JSON.parse(localStorage.getItem('telefonia_favorites') || '[]');
+                if (!Array.isArray(this.favorites)) this.favorites = [];
+            } catch (e) {
+                console.error('Erro ao carregar favoritos:', e);
+            }
+        },
+
+        async login(user, pass) {
+            const result = AuthService.login(user, pass);
+            if (result.success) {
+                UI.closeLogin();
+                UI.openAdmin();
+            } else {
+                alert(result.message);
+            }
+        },
+
+        logout() {
+            AuthService.logout();
+            UI.closeAdmin();
+            window.location.reload();
+        },
+
+        // NOVO: Adiciona a lógica de salvar ou atualizar no App
+        saveUnitFromForm() {
+            // Coleta os dados do formulário
+            const form = UI.elements.unitForm;
+            const isEdit = form.hasAttribute('data-edit-id');
+            const unitId = isEdit ? parseInt(form.getAttribute('data-edit-id')) : Date.now();
+
+            // Validação básica do tipo
+            if (!document.getElementById('unitType').value) {
+                alert('O campo Tipo é obrigatório.');
+                return;
+            }
+
+            const newUnit = {
+                id: unitId,
+                name: document.getElementById('unitName').value,
+                type: document.getElementById('unitType').value,
+                address: document.getElementById('unitAddress').value,
+                bairro: document.getElementById('unitBairro').value,
+                phone: document.getElementById('unitPhone').value.replace(/\D/g, ''), // Limpa o telefone
+                ramal: document.getElementById('unitRamal').value,
+                email: document.getElementById('unitEmail').value,
+                // Campos condicionais
+                vacina: document.getElementById('unitVacina') && document.getElementById('unitVacina').closest('.hidden') ? 'Não' : document.getElementById('unitVacina').value,
+                odonto: document.getElementById('unitOdonto') && document.getElementById('unitOdonto').closest('.hidden') ? 'Não' : document.getElementById('unitOdonto').value,
+                farmacia: document.getElementById('unitFarmacia') && document.getElementById('unitFarmacia').closest('.hidden') ? 'Não' : document.getElementById('unitFarmacia').value,
+                enfermeiro: document.getElementById('unitEnfermeiro').value,
+                gerente: document.getElementById('unitGerente').value,
+                responsavel: document.getElementById('unitResponsavel').value,
+                favorite: false // Será sobrescrito pelo DataService.addOrUpdateUnit se for edição
+            };
+
+            // Remove o campo de id do objeto se for novo, para garantir que o DataService crie um (embora o Date.now() já garanta)
+            if (!isEdit) delete newUnit.id;
+
+
+            DataService.addOrUpdateUnit(newUnit);
+            UI.showSyncStatus(`Unidade "${newUnit.name}" ${isEdit ? 'atualizada' : 'adicionada'} com sucesso!`, 'success');
+
+            // Reseta o formulário e atualiza a interface
+            this.resetFormAfterSave();
+            this.refreshAll();
+        },
+
+        resetFormAfterSave() {
+            UI.resetFormToAdd();
+            // NOVO: Volta para a aba de unidades gerenciadas após salvar/cancelar
+            document.querySelector('.admin-tab[data-tab="units"]').click();
+        },
+
+        editUnit(id) {
+            const unit = this.units.find(u=>u.id===id);
+            if (!unit) return alert('Unidade não encontrada');
+
+            document.getElementById('unitName').value = unit.name || '';
+            document.getElementById('unitType').value = unit.type || '';
+            document.getElementById('unitAddress').value = unit.address || '';
+            document.getElementById('unitBairro').value = unit.bairro || '';
+            document.getElementById('unitPhone').value = unit.phone || '';
+
+            if (document.getElementById('unitRamal')) document.getElementById('unitRamal').value = unit.ramal || ''; // NOVO CAMPO: RAMAL
+            
+            document.getElementById('unitEmail').value = unit.email || '';
+            
+            if (document.getElementById('unitVacina')) document.getElementById('unitVacina').value = unit.vacina || 'Não';
+            if (document.getElementById('unitOdonto')) document.getElementById('unitOdonto').value = unit.odonto || 'Não';
+            if (document.getElementById('unitFarmacia')) document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+            
+            if (document.getElementById('unitEnfermeiro')) document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
+            if (document.getElementById('unitGerente')) document.getElementById('unitGerente').value = unit.gerente || '';
+            if (document.getElementById('unitResponsavel')) document.getElementById('unitResponsavel').value = unit.responsavel || '';
+
+            const form = document.getElementById('unitForm');
+            form.setAttribute('data-edit-id', String(unit.id));
+            UI.elements.formTitle.textContent = 'Editar Unidade';
+            UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
+            UI.elements.cancelEdit.style.display = 'inline-block';
+            
+            // NOVO: Alterna para a aba de edição (Adicionar Unidade)
+            document.querySelector('.admin-tab[data-tab="add"]').click();
+
+            UI.setupConditionalFormLogic(); // Re-executa a lógica condicional para mostrar/esconder campos
+        },
+
+        deleteUnit(id) {
+            if (!confirm('Tem certeza que deseja excluir esta unidade?')) return;
+            this.units = this.units.filter(u=>u.id!==id);
+            DataService.saveUnits(this.units);
+            UI.showSyncStatus('Unidade excluída com sucesso.', 'success');
+            this.refreshAll();
+        },
+
+        // GitHub/Sync Methods
+        async saveGitHubConfig() {
+            DataService.saveGitHubConfig(
+                UI.elements.githubToken.value,
+                UI.elements.repoOwner.value,
+                UI.elements.repoName.value,
+                UI.elements.filePath.value
+            );
+            UI.showSyncStatus('Configurações do GitHub salvas.', 'success');
+        },
+
+        async syncToGitHub() {
+            this.showLoadingScreen('Sincronizando para GitHub...');
+            const res = await DataService.syncToGitHub();
+            UI.showSyncStatus(res.message, res.success ? 'success' : 'error');
+            this.hideLoadingScreen();
+        },
+
+        async pullFromGitHub() {
+            this.showLoadingScreen('Puxando dados do GitHub...');
+            const res = await DataService.pullFromGitHub();
+            UI.showSyncStatus(res.message, res.success ? 'success' : 'error');
+            if (res.success) {
+                this.units = res.data;
+                this.refreshAll();
+            }
+            this.hideLoadingScreen();
+        },
+
+        async testGitHubConnection() {
+            const res = await DataService.testGitHubConnection();
+            UI.showSyncStatus(res.message, res.success ? 'success' : 'error');
+        },
+
+        toggleAutoSync() {
+            const enabled = !DataService.autoSyncEnabled;
+            DataService.setAutoSync(enabled);
+            UI.showSyncStatus(`Sincronização automática ${enabled ? 'ativada' : 'desativada'}!`, enabled ? 'success' : 'error');
+        },
+
+        async toggleFavorite(id) {
+            const idx = this.favorites.indexOf(id);
+            if (idx === -1) this.favorites.push(id);
+            else this.favorites.splice(idx,1);
+            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+        },
+
+        performSearch() {
+            const q = UI.elements.searchInput.value.trim().toLowerCase();
+            let filtered = this.units;
+            
+            if (q) {
+                filtered = filtered.filter(u => {
+                    return (u.name||'').toLowerCase().includes(q) || 
+                           (u.phone||'').toLowerCase().includes(q) || 
+                           (u.ramal||'').toLowerCase().includes(q) || // Busca por ramal
+                           (u.address||'').toLowerCase().includes(q) ||
+                           (u.enfermeiro||'').toLowerCase().includes(q) ||
+                           (u.gerente||'').toLowerCase().includes(q);
+                });
+            }
+
+            // Re-apply type/service filters on the search result
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            this.filterContacts(activeFilter, filtered);
+        },
+
+        filterContacts(filter, unitsToFilter = this.units) {
+            let filtered = unitsToFilter.slice();
+
+            if (filter && filter !== 'all') filtered = filtered.filter(u => u.type === filter);
+
+            // apply service filters
+            document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
+                const sv = btn.getAttribute('data-service');
+                const val = btn.getAttribute('data-value');
+                if (val === 'Sim') {
+                    if (sv === 'vaccine') filtered = filtered.filter(u => (u.vacina||'') === 'Sim');
+                    if (sv === 'dental') filtered = filtered.filter(u => (u.odonto||'') === 'Sim');
+                    if (sv === 'pharmacy') filtered = filtered.filter(u => (u.farmacia||'') === 'Sim');
+                }
+            });
+
+            UI.renderContacts(filtered, 'all');
+        },
+
+        toggleServiceFilter(btn) {
+            const currentVal = btn.getAttribute('data-value');
+            const newVal = currentVal === 'Sim' ? '' : 'Sim';
+            btn.setAttribute('data-value', newVal);
+            btn.classList.toggle('active', newVal === 'Sim');
+            this.performSearch(); // Re-executa a busca para aplicar o filtro
+        },
+
+        setViewMode(mode, refresh = true) {
+            this.viewMode = mode;
+            localStorage.setItem('telefonia_viewMode', mode);
+            if (UI.elements.viewBlockBtn) {
+                UI.elements.viewBlockBtn.classList.toggle('active', mode === 'block');
+                UI.elements.viewTableBtn.classList.toggle('active', mode === 'table');
+                UI.elements.viewBlockBtn.classList.toggle('btn-primary', mode === 'block');
+                UI.elements.viewBlockBtn.classList.toggle('btn-secondary', mode !== 'block');
+                UI.elements.viewTableBtn.classList.toggle('btn-primary', mode === 'table');
+                UI.elements.viewTableBtn.classList.toggle('btn-secondary', mode !== 'table');
+            }
+            if (refresh) {
+                // Re-render only the main content after changing view mode
+                this.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
+                const activeTab = document.querySelector('.tab.active').dataset.tab;
+                if (activeTab === 'favorites') this.refreshAll(); // Garante que favoritos também mude de view
+            }
+        },
+        
+        backupData() {
+            const data = DataService.getUnitsSync();
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'units-backup.json'; document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+        },
+
+        restoreData(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!Array.isArray(parsed)) return alert('Arquivo inválido: deve ser um array JSON de unidades');
+                    DataService.saveUnits(parsed);
+                    UI.showSyncStatus('Dados restaurados localmente.', 'success');
+                    this.refreshAll();
+                } catch (err) {
+                    alert('Erro ao ler arquivo: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        },
+
+        clearAllData() {
+            if (!confirm('Tem certeza que deseja limpar todos os dados locais?')) return;
+            localStorage.removeItem('units');
+            UI.showSyncStatus('Dados locais removidos.', 'success');
+            this.refreshAll();
+        }
     };
 
     /* ===============================
@@ -1139,7 +1413,7 @@
     window.addEventListener('load', ()=>{ App.init(); });
 
     // expose helper on window for in-HTML onclick usage if needed
-    window.App = App; window.UI = UI; window.DataService = DataService;
+    window.App = App;
   </script>
 </body>
 </html>
