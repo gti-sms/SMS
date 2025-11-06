@@ -469,9 +469,9 @@
         lastSyncTime: null,
 
         async getUnits() {
-            // SEMPRE tenta carregar do GitHub primeiro (automático)
+            // SEMPRE tenta carregar do GitHub primeiro (automático) - SEM TOKEN
             try {
-                this.showNotification('Verificando atualizações do GitHub...', 'info');
+                console.log('Verificando atualizações do GitHub...');
                 const remote = await this.loadFromGitHubRaw();
                 if (Array.isArray(remote) && remote.length > 0) {
                     // Verifica se há dados novos comparando com o localStorage
@@ -479,14 +479,18 @@
                     const shouldUpdate = this.shouldUpdateFromRemote(remote, localUnits);
                     
                     if (shouldUpdate) {
-                        this.showNotification('Atualizando dados do GitHub...', 'success');
+                        console.log('Atualizando dados do GitHub...', remote.length, 'unidades');
                         this.saveUnits(remote);
                         this.lastSyncTime = Date.now();
                         localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
+                        this.showNotification(`Dados atualizados: ${remote.length} unidades`, 'success');
                         return remote;
                     } else {
+                        console.log('Dados já estão atualizados');
                         this.showNotification('Dados já estão atualizados', 'success');
                     }
+                } else if (remote && remote.length === 0) {
+                    console.log('Arquivo vazio no GitHub');
                 }
             } catch (e) {
                 console.warn('Erro carregando remoto:', e.message);
@@ -494,21 +498,33 @@
             }
             
             // Fallback para dados locais
-            return this.getUnitsSync();
+            const localUnits = this.getUnitsSync();
+            console.log('Usando dados locais:', localUnits.length, 'unidades');
+            return localUnits;
         },
 
         shouldUpdateFromRemote(remoteUnits, localUnits) {
             // Se não há dados locais, deve atualizar
-            if (!localUnits || localUnits.length === 0) return true;
+            if (!localUnits || localUnits.length === 0) {
+                console.log('Atualizando: sem dados locais');
+                return true;
+            }
             
             // Se os arrays têm tamanhos diferentes, deve atualizar
-            if (remoteUnits.length !== localUnits.length) return true;
+            if (remoteUnits.length !== localUnits.length) {
+                console.log('Atualizando: tamanhos diferentes', remoteUnits.length, 'vs', localUnits.length);
+                return true;
+            }
             
             // Verifica se houve mudança no conteúdo (comparação simples)
-            const remoteString = JSON.stringify(remoteUnits);
-            const localString = JSON.stringify(localUnits);
+            const remoteString = JSON.stringify(remoteUnits.sort((a, b) => a.id - b.id));
+            const localString = JSON.stringify(localUnits.sort((a, b) => a.id - b.id));
             
-            return remoteString !== localString;
+            const shouldUpdate = remoteString !== localString;
+            if (shouldUpdate) {
+                console.log('Atualizando: conteúdo diferente');
+            }
+            return shouldUpdate;
         },
 
         showNotification(message, type) {
@@ -530,16 +546,33 @@
         },
 
         async loadFromGitHubRaw() {
-            // tenta carregar via raw.githubusercontent (mais simples e cache bust)
+            // Usa raw.githubusercontent.com (NÃO PRECISA DE TOKEN)
             const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?t=${Date.now()}`;
+            console.log('Tentando carregar:', url);
+            
             try {
-                const res = await fetch(url, {cache: 'no-cache'});
+                const res = await fetch(url, {
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
                 if (res.ok) {
                     const text = await res.text();
-                    if (!text.trim()) return [];
+                    console.log('Resposta do GitHub:', text.substring(0, 100) + '...');
+                    
+                    if (!text.trim()) {
+                        console.log('Arquivo vazio');
+                        return [];
+                    }
+                    
                     const data = JSON.parse(text);
+                    console.log('Dados parseados:', Array.isArray(data) ? data.length : 'não é array');
+                    
                     return Array.isArray(data) ? data : [];
                 } else {
+                    console.warn('Erro HTTP:', res.status, res.statusText);
                     return null;
                 }
             } catch (e) {
@@ -548,7 +581,7 @@
             }
         },
 
-        // NOVO: Adiciona ou atualiza uma unidade no localStorage
+        // Adiciona ou atualiza uma unidade no localStorage
         addOrUpdateUnit(unit) {
             let units = this.getUnitsSync();
             const index = units.findIndex(u => u.id === unit.id);
@@ -566,7 +599,7 @@
             return unit;
         },
 
-        // NOVO: Função síncrona para obter unidades do localStorage (anteriormente apenas getUnitsSync)
+        // Função síncrona para obter unidades do localStorage
         getUnitsSync() {
             try {
                 const units = JSON.parse(localStorage.getItem('units') || '[]');
@@ -692,21 +725,17 @@
         },
 
         async pullFromGitHub() {
-            if (!this.githubToken) return { success: false, message: 'Token não configurado' };
+            // Para outras máquinas: usa raw.githubusercontent.com SEM TOKEN
             try {
-                const fileInfo = await this.getGitHubFile();
-                if (!fileInfo || !fileInfo.exists) return { success: false, message: 'Arquivo não encontrado no repositório' };
-                
-                const content = b64_to_utf8(fileInfo.data.content);
-                const parsed = JSON.parse(content);
-                
-                if (!Array.isArray(parsed)) return { success: false, message: 'Conteúdo inválido do repositório' };
-
-                this.saveUnits(parsed);
-                this.lastSyncTime = Date.now();
-                localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
-                return { success: true, message: `Dados carregados: ${parsed.length} unidades`, data: parsed };
-
+                const remote = await this.loadFromGitHubRaw();
+                if (Array.isArray(remote) && remote.length > 0) {
+                    this.saveUnits(remote);
+                    this.lastSyncTime = Date.now();
+                    localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
+                    return { success: true, message: `Dados carregados: ${remote.length} unidades`, data: remote };
+                } else {
+                    return { success: false, message: 'Nenhum dado encontrado no repositório' };
+                }
             } catch (e) {
                 console.error('Erro pullFromGitHub:', e);
                 return { success: false, message: 'Erro ao puxar dados: ' + e.message };
@@ -809,7 +838,6 @@
                 vacinaField: document.getElementById('vacinaField'),
                 odontoField: document.getElementById('odontoField'),
                 farmaciaField: document.getElementById('farmaciaField'),
-                // Elementos da nova funcionalidade
                 viewBlockBtn: document.getElementById('viewBlock'),
                 viewTableBtn: document.getElementById('viewTable')
             };
@@ -886,18 +914,15 @@
         },
 
         setupConditionalFormLogic() {
-            // Quando o tipo estiver em conditionalTypes, ocultar vacina/odonto/farmacia
             const conditionalTypes = ['administrativo','vigilancia','capne','outros'];
             const check = ()=> {
                 const type = (this.elements.unitType && this.elements.unitType.value) ? this.elements.unitType.value : '';
                 const isConditional = conditionalTypes.includes(type);
 
-                // ocultar os campos de serviços quando for condicional
                 if (this.elements.vacinaField) this.elements.vacinaField.classList.toggle('hidden', isConditional);
                 if (this.elements.odontoField) this.elements.odontoField.classList.toggle('hidden', isConditional);
                 if (this.elements.farmaciaField) this.elements.farmaciaField.classList.toggle('hidden', isConditional);
 
-                // campos de responsável / enfermeiro / gerente
                 if (this.elements.enfermeiroField) this.elements.enfermeiroField.classList.toggle('hidden', isConditional);
                 if (this.elements.gerenteField) this.elements.gerenteField.classList.toggle('hidden', isConditional);
                 if (this.elements.responsibleField) this.elements.responsibleField.classList.toggle('hidden', !isConditional);
@@ -908,7 +933,6 @@
 
             if (this.elements.unitType) {
                 this.elements.unitType.addEventListener('change', check);
-                // disparar verificação inicial
                 setTimeout(check, 0);
             }
         },
@@ -950,7 +974,7 @@
             this.elements.repoOwner.value = DataService.repoOwner;
             this.elements.repoName.value = DataService.repoName;
             this.elements.filePath.value = DataService.filePath;
-            DataService.loadAutoSyncConfig(); // Atualiza o status do botão
+            DataService.loadAutoSyncConfig();
         },
 
         showSyncStatus(message, type) {
@@ -999,7 +1023,6 @@
                     target.appendChild(card);
                 });
             } else { 
-                // Table mode
                 const table = document.createElement('table');
                 table.className = 'contact-table';
                 table.innerHTML = `
@@ -1026,7 +1049,6 @@
             const phoneClean = (contact.phone || '').replace(/\D/g,'');
             const telLink = `tel:+55${phoneClean}`;
             const whatsappLink = `https://wa.me/55${phoneClean}`;
-            // CORREÇÃO: Link correto do Google Maps
             const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
             
             const typeLabel = this.getTypeLabel(contact.type);
@@ -1069,7 +1091,6 @@
             const phoneClean = (contact.phone || '').replace(/\D/g,'');
             const telLink = `tel:+55${phoneClean}`;
             const whatsappLink = `https://wa.me/55${phoneClean}`;
-            // CORREÇÃO: Link correto do Google Maps
             const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((contact.address||'') + ', ' + (contact.bairro||'') + ', Passo Fundo, RS')}`;
 
             card.innerHTML = `
@@ -1169,15 +1190,9 @@
         },
 
         async refreshAll() {
-            this.units = DataService.getUnitsSync(); // Sempre pega do local após o init
-            
-            // Renderiza o painel de administração
+            this.units = DataService.getUnitsSync();
             UI.renderUnitsList(this.units);
-            
-            // Atualiza a busca/filtros
             this.performSearch();
-
-            // Renderiza Favoritos
             const favUnits = this.units.filter(u=>this.favorites.includes(u.id));
             UI.renderContacts(favUnits, 'favorites');
         },
@@ -1220,14 +1235,11 @@
             window.location.reload();
         },
 
-        // NOVO: Adiciona a lógica de salvar ou atualizar no App
         saveUnitFromForm() {
-            // Coleta os dados do formulário
             const form = UI.elements.unitForm;
             const isEdit = form.hasAttribute('data-edit-id');
             const unitId = isEdit ? parseInt(form.getAttribute('data-edit-id')) : Date.now();
 
-            // Validação básica do tipo
             if (!document.getElementById('unitType').value) {
                 alert('O campo Tipo é obrigatório.');
                 return;
@@ -1239,34 +1251,29 @@
                 type: document.getElementById('unitType').value,
                 address: document.getElementById('unitAddress').value,
                 bairro: document.getElementById('unitBairro').value,
-                phone: document.getElementById('unitPhone').value.replace(/\D/g, ''), // Limpa o telefone
+                phone: document.getElementById('unitPhone').value.replace(/\D/g, ''),
                 ramal: document.getElementById('unitRamal').value,
                 email: document.getElementById('unitEmail').value,
-                // Campos condicionais
                 vacina: document.getElementById('unitVacina') && document.getElementById('unitVacina').closest('.hidden') ? 'Não' : document.getElementById('unitVacina').value,
                 odonto: document.getElementById('unitOdonto') && document.getElementById('unitOdonto').closest('.hidden') ? 'Não' : document.getElementById('unitOdonto').value,
                 farmacia: document.getElementById('unitFarmacia') && document.getElementById('unitFarmacia').closest('.hidden') ? 'Não' : document.getElementById('unitFarmacia').value,
                 enfermeiro: document.getElementById('unitEnfermeiro').value,
                 gerente: document.getElementById('unitGerente').value,
                 responsavel: document.getElementById('unitResponsavel').value,
-                favorite: false // Será sobrescrito pelo DataService.addOrUpdateUnit se for edição
+                favorite: false
             };
 
-            // Remove o campo de id do objeto se for novo, para garantir que o DataService crie um (embora o Date.now() já garanta)
             if (!isEdit) delete newUnit.id;
-
 
             DataService.addOrUpdateUnit(newUnit);
             UI.showSyncStatus(`Unidade "${newUnit.name}" ${isEdit ? 'atualizada' : 'adicionada'} com sucesso!`, 'success');
 
-            // Reseta o formulário e atualiza a interface
             this.resetFormAfterSave();
             this.refreshAll();
         },
 
         resetFormAfterSave() {
             UI.resetFormToAdd();
-            // NOVO: Volta para a aba de unidades gerenciadas após salvar/cancelar
             document.querySelector('.admin-tab[data-tab="units"]').click();
         },
 
@@ -1279,18 +1286,14 @@
             document.getElementById('unitAddress').value = unit.address || '';
             document.getElementById('unitBairro').value = unit.bairro || '';
             document.getElementById('unitPhone').value = unit.phone || '';
-
-            if (document.getElementById('unitRamal')) document.getElementById('unitRamal').value = unit.ramal || ''; // NOVO CAMPO: RAMAL
-            
+            document.getElementById('unitRamal').value = unit.ramal || '';
             document.getElementById('unitEmail').value = unit.email || '';
-            
-            if (document.getElementById('unitVacina')) document.getElementById('unitVacina').value = unit.vacina || 'Não';
-            if (document.getElementById('unitOdonto')) document.getElementById('unitOdonto').value = unit.odonto || 'Não';
-            if (document.getElementById('unitFarmacia')) document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
-            
-            if (document.getElementById('unitEnfermeiro')) document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
-            if (document.getElementById('unitGerente')) document.getElementById('unitGerente').value = unit.gerente || '';
-            if (document.getElementById('unitResponsavel')) document.getElementById('unitResponsavel').value = unit.responsavel || '';
+            document.getElementById('unitVacina').value = unit.vacina || 'Não';
+            document.getElementById('unitOdonto').value = unit.odonto || 'Não';
+            document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+            document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
+            document.getElementById('unitGerente').value = unit.gerente || '';
+            document.getElementById('unitResponsavel').value = unit.responsavel || '';
 
             const form = document.getElementById('unitForm');
             form.setAttribute('data-edit-id', String(unit.id));
@@ -1298,10 +1301,8 @@
             UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
             UI.elements.cancelEdit.style.display = 'inline-block';
             
-            // NOVO: Alterna para a aba de edição (Adicionar Unidade)
             document.querySelector('.admin-tab[data-tab="add"]').click();
-
-            UI.setupConditionalFormLogic(); // Re-executa a lógica condicional para mostrar/esconder campos
+            UI.setupConditionalFormLogic();
         },
 
         deleteUnit(id) {
@@ -1367,14 +1368,13 @@
                 filtered = filtered.filter(u => {
                     return (u.name||'').toLowerCase().includes(q) || 
                            (u.phone||'').toLowerCase().includes(q) || 
-                           (u.ramal||'').toLowerCase().includes(q) || // Busca por ramal
+                           (u.ramal||'').toLowerCase().includes(q) ||
                            (u.address||'').toLowerCase().includes(q) ||
                            (u.enfermeiro||'').toLowerCase().includes(q) ||
                            (u.gerente||'').toLowerCase().includes(q);
                 });
             }
 
-            // Re-apply type/service filters on the search result
             const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
             this.filterContacts(activeFilter, filtered);
         },
@@ -1384,7 +1384,6 @@
 
             if (filter && filter !== 'all') filtered = filtered.filter(u => u.type === filter);
 
-            // apply service filters
             document.querySelectorAll('.service-toggle-btn').forEach(btn=>{
                 const sv = btn.getAttribute('data-service');
                 const val = btn.getAttribute('data-value');
@@ -1403,7 +1402,7 @@
             const newVal = currentVal === 'Sim' ? '' : 'Sim';
             btn.setAttribute('data-value', newVal);
             btn.classList.toggle('active', newVal === 'Sim');
-            this.performSearch(); // Re-executa a busca para aplicar o filtro
+            this.performSearch();
         },
 
         setViewMode(mode, refresh = true) {
@@ -1418,10 +1417,9 @@
                 UI.elements.viewTableBtn.classList.toggle('btn-secondary', mode !== 'table');
             }
             if (refresh) {
-                // Re-render only the main content after changing view mode
                 this.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
                 const activeTab = document.querySelector('.tab.active').dataset.tab;
-                if (activeTab === 'favorites') this.refreshAll(); // Garante que favoritos também mude de view
+                if (activeTab === 'favorites') this.refreshAll();
             }
         },
         
