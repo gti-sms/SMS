@@ -469,66 +469,162 @@
         lastSyncTime: null,
 
         async getUnits() {
-            // SEMPRE tenta carregar do GitHub primeiro (automático) - SEM TOKEN
+            // PRIMEIRO tenta carregar do GitHub Pages (URL relativa)
             try {
-                console.log('Verificando atualizações do GitHub...');
-                const remote = await this.loadFromGitHubRaw();
+                console.log('📡 Verificando atualizações do GitHub Pages...');
+                const remote = await this.loadFromGitHubPages();
                 if (Array.isArray(remote) && remote.length > 0) {
-                    // Verifica se há dados novos comparando com o localStorage
                     const localUnits = this.getUnitsSync();
                     const shouldUpdate = this.shouldUpdateFromRemote(remote, localUnits);
                     
                     if (shouldUpdate) {
-                        console.log('Atualizando dados do GitHub...', remote.length, 'unidades');
+                        console.log('🔄 Atualizando dados do GitHub Pages...', remote.length, 'unidades');
                         this.saveUnits(remote);
                         this.lastSyncTime = Date.now();
                         localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
-                        this.showNotification(`Dados atualizados: ${remote.length} unidades`, 'success');
+                        this.showNotification(`✅ Dados atualizados: ${remote.length} unidades`, 'success');
                         return remote;
                     } else {
-                        console.log('Dados já estão atualizados');
-                        this.showNotification('Dados já estão atualizados', 'success');
+                        console.log('✅ Dados já estão atualizados');
+                        this.showNotification('✅ Dados sincronizados', 'success');
                     }
-                } else if (remote && remote.length === 0) {
-                    console.log('Arquivo vazio no GitHub');
+                    return remote;
                 }
             } catch (e) {
-                console.warn('Erro carregando remoto:', e.message);
-                this.showNotification('Usando dados locais (sem conexão)', 'warning');
+                console.warn('❌ Erro GitHub Pages:', e.message);
+            }
+
+            // FALLBACK: tenta raw.githubusercontent.com
+            try {
+                console.log('📡 Tentando raw.githubusercontent.com...');
+                const remote = await this.loadFromGitHubRaw();
+                if (Array.isArray(remote) && remote.length > 0) {
+                    const localUnits = this.getUnitsSync();
+                    const shouldUpdate = this.shouldUpdateFromRemote(remote, localUnits);
+                    
+                    if (shouldUpdate) {
+                        console.log('🔄 Atualizando dados do GitHub Raw...', remote.length, 'unidades');
+                        this.saveUnits(remote);
+                        this.lastSyncTime = Date.now();
+                        localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
+                        this.showNotification(`✅ Dados atualizados: ${remote.length} unidades`, 'success');
+                        return remote;
+                    }
+                    return remote;
+                }
+            } catch (e) {
+                console.warn('❌ Erro GitHub Raw:', e.message);
+                this.showNotification('⚠️ Usando dados locais (sem conexão)', 'warning');
             }
             
-            // Fallback para dados locais
+            // ÚLTIMO FALLBACK: dados locais
             const localUnits = this.getUnitsSync();
-            console.log('Usando dados locais:', localUnits.length, 'unidades');
+            console.log('💾 Usando dados locais:', localUnits.length, 'unidades');
             return localUnits;
+        },
+
+        // NOVO MÉTODO: Carrega do GitHub Pages (URL relativa)
+        async loadFromGitHubPages() {
+            // Usa URL relativa para o GitHub Pages
+            const url = `./data/units.json?v=${Date.now()}`;
+            console.log('🔗 Tentando carregar:', url);
+            
+            try {
+                const res = await fetch(url, {
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (res.ok) {
+                    const text = await res.text();
+                    console.log('📄 Resposta do GitHub Pages:', text.substring(0, 100) + '...');
+                    
+                    if (!text.trim()) {
+                        console.log('📄 Arquivo vazio');
+                        return [];
+                    }
+                    
+                    const data = JSON.parse(text);
+                    console.log('✅ Dados parseados do GitHub Pages:', Array.isArray(data) ? data.length : 'não é array');
+                    
+                    return Array.isArray(data) ? data : [];
+                } else {
+                    console.warn('❌ Erro HTTP GitHub Pages:', res.status, res.statusText);
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+            } catch (e) {
+                console.error('❌ Erro loadFromGitHubPages:', e);
+                throw e;
+            }
+        },
+
+        // MÉTODO EXISTENTE: Carrega do raw.githubusercontent.com
+        async loadFromGitHubRaw() {
+            const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?v=${Date.now()}`;
+            console.log('🔗 Tentando carregar:', url);
+            
+            try {
+                const res = await fetch(url, {
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (res.ok) {
+                    const text = await res.text();
+                    console.log('📄 Resposta do GitHub Raw:', text.substring(0, 100) + '...');
+                    
+                    if (!text.trim()) {
+                        console.log('📄 Arquivo vazio');
+                        return [];
+                    }
+                    
+                    const data = JSON.parse(text);
+                    console.log('✅ Dados parseados do GitHub Raw:', Array.isArray(data) ? data.length : 'não é array');
+                    
+                    return Array.isArray(data) ? data : [];
+                } else {
+                    console.warn('❌ Erro HTTP GitHub Raw:', res.status, res.statusText);
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+            } catch (e) {
+                console.error('❌ Erro loadFromGitHubRaw:', e);
+                throw e;
+            }
         },
 
         shouldUpdateFromRemote(remoteUnits, localUnits) {
             // Se não há dados locais, deve atualizar
             if (!localUnits || localUnits.length === 0) {
-                console.log('Atualizando: sem dados locais');
+                console.log('🔄 Atualizando: sem dados locais');
                 return true;
             }
             
             // Se os arrays têm tamanhos diferentes, deve atualizar
             if (remoteUnits.length !== localUnits.length) {
-                console.log('Atualizando: tamanhos diferentes', remoteUnits.length, 'vs', localUnits.length);
+                console.log('🔄 Atualizando: tamanhos diferentes', remoteUnits.length, 'vs', localUnits.length);
                 return true;
             }
             
             // Verifica se houve mudança no conteúdo (comparação simples)
-            const remoteString = JSON.stringify(remoteUnits.sort((a, b) => a.id - b.id));
-            const localString = JSON.stringify(localUnits.sort((a, b) => a.id - b.id));
+            const remoteString = JSON.stringify(remoteUnits.sort((a, b) => (a.id || 0) - (b.id || 0)));
+            const localString = JSON.stringify(localUnits.sort((a, b) => (a.id || 0) - (b.id || 0)));
             
             const shouldUpdate = remoteString !== localString;
             if (shouldUpdate) {
-                console.log('Atualizando: conteúdo diferente');
+                console.log('🔄 Atualizando: conteúdo diferente');
+            } else {
+                console.log('✅ Conteúdo idêntico, não precisa atualizar');
             }
             return shouldUpdate;
         },
 
         showNotification(message, type) {
-            // Cria uma notificação temporária
             const notification = document.createElement('div');
             notification.className = `update-notification sync-${type}`;
             notification.innerHTML = `
@@ -537,61 +633,22 @@
             `;
             document.body.appendChild(notification);
             
-            // Remove após 3 segundos
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
-            }, 3000);
+            }, 4000);
         },
 
-        async loadFromGitHubRaw() {
-            // Usa raw.githubusercontent.com (NÃO PRECISA DE TOKEN)
-            const url = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/${this.branch}/${this.filePath}?t=${Date.now()}`;
-            console.log('Tentando carregar:', url);
-            
-            try {
-                const res = await fetch(url, {
-                    cache: 'no-cache',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (res.ok) {
-                    const text = await res.text();
-                    console.log('Resposta do GitHub:', text.substring(0, 100) + '...');
-                    
-                    if (!text.trim()) {
-                        console.log('Arquivo vazio');
-                        return [];
-                    }
-                    
-                    const data = JSON.parse(text);
-                    console.log('Dados parseados:', Array.isArray(data) ? data.length : 'não é array');
-                    
-                    return Array.isArray(data) ? data : [];
-                } else {
-                    console.warn('Erro HTTP:', res.status, res.statusText);
-                    return null;
-                }
-            } catch (e) {
-                console.error('Erro loadFromGitHubRaw:', e);
-                return null;
-            }
-        },
-
-        // Adiciona ou atualiza uma unidade no localStorage
+        // ... outros métodos permanecem iguais
         addOrUpdateUnit(unit) {
             let units = this.getUnitsSync();
             const index = units.findIndex(u => u.id === unit.id);
 
             if (index !== -1) {
-                // Editar: mantém o status de favorito da unidade original
                 const existingFavorite = units[index].favorite;
                 units[index] = { ...unit, favorite: existingFavorite }; 
             } else {
-                // Adicionar
                 units.push(unit);
             }
             
@@ -599,7 +656,6 @@
             return unit;
         },
 
-        // Função síncrona para obter unidades do localStorage
         getUnitsSync() {
             try {
                 const units = JSON.parse(localStorage.getItem('units') || '[]');
@@ -610,7 +666,6 @@
         },
 
         saveUnits(units) {
-            // Remove duplicatas por ID (segurança)
             const uniqueUnits = units.filter((unit, index, self) => 
                 index === self.findIndex((t) => (
                     t.id === unit.id
@@ -638,7 +693,6 @@
             localStorage.setItem('github_filePath', path);
         },
 
-        // ... helpers
         async testGitHubConnection() {
             if (!this.githubToken) return { success: false, message: 'Token não configurado' };
             try {
@@ -680,7 +734,6 @@
         },
 
         async syncToGitHub() {
-            // Operação manual: pega units locais, converte e faz PUT na API
             if (!this.githubToken) return { success: false, message: 'Token não configurado' };
             try {
                 const units = this.getUnitsSync();
@@ -714,7 +767,7 @@
                 if (res.ok) {
                     this.lastSyncTime = Date.now();
                     localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
-                    return { success: true, message: 'Dados sincronizados com sucesso!' };
+                    return { success: true, message: '✅ Dados sincronizados com sucesso!' };
                 } else {
                     return { success: false, message: j.message || `Erro HTTP ${res.status}` };
                 }
@@ -725,20 +778,19 @@
         },
 
         async pullFromGitHub() {
-            // Para outras máquinas: usa raw.githubusercontent.com SEM TOKEN
             try {
-                const remote = await this.loadFromGitHubRaw();
+                const remote = await this.loadFromGitHubPages();
                 if (Array.isArray(remote) && remote.length > 0) {
                     this.saveUnits(remote);
                     this.lastSyncTime = Date.now();
                     localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
-                    return { success: true, message: `Dados carregados: ${remote.length} unidades`, data: remote };
+                    return { success: true, message: `✅ Dados carregados: ${remote.length} unidades`, data: remote };
                 } else {
-                    return { success: false, message: 'Nenhum dado encontrado no repositório' };
+                    return { success: false, message: '❌ Nenhum dado encontrado no repositório' };
                 }
             } catch (e) {
                 console.error('Erro pullFromGitHub:', e);
-                return { success: false, message: 'Erro ao puxar dados: ' + e.message };
+                return { success: false, message: '❌ Erro ao puxar dados: ' + e.message };
             }
         },
 
@@ -758,6 +810,7 @@
         }
     };
 
+    // ... O RESTANTE DO CÓDIGO (AuthService, UI, App) PERMANECE IGUAL
     /* =============================== AUTH SERVICE =============================== */
     const AuthService = {
         adminUser: 'admin',
@@ -1174,7 +1227,7 @@
             
             // 1. Carregar favoritos
             this.loadFavorites();
-            // 2. Carregar unidades (do GitHub ou local) - AGORA AUTOMÁTICO
+            // 2. Carregar unidades (do GitHub ou local) - AGORA COM MÚLTIPLAS FONTES
             this.units = await DataService.getUnits();
             
             // 3. Inicializar view mode
