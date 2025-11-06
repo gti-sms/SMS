@@ -379,7 +379,7 @@
               <li>Gerar token em <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub Settings → Tokens</a>.</li>
               <li>Escolher permissão <strong>repo</strong> e salvar token no campo acima.</li>
               <li>Adicionar/editar unidades no painel e clicar <strong>Sincronizar para GitHub</strong>.</li>
-              <li>Use <strong>Puxar do GitHub</strong> em outra máquina para obter as publicações mais recentes.</li>
+              <li>As outras máquinas <strong>puxarão automaticamente</strong> as atualizações ao abrir o sistema.</li>
             </ol>
           </div>
         </div>
@@ -466,19 +466,67 @@
         filePath: 'data/units.json',
         branch: 'main',
         autoSyncEnabled: false,
+        lastSyncTime: null,
 
         async getUnits() {
-            // Tenta remote -> fallback local
+            // SEMPRE tenta carregar do GitHub primeiro (automático)
             try {
+                this.showNotification('Verificando atualizações do GitHub...', 'info');
                 const remote = await this.loadFromGitHubRaw();
                 if (Array.isArray(remote) && remote.length > 0) {
-                    this.saveUnits(remote);
-                    return remote;
+                    // Verifica se há dados novos comparando com o localStorage
+                    const localUnits = this.getUnitsSync();
+                    const shouldUpdate = this.shouldUpdateFromRemote(remote, localUnits);
+                    
+                    if (shouldUpdate) {
+                        this.showNotification('Atualizando dados do GitHub...', 'success');
+                        this.saveUnits(remote);
+                        this.lastSyncTime = Date.now();
+                        localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
+                        return remote;
+                    } else {
+                        this.showNotification('Dados já estão atualizados', 'success');
+                    }
                 }
             } catch (e) {
                 console.warn('Erro carregando remoto:', e.message);
+                this.showNotification('Usando dados locais (sem conexão)', 'warning');
             }
+            
+            // Fallback para dados locais
             return this.getUnitsSync();
+        },
+
+        shouldUpdateFromRemote(remoteUnits, localUnits) {
+            // Se não há dados locais, deve atualizar
+            if (!localUnits || localUnits.length === 0) return true;
+            
+            // Se os arrays têm tamanhos diferentes, deve atualizar
+            if (remoteUnits.length !== localUnits.length) return true;
+            
+            // Verifica se houve mudança no conteúdo (comparação simples)
+            const remoteString = JSON.stringify(remoteUnits);
+            const localString = JSON.stringify(localUnits);
+            
+            return remoteString !== localString;
+        },
+
+        showNotification(message, type) {
+            // Cria uma notificação temporária
+            const notification = document.createElement('div');
+            notification.className = `update-notification sync-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'warning' ? 'exclamation-triangle' : 'info'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            // Remove após 3 segundos
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
         },
 
         async loadFromGitHubRaw() {
@@ -543,6 +591,7 @@
             this.repoOwner = localStorage.getItem('github_repoOwner') || this.repoOwner;
             this.repoName = localStorage.getItem('github_repoName') || this.repoName;
             this.filePath = localStorage.getItem('github_filePath') || this.filePath;
+            this.lastSyncTime = parseInt(localStorage.getItem('lastGitHubSync') || '0');
         },
 
         saveGitHubConfig(token, owner, name, path) {
@@ -630,6 +679,8 @@
 
                 const j = await res.json();
                 if (res.ok) {
+                    this.lastSyncTime = Date.now();
+                    localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
                     return { success: true, message: 'Dados sincronizados com sucesso!' };
                 } else {
                     return { success: false, message: j.message || `Erro HTTP ${res.status}` };
@@ -652,6 +703,8 @@
                 if (!Array.isArray(parsed)) return { success: false, message: 'Conteúdo inválido do repositório' };
 
                 this.saveUnits(parsed);
+                this.lastSyncTime = Date.now();
+                localStorage.setItem('lastGitHubSync', this.lastSyncTime.toString());
                 return { success: true, message: `Dados carregados: ${parsed.length} unidades`, data: parsed };
 
             } catch (e) {
@@ -1100,7 +1153,7 @@
             
             // 1. Carregar favoritos
             this.loadFavorites();
-            // 2. Carregar unidades (do GitHub ou local)
+            // 2. Carregar unidades (do GitHub ou local) - AGORA AUTOMÁTICO
             this.units = await DataService.getUnits();
             
             // 3. Inicializar view mode
