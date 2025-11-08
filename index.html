@@ -309,21 +309,91 @@
             display: none !important;
         }
         
+        /* ====== NOVOS ESTILOS PARA A ABA RAMAL ====== */
+        
+        /* Lista de ramais */
+        .ramal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .ramal-card {
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 120px;
+        }
+        
+        .ramal-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,.15);
+        }
+        
+        .ramal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .ramal-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            line-height: 1.3;
+        }
+        
+        .ramal-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-align: center;
+            padding: 15px;
+            background: rgba(76,175,80,.1);
+            border-radius: var(--radius);
+            margin-top: 10px;
+        }
+        
+        .ramal-type {
+            background: rgba(44,106,160,.1);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+        
+        /* Dark mode para ramais */
+        body.dark-mode .ramal-card {
+            background: #2d3239;
+            color: #e9ecef;
+            border-color: #3d434b;
+        }
+        
         /* Enhanced Responsive Design */
         @media (max-width:1200px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
             .form-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+            .ramal-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
         }
         
         @media (max-width:992px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
             .admin-tabs,.tabs{flex-wrap:wrap}
             .admin-tab,.tab{flex:1 1 calc(50% - 10px);min-width:140px}
+            .ramal-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
         }
         
         @media (max-width:768px){
             .header-content{flex-direction:column;gap:15px;text-align:center}
-            .contact-grid,.ramais-container{grid-template-columns:1fr}
+            .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .search-box{flex-direction:column}
             .filter-options,.service-filters{justify-content:center}
             .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
@@ -337,6 +407,7 @@
             .action-btn{width:100%}
             .form-actions{flex-direction:column}
             .btn{width:100%;justify-content:center}
+            .ramal-card{padding:20px}
         }
         
         @media (max-width:480px){
@@ -346,17 +417,19 @@
             .service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
             .filter-btn{padding:8px 15px;font-size:0.8rem}
             .search-input{padding:14px 16px}
-            .contact-grid{gap:15px}
+            .contact-grid,.ramal-grid{gap:15px}
             .container{padding:0 15px}
             .search-container,.admin-panel{padding:20px}
             .contact-card{padding:18px;min-height:360px}
             .contact-name{font-size:1.2rem}
             .contact-item{gap:10px;padding:6px 0}
             .contact-services{margin-top:15px;padding-top:15px}
+            .ramal-card{padding:18px}
+            .ramal-number{font-size:1.5rem;padding:12px}
         }
         
         @media (max-width:360px){
-            .contact-grid{grid-template-columns:1fr}
+            .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .admin-tab,.tab{flex:1 1 100%;min-width:100%}
             .filter-options,.service-filters{gap:8px}
             .filter-btn,.service-toggle-btn{padding:8px 12px;font-size:0.75rem}
@@ -543,6 +616,8 @@
             <div class="tabs" role="tablist">
                 <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
                 <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
+                <!-- NOVA ABA: Ramal -->
+                <div class="tab" data-tab="ramal" role="tab">Ramal</div>
             </div>
 
             <div class="content active" id="all-content">
@@ -553,6 +628,12 @@
             <div class="content" id="favorites-content">
                 <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
                 <div class="contact-grid" id="favorites-contacts"></div>
+            </div>
+
+            <!-- NOVA ABA: Ramal -->
+            <div class="content" id="ramal-content">
+                <div class="results-count" id="ramal-count">Lista de ramais</div>
+                <div class="ramal-grid" id="ramal-contacts"></div>
             </div>
         </main>
 
@@ -695,6 +776,7 @@
                 adminTabs: document.querySelectorAll('.admin-tab'),
                 allContacts: document.getElementById('all-contacts'),
                 favoritesContacts: document.getElementById('favorites-contacts'),
+                ramalContacts: document.getElementById('ramal-contacts'),
                 unitsListAdmin: document.getElementById('unitsList'),
                 formUnit: document.getElementById('unitForm'),
                 submitBtn: document.getElementById('submitBtn'),
@@ -702,6 +784,7 @@
                 formTitle: document.getElementById('formTitle'),
                 allCount: document.getElementById('all-count'),
                 favoritesCount: document.getElementById('favorites-count'),
+                ramalCount: document.getElementById('ramal-count'),
                 backupBtn: document.getElementById('backupData'),
                 restoreInput: document.getElementById('restoreData'),
                 clearAllBtn: document.getElementById('clearAll'),
@@ -715,6 +798,11 @@
             };
         },
 
+        /******************************************************
+         * FUNÇÕES EXISTENTES - SEM ALTERAÇÕES
+         ******************************************************/
+        
+        // Configuração da lógica condicional do formulário (EXISTENTE)
         setupConditionalFormLogic() {
             const unitTypeSelect = this.elements.unitType;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
@@ -747,6 +835,7 @@
             checkConditionalFields();
         },
 
+        // Obter label do tipo (EXISTENTE)
         getTypeLabel(type) {
             const map = { 
                 'promocao': 'Promoção',
@@ -759,13 +848,90 @@
             return map[type] || type;
         },
 
+        // Verificar se deve mostrar serviços (EXISTENTE)
         shouldShowServices(type) {
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             return !conditionalTypes.includes(type);
         },
 
+        /******************************************************
+         * NOVAS FUNÇÕES PARA A ABA RAMAL
+         ******************************************************/
+        
+        // Obter ramal do telefone (extrai últimos 4 dígitos)
+        getRamalFromPhone(phone) {
+            if (!phone) return '';
+            
+            // Extrair apenas os últimos 4 dígitos numéricos
+            const digits = phone.replace(/\D/g, '');
+            return digits.slice(-4);
+        },
+
+        // Renderizar lista de ramais
+        renderRamalContacts(contacts) {
+            const root = this.elements.ramalContacts;
+            root.innerHTML = '';
+            
+            if (!contacts || contacts.length === 0) {
+                root.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-phone"></i>
+                        <h3>Nenhum ramal encontrado</h3>
+                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filtrar apenas unidades com telefone
+            const unitsWithPhone = contacts.filter(c => c.phone && c.phone.trim() !== '');
+            
+            if (unitsWithPhone.length === 0) {
+                root.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-phone"></i>
+                        <h3>Nenhum ramal encontrado</h3>
+                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            unitsWithPhone.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'ramal-card';
+                
+                const ramal = this.getRamalFromPhone(c.phone);
+                
+                card.innerHTML = `
+                    <div class="ramal-header">
+                        <div>
+                            <h3 class="ramal-name">${c.name}</h3>
+                            <span class="ramal-type">${this.getTypeLabel(c.type)}</span>
+                        </div>
+                    </div>
+                    <div class="ramal-number">${ramal}</div>
+                `;
+                root.appendChild(card);
+            });
+        },
+
+        /******************************************************
+         * FUNÇÕES DE RENDERIZAÇÃO EXISTENTES
+         ******************************************************/
+        
+        // Renderizar contatos (EXISTENTE)
         renderContacts(contacts, container) {
-            const root = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+            const root = container === 'all' ? this.elements.allContacts : 
+                         container === 'favorites' ? this.elements.favoritesContacts : 
+                         this.elements.ramalContacts;
+            
+            if (container === 'ramal') {
+                // Usar a nova função específica para ramais
+                this.renderRamalContacts(contacts);
+                return;
+            }
+            
             root.innerHTML = '';
             
             if (!contacts || contacts.length === 0) {
@@ -864,6 +1030,7 @@
             this.attachContactListeners();
         },
 
+        // Anexar listeners aos contatos (EXISTENTE)
         attachContactListeners() {
             document.querySelectorAll('.favorite-btn').forEach(btn => {
                 btn.onclick = async (e) => {
@@ -873,6 +1040,7 @@
             });
         },
 
+        // Renderizar lista de unidades no admin (EXISTENTE)
         renderUnitsList(units) {
             this.elements.unitsListAdmin.innerHTML = '';
             
@@ -905,6 +1073,7 @@
             });
         },
 
+        // Funções de UI existentes
         showLogin() {
             this.elements.loginModal.classList.add('active');
             this.elements.loginModal.setAttribute('aria-hidden', 'false');
@@ -952,10 +1121,18 @@
         setCounts(all, favorites) {
             this.elements.allCount.textContent = `Mostrando ${all} contatos`;
             this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
+            
+            // NOVO: Contar unidades com telefone para ramais
+            const ramalCount = this.units.filter(u => u.phone && u.phone.trim() !== '').length;
+            this.elements.ramalCount.textContent = `Mostrando ${ramalCount} ramais`;
         },
 
+        /******************************************************
+         * BIND DE AÇÕES DE UI (ATUALIZADO PARA INCLUIR NOVA ABA)
+         ******************************************************/
+        
         bindUIActions() {
-            // Toggle do painel administrativo
+            // Toggle do painel administrativo (EXISTENTE)
             this.elements.adminToggle.onclick = () => {
                 if (AuthService.isLogged()) {
                     this.openAdmin();
@@ -973,7 +1150,7 @@
                 alert('Desconectado do painel administrativo');
             };
 
-            // Login form
+            // Login form (EXISTENTE)
             this.elements.loginForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const username = this.elements.loginUsername.value.trim();
@@ -989,10 +1166,10 @@
                 }
             };
 
-            // Toggle de tema
+            // Toggle de tema (EXISTENTE)
             this.elements.themeToggle.onclick = () => this.toggleTheme();
 
-            // Busca e filtros
+            // Busca e filtros (EXISTENTE)
             this.elements.searchBtn.onclick = () => App.performSearch();
             this.elements.searchInput.onkeypress = (e) => {
                 if (e.key === 'Enter') App.performSearch();
@@ -1006,7 +1183,7 @@
                 };
             });
 
-            // Filtros de serviços
+            // Filtros de serviços (EXISTENTE)
             document.querySelectorAll('.service-toggle-btn').forEach(btn => {
                 btn.onclick = function() {
                     this.classList.toggle('active');
@@ -1016,17 +1193,20 @@
                 };
             });
 
-            // Tabs principais
+            // Tabs principais (ATUALIZADO para incluir nova aba)
             this.elements.tabs.forEach(tab => {
                 tab.onclick = function() {
                     UI.elements.tabs.forEach(x => x.classList.remove('active'));
                     this.classList.add('active');
                     document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
                     document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
+                    
+                    // Atualizar filtros quando mudar de aba
+                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
                 };
             });
 
-            // Tabs do admin
+            // Tabs do admin (EXISTENTE)
             this.elements.adminTabs.forEach(tab => {
                 tab.onclick = function() {
                     UI.elements.adminTabs.forEach(x => x.classList.remove('active'));
@@ -1036,7 +1216,7 @@
                 };
             });
 
-            // Formulário de unidade
+            // Formulário de unidade (EXISTENTE)
             this.elements.formUnit.onsubmit = async (e) => {
                 e.preventDefault();
                 await App.saveUnitFromForm();
@@ -1051,12 +1231,12 @@
                 this.setupConditionalFormLogic();
             };
 
-            // Configurações
+            // Configurações (EXISTENTE)
             this.elements.backupBtn.onclick = () => App.backupData();
             this.elements.restoreInput.onchange = (e) => App.restoreData(e.target.files[0]);
             this.elements.clearAllBtn.onclick = () => App.clearAllData();
 
-            // Lógica condicional do formulário
+            // Lógica condicional do formulário (EXISTENTE)
             this.setupConditionalFormLogic();
         }
     };
@@ -1095,9 +1275,11 @@
                 u.favorite = this.favorites.includes(u.id);
             });
             
-            // Renderizar contatos
+            // Renderizar contatos em todas as abas
             UI.renderContacts(this.units, 'all');
             UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
+            UI.renderContacts(this.units, 'ramal'); // NOVO: Renderizar ramais
+            
             UI.renderUnitsList(this.units);
             UI.setCounts(this.units.length, this.favorites.length);
         },
@@ -1155,8 +1337,16 @@
                 });
             }
             
-            // Renderizar resultados
-            UI.renderContacts(filtered, 'all');
+            // Determinar qual aba está ativa
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            
+            // Renderizar resultados na aba apropriada
+            if (activeTab === 'favorites') {
+                UI.renderContacts(filtered.filter(u => this.favorites.includes(u.id)), activeTab);
+            } else {
+                UI.renderContacts(filtered, activeTab);
+            }
+            
             UI.setCounts(filtered.length, this.favorites.length);
         },
 
