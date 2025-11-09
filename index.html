@@ -160,12 +160,48 @@
         }
         .filter-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
         
+        /* Novos filtros para serviços (múltipla seleção) */
+        .service-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .service-filter-btn {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .service-filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44,106,160,.2);
+        }
+        
+        .service-filter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
         /* Novos filtros para gerentes e enfermeiros */
         .staff-filters {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 10px;
             width: 100%;
         }
         
@@ -173,11 +209,11 @@
             background: #fff;
             border: 2px solid var(--border);
             border-radius: 25px;
-            padding: 12px 20px;
+            padding: 10px 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: var(--transition);
             font-size: 0.9rem;
             color: var(--gray);
@@ -361,6 +397,7 @@
         body.dark-mode .search-container,
         body.dark-mode .contact-card,
         body.dark-mode .filter-btn,
+        body.dark-mode .service-filter-btn,
         body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn,
         body.dark-mode .admin-panel,
@@ -370,6 +407,7 @@
         }
         body.dark-mode .search-input,
         body.dark-mode .filter-btn,
+        body.dark-mode .service-filter-btn,
         body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn,
         body.dark-mode .form-control{
@@ -379,14 +417,17 @@
         body.dark-mode .form-control:focus{
             border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
         }
+        body.dark-mode .service-filter-btn,
         body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn{
             background:#343a40;border-color:#495057;color:#e9ecef;
         }
+        body.dark-mode .service-filter-btn.active,
         body.dark-mode .staff-filter-btn.active,
         body.dark-mode .quick-link-btn:hover{
             background:var(--primary);color:#fff;border-color:var(--primary);
         }
+        body.dark-mode .service-filter-btn:hover:not(.active),
         body.dark-mode .staff-filter-btn:hover:not(.active){
             border-color:var(--primary);
         }
@@ -681,7 +722,7 @@
             .header-content{flex-direction:column;gap:15px;text-align:center}
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .search-box{flex-direction:column}
-            .filter-options,.staff-filters,.quick-links{justify-content:center}
+            .filter-options,.service-filters,.staff-filters,.quick-links{justify-content:center}
             .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
             .form-grid{grid-template-columns:1fr}
             .unit-item{flex-direction:column;align-items:flex-start;gap:15px}
@@ -707,7 +748,7 @@
             .logo h1{font-size:1.5rem}
             .logo i{font-size:1.8rem}
             .tab{padding:10px 12px;font-size:.85rem}
-            .staff-filter-btn,.quick-link-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
+            .service-filter-btn,.staff-filter-btn,.quick-link-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
             .filter-btn{padding:8px 15px;font-size:0.8rem}
             .display-btn{padding:8px 12px;font-size:0.8rem}
             .search-input{padding:14px 16px}
@@ -725,8 +766,8 @@
         @media (max-width:360px){
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .admin-tab,.tab{flex:1 1 100%;min-width:100%}
-            .filter-options,.staff-filters,.quick-links{gap:8px}
-            .filter-btn,.staff-filter-btn,.quick-link-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
+            .filter-options,.service-filters,.staff-filters,.quick-links{gap:8px}
+            .filter-btn,.service-filter-btn,.staff-filter-btn,.quick-link-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
         }
         
         /* Loading Animation */
@@ -904,12 +945,27 @@
                     <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
                 </div>
 
-                <div class="filter-options" style="margin-top: 10px;">
-                    <button class="filter-btn" data-filter="vacina"><i class="fas fa-syringe"></i> Vacina</button>
-                    <button class="filter-btn" data-filter="odonto"><i class="fas fa-tooth"></i> Odonto</button>
-                    <button class="filter-btn" data-filter="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
-                    <button class="filter-btn" data-filter="enfermeiro"><i class="fas fa-user-nurse"></i> Enfermeiro</button>
-                    <button class="filter-btn" data-filter="gerente"><i class="fas fa-user-tie"></i> Gerente</button>
+                <!-- FILTROS DE SERVIÇOS (MÚLTIPLA SELEÇÃO) -->
+                <div class="service-filters">
+                    <button class="service-filter-btn" data-service="vacina">
+                        <i class="fas fa-syringe"></i> Vacina
+                    </button>
+                    <button class="service-filter-btn" data-service="odonto">
+                        <i class="fas fa-tooth"></i> Odonto
+                    </button>
+                    <button class="service-filter-btn" data-service="farmacia">
+                        <i class="fas fa-pills"></i> Farmácia
+                    </button>
+                </div>
+
+                <!-- FILTROS DE STAFF (SELEÇÃO ÚNICA) -->
+                <div class="staff-filters">
+                    <button class="staff-filter-btn" data-staff="enfermeiro">
+                        <i class="fas fa-user-nurse"></i> Enfermeiro
+                    </button>
+                    <button class="staff-filter-btn" data-staff="gerente">
+                        <i class="fas fa-user-tie"></i> Gerente
+                    </button>
                 </div>
 
                 <!-- LINKS RÁPIDOS COM ÍCONES -->
@@ -1152,6 +1208,7 @@
                 searchInput: document.getElementById('searchInput'),
                 searchBtn: document.getElementById('searchBtn'),
                 filterBtns: document.querySelectorAll('.filter-btn'),
+                serviceFilterBtns: document.querySelectorAll('.service-filter-btn'),
                 staffFilterBtns: document.querySelectorAll('.staff-filter-btn'),
                 tabs: document.querySelectorAll('.tab'),
                 adminTabs: document.querySelectorAll('.admin-tab'),
@@ -1665,11 +1722,34 @@
                 if (e.key === 'Enter') App.performSearch();
             };
 
+            // Filtros principais (seleção única)
             this.elements.filterBtns.forEach(btn => {
                 btn.onclick = function() {
+                    // Remove active de todos os filtros principais
                     UI.elements.filterBtns.forEach(x => x.classList.remove('active'));
+                    // Adiciona active apenas ao clicado
                     this.classList.add('active');
-                    App.filterContacts(this.dataset.filter);
+                    App.filterContacts();
+                };
+            });
+
+            // Filtros de serviços (múltipla seleção)
+            this.elements.serviceFilterBtns.forEach(btn => {
+                btn.onclick = function() {
+                    // Alterna a classe active (múltipla seleção)
+                    this.classList.toggle('active');
+                    App.filterContacts();
+                };
+            });
+
+            // Filtros de staff (seleção única)
+            this.elements.staffFilterBtns.forEach(btn => {
+                btn.onclick = function() {
+                    // Remove active de todos os filtros de staff
+                    UI.elements.staffFilterBtns.forEach(x => x.classList.remove('active'));
+                    // Adiciona active apenas ao clicado
+                    this.classList.add('active');
+                    App.filterContacts();
                 };
             });
 
@@ -1684,7 +1764,7 @@
                     
                     UI.loadDisplayMode();
                     
-                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
+                    App.filterContacts();
                 };
             });
 
@@ -1788,27 +1868,43 @@
             });
         },
 
-        async filterContacts(filter) {
+        async filterContacts() {
             let filtered = this.units.slice();
             
-            // Aplicar filtro de tipo
-            if (filter && filter !== 'all') {
-                if (['vacina', 'odonto', 'farmacia', 'enfermeiro', 'gerente'].includes(filter)) {
-                    // Filtros para serviços e staff
-                    filtered = filtered.filter(u => {
-                        if (filter === 'vacina') return u.vacina === 'Sim';
-                        if (filter === 'odonto') return u.odonto === 'Sim';
-                        if (filter === 'farmacia') return u.farmacia === 'Sim';
-                        if (filter === 'enfermeiro') return u.enfermeiro && u.enfermeiro.trim() !== '';
-                        if (filter === 'gerente') return u.gerente && u.gerente.trim() !== '';
-                        return true;
-                    });
-                } else {
-                    // Filtros de tipo padrão
-                    filtered = filtered.filter(u => u.type === filter);
-                }
+            // Aplicar filtro de tipo principal (seleção única)
+            const activeMainFilter = document.querySelector('.filter-btn.active');
+            if (activeMainFilter && activeMainFilter.dataset.filter !== 'all') {
+                const mainFilter = activeMainFilter.dataset.filter;
+                filtered = filtered.filter(u => u.type === mainFilter);
             }
             
+            // Aplicar filtros de serviços (múltipla seleção)
+            const activeServiceFilters = document.querySelectorAll('.service-filter-btn.active');
+            if (activeServiceFilters.length > 0) {
+                filtered = filtered.filter(u => {
+                    // Verifica se a unidade possui pelo menos um dos serviços selecionados
+                    return Array.from(activeServiceFilters).some(btn => {
+                        const service = btn.dataset.service;
+                        return u[service] === 'Sim';
+                    });
+                });
+            }
+            
+            // Aplicar filtros de staff (seleção única)
+            const activeStaffFilter = document.querySelector('.staff-filter-btn.active');
+            if (activeStaffFilter) {
+                const staffFilter = activeStaffFilter.dataset.staff;
+                filtered = filtered.filter(u => {
+                    if (staffFilter === 'enfermeiro') {
+                        return u.enfermeiro && u.enfermeiro.trim() !== '';
+                    } else if (staffFilter === 'gerente') {
+                        return u.gerente && u.gerente.trim() !== '';
+                    }
+                    return true;
+                });
+            }
+            
+            // Aplicar busca por termo
             const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
             if (term) {
                 filtered = filtered.filter(u => {
@@ -1841,9 +1937,7 @@
         },
 
         async performSearch() {
-            const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
-            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-            await this.filterContacts(activeFilter);
+            await this.filterContacts();
         },
 
         async editUnit(id) {
