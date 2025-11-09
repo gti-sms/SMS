@@ -159,21 +159,78 @@
             transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
         }
         .filter-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
-        .service-filters{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;width:100%}
         
-        /* Service Toggle Buttons */
-        .service-toggle-btn{
-            background:#fff;border:2px solid var(--border);border-radius:25px;
-            padding:12px 20px;cursor:pointer;display:flex;align-items:center;
-            gap:10px;transition:var(--transition);font-size:0.9rem;color:var(--gray);
-            font-weight:500;
+        /* Novos filtros para gerentes e enfermeiros */
+        .staff-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            width: 100%;
         }
-        .service-toggle-btn.active{
-            background:var(--primary);color:#fff;border-color:var(--primary);
-            transform:translateY(-2px);box-shadow:0 4px 12px rgba(44,106,160,.2);
+        
+        .staff-filter-btn {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 500;
         }
-        .service-toggle-btn:hover:not(.active){border-color:var(--primary);transform:translateY(-1px)}
-        .service-toggle-btn i{font-size:1rem}
+        
+        .staff-filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44,106,160,.2);
+        }
+        
+        .staff-filter-btn:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        /* Links rápidos */
+        .quick-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .quick-link-btn {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .quick-link-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44,106,160,.2);
+            text-decoration: none;
+        }
         
         /* Tabs & Content */
         .tabs{
@@ -208,11 +265,12 @@
         }
         .favorite-btn{
             position:absolute;top:20px;right:20px;background:none;border:0;
-            font-size:1.4rem;color:var(--gray);cursor:pointer;z-index:10;
+            font-size:1.4rem;cursor:pointer;z-index:10;
             transition:var(--transition);
+            color: var(--primary); /* Azul quando não selecionado */
         }
         .favorite-btn:hover{transform:scale(1.2)}
-        .favorite-btn.active{color:var(--warning)}
+        .favorite-btn.active{color:var(--secondary)} /* Verde quando selecionado */
         .contact-header{
             display:flex;justify-content:space-between;align-items:flex-start;
             margin-bottom:20px;width:100%;
@@ -237,12 +295,37 @@
         .service{
             display:flex;flex-direction:column;align-items:center;text-align:center;
             transition:var(--transition);
+            position: relative;
         }
         .service i{font-size:1.4rem;margin-bottom:.4rem;transition:var(--transition)}
         .service.available{color:var(--secondary)}
         .service.available i{transform:scale(1.1)}
         .service.unavailable{color:var(--gray);opacity:.6}
         .service-label{font-size:.75rem;margin-top:.3rem;font-weight:600}
+        
+        /* Tooltip para serviços */
+        .service-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 100;
+        }
+        
+        .service:hover .service-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
         .contact-actions{
             display:flex;gap:12px;margin-top:20px;width:100%;
         }
@@ -278,7 +361,8 @@
         body.dark-mode .search-container,
         body.dark-mode .contact-card,
         body.dark-mode .filter-btn,
-        body.dark-mode .service-toggle-btn,
+        body.dark-mode .staff-filter-btn,
+        body.dark-mode .quick-link-btn,
         body.dark-mode .admin-panel,
         body.dark-mode .unit-item,
         body.dark-mode .login-form{
@@ -286,7 +370,8 @@
         }
         body.dark-mode .search-input,
         body.dark-mode .filter-btn,
-        body.dark-mode .service-toggle-btn,
+        body.dark-mode .staff-filter-btn,
+        body.dark-mode .quick-link-btn,
         body.dark-mode .form-control{
             background:#343a40;border-color:#495057;color:#e9ecef;
         }
@@ -294,13 +379,15 @@
         body.dark-mode .form-control:focus{
             border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
         }
-        body.dark-mode .service-toggle-btn{
+        body.dark-mode .staff-filter-btn,
+        body.dark-mode .quick-link-btn{
             background:#343a40;border-color:#495057;color:#e9ecef;
         }
-        body.dark-mode .service-toggle-btn.active{
+        body.dark-mode .staff-filter-btn.active,
+        body.dark-mode .quick-link-btn:hover{
             background:var(--primary);color:#fff;border-color:var(--primary);
         }
-        body.dark-mode .service-toggle-btn:hover:not(.active){
+        body.dark-mode .staff-filter-btn:hover:not(.active){
             border-color:var(--primary);
         }
         
@@ -370,7 +457,7 @@
             font-weight: 600;
         }
         
-        /* ====== NOVOS ESTILOS PARA CONTROLES DE EXIBIÇÃO ====== */
+        /* ====== NOVOS ESTILOS OTIMIZADOS PARA CONTROLES DE EXIBIÇÃO ====== */
         
         /* Controles de Exibição (Bloco/Linha) */
         .display-controls {
@@ -404,7 +491,7 @@
             border-color: var(--primary);
         }
         
-        /* Modo Linha para contatos */
+        /* Modo Linha para contatos - OTIMIZADO */
         .contact-list {
             display: flex;
             flex-direction: column;
@@ -467,7 +554,7 @@
             gap: 10px;
         }
         
-        /* Modo Linha para ramais */
+        /* Modo Linha para ramais - OTIMIZADO */
         .ramal-list {
             display: flex;
             flex-direction: column;
@@ -536,6 +623,36 @@
             border-color: var(--primary);
         }
         
+        /* Loading states */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .favorite-btn.pulsing {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
         /* Enhanced Responsive Design */
         @media (max-width:1200px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
@@ -564,7 +681,7 @@
             .header-content{flex-direction:column;gap:15px;text-align:center}
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .search-box{flex-direction:column}
-            .filter-options,.service-filters{justify-content:center}
+            .filter-options,.staff-filters,.quick-links{justify-content:center}
             .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
             .form-grid{grid-template-columns:1fr}
             .unit-item{flex-direction:column;align-items:flex-start;gap:15px}
@@ -590,7 +707,7 @@
             .logo h1{font-size:1.5rem}
             .logo i{font-size:1.8rem}
             .tab{padding:10px 12px;font-size:.85rem}
-            .service-toggle-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
+            .staff-filter-btn,.quick-link-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
             .filter-btn{padding:8px 15px;font-size:0.8rem}
             .display-btn{padding:8px 12px;font-size:0.8rem}
             .search-input{padding:14px 16px}
@@ -608,8 +725,8 @@
         @media (max-width:360px){
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .admin-tab,.tab{flex:1 1 100%;min-width:100%}
-            .filter-options,.service-filters{gap:8px}
-            .filter-btn,.service-toggle-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
+            .filter-options,.staff-filters,.quick-links{gap:8px}
+            .filter-btn,.staff-filter-btn,.quick-link-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
         }
         
         /* Loading Animation */
@@ -639,6 +756,14 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div style="text-align: center;">
+            <div class="loading"></div>
+            <p style="margin-top: 15px;" id="loadingText">Carregando...</p>
+        </div>
+    </div>
+
     <!-- LOGIN MODAL -->
     <div class="login-modal" id="loginModal" aria-hidden="true">
         <div class="login-form" role="dialog" aria-labelledby="loginTitle">
@@ -762,35 +887,51 @@
                     <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
-                <div class="filter-options">
-                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
-                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
-                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
-                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
-                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
-                    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
-                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
-                </div>
+<div class="filter-options">
+    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
+    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
+    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
+    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
+    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
+    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
+    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
+</div>
 
-                <div class="service-filters">
-                    <!-- Botão Toggle para Sala de Vacina -->
-                    <button class="service-toggle-btn" data-service="vaccine" data-value="">
-                        <i class="fas fa-syringe"></i>Com sala de vacina
-                    </button>
-                    
-                    <!-- Botão Toggle para Consultório Odontológico -->
-                    <button class="service-toggle-btn" data-service="dental" data-value="">
-                        <i class="fas fa-tooth"></i>Com consultório odontológico
-                    </button>
-                    
-                    <!-- Botão Toggle para Farmácia -->
-                    <button class="service-toggle-btn" data-service="pharmacy" data-value="">
-                        <i class="fas fa-pills"></i>Com farmácia
-                    </button>
+<div class="filter-options" style="margin-top: 10px;">
+    <button class="filter-btn" data-filter="vacina"><i class="fas fa-syringe"></i> Vacina</button>
+    <button class="filter-btn" data-filter="odonto"><i class="fas fa-tooth"></i> Odonto</button>
+    <button class="filter-btn" data-filter="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
+    <button class="filter-btn" data-filter="enfermeiro"><i class="fas fa-user-nurse"></i> Enfermeiro</button>
+    <button class="filter-btn" data-filter="gerente"><i class="fas fa-user-tie"></i> Gerente</button>
+</div>
+
+                <!-- LINKS RÁPIDOS COM ÍCONES -->
+                <div class="quick-links">
+                    <a href="https://esus.pmpf.rs.gov.br/" target="_blank" class="quick-link-btn" title="eSUS">
+                        <i class="fas fa-laptop-medical"></i>
+                    </a>
+                    <a href="https://gercon.procempa.com.br/gerconweb/" target="_blank" class="quick-link-btn" title="Gercon">
+                        <i class="fas fa-desktop"></i>
+                    </a>
+                    <a href="http://172.26.72.72:5001" target="_blank" class="quick-link-btn" title="Dashboard">
+                        <i class="fas fa-chart-line"></i>
+                    </a>
+                    <a href="https://www.google.com/maps/d/viewer?mid=10udieuwsQmwLO8cJeLQidRpRNjBUB0ah&ll=-28.256605790662608%2C-52.406028030716925&z=12" 
+                       target="_blank" class="quick-link-btn" title="Mapa">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </a>
+                    <!-- NOVO LINK SOLICITADO -->
+                    <a href="https://cadastro.saude.gov.br/operador/" target="_blank" class="quick-link-btn" title="Cadastro SUS">
+                        <i class="fas fa-user-md"></i>
+                    </a>
+                    <!-- NOVO LINK GRP -->
+                    <a href="https://grp.pmpf.rs.gov.br/grp/" target="_blank" class="quick-link-btn" title="GRP">
+                        <i class="fas fa-file-alt"></i>
+                    </a>
                 </div>
             </div>
 
-            <!-- NOVO: Controles de exibição (Bloco/Linha) -->
+            <!-- Controles de exibição (Bloco/Linha) -->
             <div class="display-controls">
                 <button class="display-btn active" data-display="block">
                     <i class="fas fa-th-large"></i> Modo Bloco
@@ -803,12 +944,11 @@
             <div class="tabs" role="tablist">
                 <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
                 <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
-                <!-- NOVA ABA: Ramal -->
                 <div class="tab" data-tab="ramal" role="tab">Ramal</div>
             </div>
 
             <div class="content active" id="all-content">
-                <div class="results-count" id="all-count">Mostrando todos os contatos</div>
+                <div class="results-count" id="all-count">Carregando contatos...</div>
                 <div class="contact-grid" id="all-contacts"></div>
                 <div class="contact-list hidden" id="all-contacts-list"></div>
             </div>
@@ -819,7 +959,6 @@
                 <div class="contact-list hidden" id="favorites-contacts-list"></div>
             </div>
 
-            <!-- NOVA ABA: Ramal -->
             <div class="content" id="ramal-content">
                 <div class="results-count" id="ramal-count">Lista de ramais</div>
                 <div class="ramal-grid" id="ramal-contacts"></div>
@@ -838,7 +977,6 @@
     /***********************************************
      * Firebase Configuration & Initialization
      ***********************************************/
-    // Configuração do Firebase - COM SUAS CONFIGURAÇÕES REAIS
     const firebaseConfig = {
         apiKey: "AIzaSyBAWIDL__uXduaupNcv_9vdnPrD9rZLao4",
         authDomain: "telefonia-sms-pmpf.firebaseapp.com",
@@ -857,31 +995,81 @@
      * Firebase Database Services
      ***********************************************/
     const DataService = {
-        // Obter todas as unidades do Firestore
-        async getUnits() {
+        _cache: {
+            units: null,
+            lastFetch: 0,
+            CACHE_DURATION: 5 * 60 * 1000
+        },
+        
+        async getUnits(forceRefresh = false) {
+            const now = Date.now();
+            if (!forceRefresh && 
+                this._cache.units && 
+                (now - this._cache.lastFetch < this._cache.CACHE_DURATION)) {
+                return this._cache.units;
+            }
+            
             try {
                 const snapshot = await db.collection('unidades').get();
                 const units = [];
                 snapshot.forEach(doc => {
                     units.push({ id: doc.id, ...doc.data() });
                 });
+                
+                this._cache.units = units;
+                this._cache.lastFetch = now;
+                
+                localStorage.setItem('telefonia_offline_cache', JSON.stringify({
+                    units: units,
+                    timestamp: now
+                }));
+                
                 return units;
             } catch (error) {
                 console.error('Erro ao buscar unidades:', error);
+                
+                const cached = localStorage.getItem('telefonia_offline_cache');
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    return data.units || [];
+                }
                 return [];
             }
         },
 
-        // Salvar unidade (criar ou atualizar)
+        subscribeToUnits(callback) {
+            return db.collection('unidades').onSnapshot(snapshot => {
+                const units = [];
+                snapshot.forEach(doc => {
+                    units.push({ id: doc.id, ...doc.data() });
+                });
+                
+                this._cache.units = units;
+                this._cache.lastFetch = Date.now();
+                
+                localStorage.setItem('telefonia_offline_cache', JSON.stringify({
+                    units: units,
+                    timestamp: Date.now()
+                }));
+                
+                callback(units);
+            }, error => {
+                console.error('Erro ao escutar mudanças:', error);
+                const cached = localStorage.getItem('telefonia_offline_cache');
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    callback(data.units || []);
+                }
+            });
+        },
+
         async saveUnit(unit) {
             try {
                 if (unit.id) {
-                    // Atualizar unidade existente
                     const { id, ...unitData } = unit;
                     await db.collection('unidades').doc(id).update(unitData);
                     return unit;
                 } else {
-                    // Criar nova unidade
                     const docRef = await db.collection('unidades').add(unit);
                     return { id: docRef.id, ...unit };
                 }
@@ -891,7 +1079,6 @@
             }
         },
 
-        // Excluir unidade
         async deleteUnit(id) {
             try {
                 await db.collection('unidades').doc(id).delete();
@@ -901,29 +1088,25 @@
             }
         },
 
-        // Escutar mudanças em tempo real
-        subscribeToUnits(callback) {
-            return db.collection('unidades').onSnapshot(snapshot => {
-                const units = [];
-                snapshot.forEach(doc => {
-                    units.push({ id: doc.id, ...doc.data() });
-                });
-                callback(units);
-            }, error => {
-                console.error('Erro ao escutar mudanças:', error);
-            });
+        isOnline() {
+            return navigator.onLine;
+        },
+
+        async forceRefresh() {
+            this._cache.units = null;
+            this._cache.lastFetch = 0;
+            return await this.getUnits(true);
         }
     };
 
     /***********************************************
-     * Authentication Service (Local)
+     * Authentication Service
      ***********************************************/
     const AuthService = {
         adminUser: 'admin',
         adminPass: 'ZXqwas123@',
         
         async login(username, password) {
-            // Simula uma requisição assíncrona
             await new Promise(resolve => setTimeout(resolve, 120));
             
             if (username === this.adminUser && password === this.adminPass) {
@@ -962,6 +1145,7 @@
                 searchInput: document.getElementById('searchInput'),
                 searchBtn: document.getElementById('searchBtn'),
                 filterBtns: document.querySelectorAll('.filter-btn'),
+                staffFilterBtns: document.querySelectorAll('.staff-filter-btn'),
                 tabs: document.querySelectorAll('.tab'),
                 adminTabs: document.querySelectorAll('.admin-tab'),
                 allContacts: document.getElementById('all-contacts'),
@@ -988,49 +1172,53 @@
                 vacinaField: document.getElementById('vacinaField'),
                 odontoField: document.getElementById('odontoField'),
                 farmaciaField: document.getElementById('farmaciaField'),
-                // NOVOS ELEMENTOS PARA CONTROLES DE EXIBIÇÃO
-                displayBtns: document.querySelectorAll('.display-btn')
+                displayBtns: document.querySelectorAll('.display-btn'),
+                loadingOverlay: document.getElementById('loadingOverlay'),
+                loadingText: document.getElementById('loadingText')
             };
         },
 
-        /******************************************************
-         * FUNÇÕES EXISTENTES - SEM ALTERAÇÕES
-         ******************************************************/
-        
-        // Configuração da lógica condicional do formulário (EXISTENTE)
+        showLoading(message = 'Carregando...') {
+            this.elements.loadingText.textContent = message;
+            this.elements.loadingOverlay.classList.add('active');
+        },
+
+        hideLoading() {
+            this.elements.loadingOverlay.classList.remove('active');
+        },
+
         setupConditionalFormLogic() {
             const unitTypeSelect = this.elements.unitType;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             
-            function checkConditionalFields() {
+            const checkConditionalFields = () => {
                 const selectedType = unitTypeSelect.value;
                 
                 if (conditionalTypes.includes(selectedType)) {
-                    UI.elements.enfermeiroField.classList.add('hidden');
-                    UI.elements.gerenteField.classList.add('hidden');
-                    UI.elements.vacinaField.classList.add('hidden');
-                    UI.elements.odontoField.classList.add('hidden');
-                    UI.elements.farmaciaField.classList.add('hidden');
+                    this.elements.enfermeiroField.classList.add('hidden');
+                    this.elements.gerenteField.classList.add('hidden');
+                    this.elements.vacinaField.classList.add('hidden');
+                    this.elements.odontoField.classList.add('hidden');
+                    this.elements.farmaciaField.classList.add('hidden');
                     
-                    UI.elements.responsibleField.classList.remove('hidden');
+                    this.elements.responsibleField.classList.remove('hidden');
                     document.getElementById('unitResponsavel').required = true;
                 } else {
-                    UI.elements.enfermeiroField.classList.remove('hidden');
-                    UI.elements.gerenteField.classList.remove('hidden');
-                    UI.elements.vacinaField.classList.remove('hidden');
-                    UI.elements.odontoField.classList.remove('hidden');
-                    UI.elements.farmaciaField.classList.remove('hidden');
+                    this.elements.enfermeiroField.classList.remove('hidden');
+                    this.elements.gerenteField.classList.remove('hidden');
+                    this.elements.vacinaField.classList.remove('hidden');
+                    this.elements.odontoField.classList.remove('hidden');
+                    this.elements.farmaciaField.classList.remove('hidden');
                     
-                    UI.elements.responsibleField.classList.add('hidden');
+                    this.elements.responsibleField.classList.add('hidden');
                     document.getElementById('unitResponsavel').required = false;
                 }
-            }
+            };
             
             unitTypeSelect.addEventListener('change', checkConditionalFields);
             checkConditionalFields();
         },
 
-        // Obter label do tipo (EXISTENTE)
         getTypeLabel(type) {
             const map = { 
                 'promocao': 'Promoção',
@@ -1043,352 +1231,278 @@
             return map[type] || type;
         },
 
-        // Verificar se deve mostrar serviços (EXISTENTE)
         shouldShowServices(type) {
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             return !conditionalTypes.includes(type);
         },
 
-        /******************************************************
-         * NOVAS FUNÇÕES PARA CONTROLES DE EXIBIÇÃO
-         ******************************************************/
-        
-        // Alternar entre modos de exibição
         toggleDisplayMode(mode) {
             const isListMode = mode === 'list';
             
-            // Atualizar botões de exibição
             this.elements.displayBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.display === mode);
             });
             
-            // Alternar entre grid e lista para cada aba
             const activeTab = document.querySelector('.tab.active').dataset.tab;
             
             if (activeTab === 'ramal') {
-                // Para aba Ramal
-                document.getElementById('ramal-contacts').classList.toggle('hidden', isListMode);
-                document.getElementById('ramal-contacts-list').classList.toggle('hidden', !isListMode);
+                this.elements.ramalContacts.classList.toggle('hidden', isListMode);
+                this.elements.ramalContactsList.classList.toggle('hidden', !isListMode);
             } else {
-                // Para abas normais
-                document.getElementById(`${activeTab}-contacts`).classList.toggle('hidden', isListMode);
-                document.getElementById(`${activeTab}-contacts-list`).classList.toggle('hidden', !isListMode);
+                const contactsElement = activeTab === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+                const listElement = activeTab === 'all' ? this.elements.allContactsList : this.elements.favoritesContactsList;
+                
+                contactsElement.classList.toggle('hidden', isListMode);
+                listElement.classList.toggle('hidden', !isListMode);
             }
             
-            // Salvar preferência
             localStorage.setItem('telefonia_displayMode', mode);
         },
 
-        // Carregar modo de exibição salvo
         loadDisplayMode() {
             const savedMode = localStorage.getItem('telefonia_displayMode') || 'block';
             this.toggleDisplayMode(savedMode);
         },
 
-        /******************************************************
-         * FUNÇÕES EXISTENTES PARA A ABA RAMAL
-         ******************************************************/
-        
-        // Obter ramal do telefone (extrai últimos 4 dígitos)
         getRamalFromPhone(phone) {
             if (!phone) return '';
-            
-            // Extrair apenas os últimos 4 dígitos numéricos
             const digits = phone.replace(/\D/g, '');
             return digits.slice(-4);
         },
 
-        // Renderizar lista de ramais em modo grid
-        renderRamalContactsGrid(contacts) {
-            const root = this.elements.ramalContacts;
-            root.innerHTML = '';
-            
-            if (!contacts || contacts.length === 0) {
-                root.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-phone"></i>
-                        <h3>Nenhum ramal encontrado</h3>
-                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Filtrar apenas unidades com telefone
-            const unitsWithPhone = contacts.filter(c => c.phone && c.phone.trim() !== '');
-            
-            if (unitsWithPhone.length === 0) {
-                root.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-phone"></i>
-                        <h3>Nenhum ramal encontrado</h3>
-                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            unitsWithPhone.forEach(c => {
-                const card = document.createElement('div');
-                card.className = 'ramal-card';
-                
-                const ramal = this.getRamalFromPhone(c.phone);
-                
-                card.innerHTML = `
-                    <div class="ramal-header">
-                        <div>
-                            <h3 class="ramal-name">${c.name}</h3>
-                            <span class="ramal-type">${this.getTypeLabel(c.type)}</span>
-                        </div>
-                    </div>
-                    <div class="ramal-number">${ramal}</div>
-                `;
-                root.appendChild(card);
-            });
-        },
-
-        // NOVA FUNÇÃO: Renderizar lista de ramais em modo linha
-        renderRamalContactsList(contacts) {
-            const root = this.elements.ramalContactsList;
-            root.innerHTML = '';
-            
-            if (!contacts || contacts.length === 0) {
-                root.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-phone"></i>
-                        <h3>Nenhum ramal encontrado</h3>
-                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Filtrar apenas unidades com telefone
-            const unitsWithPhone = contacts.filter(c => c.phone && c.phone.trim() !== '');
-            
-            if (unitsWithPhone.length === 0) {
-                root.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-phone"></i>
-                        <h3>Nenhum ramal encontrado</h3>
-                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            unitsWithPhone.forEach(c => {
-                const row = document.createElement('div');
-                row.className = 'ramal-row';
-                
-                const ramal = this.getRamalFromPhone(c.phone);
-                
-                row.innerHTML = `
-                    <div class="ramal-row-info">
-                        <div class="ramal-row-header">
-                            <h3 class="ramal-row-name">${c.name}</h3>
-                            <span class="ramal-type">${this.getTypeLabel(c.type)}</span>
-                        </div>
-                    </div>
-                    <div class="ramal-row-number">${ramal}</div>
-                `;
-                root.appendChild(row);
-            });
-        },
-
-        /******************************************************
-         * FUNÇÕES DE RENDERIZAÇÃO EXISTENTES (ATUALIZADAS)
-         ******************************************************/
-        
-        // Renderizar contatos (ATUALIZADA para suportar modo linha)
         renderContacts(contacts, container) {
             const isListMode = document.querySelector('.display-btn[data-display="list"]').classList.contains('active');
             
-            if (container === 'ramal') {
-                // Usar as funções específicas para ramais
-                if (isListMode) {
-                    this.renderRamalContactsList(contacts);
-                } else {
-                    this.renderRamalContactsGrid(contacts);
-                }
-                return;
-            }
-            
-            const root = isListMode ? 
-                (container === 'all' ? this.elements.allContactsList : this.elements.favoritesContactsList) :
-                (container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts);
-            
-            root.innerHTML = '';
+            let htmlContent = '';
             
             if (!contacts || contacts.length === 0) {
-                root.innerHTML = `
+                htmlContent = `
                     <div class="no-results">
                         <i class="fas fa-search"></i>
                         <h3>Nenhum contato encontrado</h3>
                         <p>Tente ajustar seus filtros ou termos de busca</p>
                     </div>
                 `;
-                return;
-            }
-            
-            if (isListMode) {
-                // Renderizar em modo linha
-                this.renderContactsList(contacts, root);
+            } else if (container === 'ramal') {
+                htmlContent = this.renderRamalContent(contacts, isListMode);
             } else {
-                // Renderizar em modo grid (existente)
-                this.renderContactsGrid(contacts, root);
+                htmlContent = this.renderRegularContacts(contacts, isListMode);
             }
-        },
-
-        // FUNÇÃO EXISTENTE: Renderizar contatos em modo grid
-        renderContactsGrid(contacts, root) {
-            contacts.forEach(c => {
-                const card = document.createElement('div');
-                card.className = 'contact-card';
+            
+            if (container === 'ramal') {
+                if (isListMode) {
+                    this.elements.ramalContactsList.innerHTML = htmlContent;
+                } else {
+                    this.elements.ramalContacts.innerHTML = htmlContent;
+                }
+            } else {
+                const contactsElement = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
+                const listElement = container === 'all' ? this.elements.allContactsList : this.elements.favoritesContactsList;
                 
-                const phoneClean = c.phone.replace(/\D/g, '');
-                const telLink = `tel:+55${phoneClean}`;
-                const whatsappLink = `https://wa.me/55${phoneClean}`;
-                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + ', ' + c.bairro + ', Passo Fundo, RS')}`;
-                
-                const showServices = this.shouldShowServices(c.type);
-                
-                card.innerHTML = `
-                    <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
-                        <i class="fas fa-star"></i>
-                    </button>
-                    <div class="contact-header">
-                        <div>
-                            <h3 class="contact-name">${c.name}</h3>
-                            <span class="contact-type">${this.getTypeLabel(c.type)}</span>
-                        </div>
-                    </div>
-                    <div class="contact-info">
-                        <div class="contact-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>${c.address}, ${c.bairro}</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fas fa-phone"></i>
-                            <span>${c.phone}</span>
-                        </div>
-                        ${c.email ? `
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>${c.email}</span>
-                        </div>` : ''}
-                        ${c.enfermeiro ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user-nurse"></i>
-                            <span>Enf. ${c.enfermeiro}</span>
-                        </div>` : ''}
-                        ${c.gerente ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user-tie"></i>
-                            <span>Gerente: ${c.gerente}</span>
-                        </div>` : ''}
-                        ${c.responsavel ? `
-                        <div class="contact-item">
-                            <i class="fas fa-user"></i>
-                            <span>Responsável: ${c.responsavel}</span>
-                        </div>` : ''}
-                    </div>
-                    ${showServices ? `
-                    <div class="contact-services">
-                        <div class="service ${c.vacina === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-syringe"></i>
-                            <span class="service-label">Vacina</span>
-                        </div>
-                        <div class="service ${c.odonto === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-tooth"></i>
-                            <span class="service-label">Odonto</span>
-                        </div>
-                        <div class="service ${c.farmacia === 'Sim' ? 'available' : 'unavailable'}">
-                            <i class="fas fa-pills"></i>
-                            <span class="service-label">Farmácia</span>
-                        </div>
-                    </div>
-                    ` : ''}
-                    <div class="contact-actions">
-                        <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')">
-                            <i class="fas fa-phone"></i> Ligar
-                        </button>
-                        <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')">
-                            <i class="fab fa-whatsapp"></i> WhatsApp
-                        </button>
-                        <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')">
-                            <i class="fas fa-map"></i> Localização
-                        </button>
-                    </div>
-                `;
-                root.appendChild(card);
-            });
+                if (isListMode) {
+                    listElement.innerHTML = htmlContent;
+                } else {
+                    contactsElement.innerHTML = htmlContent;
+                }
+            }
             
             this.attachContactListeners();
         },
 
-        // NOVA FUNÇÃO: Renderizar contatos em modo lista
-        renderContactsList(contacts, root) {
-            contacts.forEach(c => {
-                const row = document.createElement('div');
-                row.className = 'contact-row';
+        renderRamalContent(contacts, isListMode) {
+            const unitsWithPhone = contacts.filter(c => c.phone && c.phone.trim() !== '');
+            
+            if (unitsWithPhone.length === 0) {
+                return `
+                    <div class="no-results">
+                        <i class="fas fa-phone"></i>
+                        <h3>Nenhum ramal encontrado</h3>
+                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
+                    </div>
+                `;
+            }
+            
+            let html = '';
+            unitsWithPhone.forEach(c => {
+                const ramal = this.getRamalFromPhone(c.phone);
                 
-                const phoneClean = c.phone.replace(/\D/g, '');
-                const telLink = `tel:+55${phoneClean}`;
-                const whatsappLink = `https://wa.me/55${phoneClean}`;
-                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + ', ' + c.bairro + ', Passo Fundo, RS')}`;
+                if (isListMode) {
+                    html += `
+                        <div class="ramal-row">
+                            <div class="ramal-row-info">
+                                <div class="ramal-row-header">
+                                    <h3 class="ramal-row-name">${c.name}</h3>
+                                    <span class="ramal-type">${this.getTypeLabel(c.type)}</span>
+                                </div>
+                            </div>
+                            <div class="ramal-row-number">${ramal}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="ramal-card">
+                            <div class="ramal-header">
+                                <div>
+                                    <h3 class="ramal-name">${c.name}</h3>
+                                    <span class="ramal-type">${this.getTypeLabel(c.type)}</span>
+                                </div>
+                            </div>
+                            <div class="ramal-number">${ramal}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            return html;
+        },
+
+        renderRegularContacts(contacts, isListMode) {
+            let html = '';
+            
+            contacts.forEach(c => {
+                const phoneClean = c.phone ? c.phone.replace(/\D/g, '') : '';
+                const telLink = phoneClean ? `tel:+55${phoneClean}` : '#';
+                const whatsappLink = phoneClean ? `https://wa.me/55${phoneClean}` : '#';
+                const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((c.address || '') + ', ' + (c.bairro || '') + ', Passo Fundo, RS')}`;
                 
                 const showServices = this.shouldShowServices(c.type);
                 
-                row.innerHTML = `
-                    <div class="contact-row-info">
-                        <div class="contact-row-header">
-                            <h3 class="contact-row-name">${c.name}</h3>
-                            <span class="contact-type">${this.getTypeLabel(c.type)}</span>
-                        </div>
-                        <div class="contact-row-details">
-                            <div class="contact-row-detail">
-                                <i class="fas fa-phone"></i>
-                                <span>${c.phone}</span>
+                if (isListMode) {
+                    html += `
+                        <div class="contact-row">
+                            <div class="contact-row-info">
+                                <div class="contact-row-header">
+                                    <h3 class="contact-row-name">${c.name}</h3>
+                                    <span class="contact-type">${this.getTypeLabel(c.type)}</span>
+                                </div>
+                                <div class="contact-row-details">
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-phone"></i>
+                                        <span>${c.phone || 'Não informado'}</span>
+                                    </div>
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span>${c.bairro || 'Não informado'}</span>
+                                    </div>
+                                    ${c.enfermeiro ? `
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-user-nurse"></i>
+                                        <span>Enf. ${c.enfermeiro}</span>
+                                    </div>` : ''}
+                                    ${c.gerente ? `
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-user-tie"></i>
+                                        <span>Gerente: ${c.gerente}</span>
+                                    </div>` : ''}
+                                </div>
                             </div>
-                            <div class="contact-row-detail">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>${c.bairro}</span>
+                            <div class="contact-row-actions">
+                                <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                                ${phoneClean ? `
+                                <button class="btn btn-primary" onclick="window.open('${telLink}', '_self')">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-success" onclick="window.open('${whatsappLink}', '_blank')">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
+                                ` : ''}
+                                <button class="btn btn-secondary" onclick="window.open('${mapsLink}', '_blank')">
+                                    <i class="fas fa-map"></i>
+                                </button>
                             </div>
-                            ${c.enfermeiro ? `
-                            <div class="contact-row-detail">
-                                <i class="fas fa-user-nurse"></i>
-                                <span>Enf. ${c.enfermeiro}</span>
-                            </div>` : ''}
-                            ${c.gerente ? `
-                            <div class="contact-row-detail">
-                                <i class="fas fa-user-tie"></i>
-                                <span>Gerente: ${c.gerente}</span>
-                            </div>` : ''}
                         </div>
-                    </div>
-                    <div class="contact-row-actions">
-                        <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
-                            <i class="fas fa-star"></i>
-                        </button>
-                        <button class="btn btn-primary" onclick="window.open('${telLink}', '_self')">
-                            <i class="fas fa-phone"></i>
-                        </button>
-                        <button class="btn btn-success" onclick="window.open('${whatsappLink}', '_blank')">
-                            <i class="fab fa-whatsapp"></i>
-                        </button>
-                        <button class="btn btn-secondary" onclick="window.open('${mapsLink}', '_blank')">
-                            <i class="fas fa-map"></i>
-                        </button>
-                    </div>
-                `;
-                root.appendChild(row);
+                    `;
+                } else {
+                    html += `
+                        <div class="contact-card">
+                            <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <div class="contact-header">
+                                <div>
+                                    <h3 class="contact-name">${c.name}</h3>
+                                    <span class="contact-type">${this.getTypeLabel(c.type)}</span>
+                                </div>
+                            </div>
+                            <div class="contact-info">
+                                <div class="contact-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>${c.address || 'Endereço não informado'}, ${c.bairro || 'Bairro não informado'}</span>
+                                </div>
+                                <div class="contact-item">
+                                    <i class="fas fa-phone"></i>
+                                    <span>${c.phone || 'Telefone não informado'}</span>
+                                </div>
+                                ${c.email ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>${c.email}</span>
+                                </div>` : ''}
+                                ${c.enfermeiro ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-user-nurse"></i>
+                                    <span>Enf. ${c.enfermeiro}</span>
+                                </div>` : ''}
+                                ${c.gerente ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>Gerente: ${c.gerente}</span>
+                                </div>` : ''}
+                                ${c.responsavel ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>Responsável: ${c.responsavel}</span>
+                                </div>` : ''}
+                            </div>
+                            ${showServices ? `
+                            <div class="contact-services">
+                                <div class="service ${c.vacina === 'Sim' ? 'available' : 'unavailable'}">
+                                    <i class="fas fa-syringe"></i>
+                                    <span class="service-tooltip">Sala de Vacina</span>
+                                    <span class="service-label">Vacina</span>
+                                </div>
+                                <div class="service ${c.odonto === 'Sim' ? 'available' : 'unavailable'}">
+                                    <i class="fas fa-tooth"></i>
+                                    <span class="service-tooltip">Consultório Odontológico</span>
+                                    <span class="service-label">Odonto</span>
+                                </div>
+                                <div class="service ${c.farmacia === 'Sim' ? 'available' : 'unavailable'}">
+                                    <i class="fas fa-pills"></i>
+                                    <span class="service-tooltip">Farmácia</span>
+                                    <span class="service-label">Farmácia</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                            <div class="contact-actions">
+                                ${phoneClean ? `
+                                <button class="action-btn call-btn" onclick="window.open('${telLink}', '_self')">
+                                    <i class="fas fa-phone"></i> Ligar
+                                </button>
+                                <button class="action-btn whatsapp-btn" onclick="window.open('${whatsappLink}', '_blank')">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                ` : `
+                                <button class="action-btn call-btn" disabled style="opacity:0.6">
+                                    <i class="fas fa-phone"></i> Sem telefone
+                                </button>
+                                <button class="action-btn whatsapp-btn" disabled style="opacity:0.6">
+                                    <i class="fab fa-whatsapp"></i> Sem WhatsApp
+                                </button>
+                                `}
+                                <button class="action-btn location-btn" onclick="window.open('${mapsLink}', '_blank')">
+                                    <i class="fas fa-map"></i> Localização
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
             });
             
-            this.attachContactListeners();
+            return html;
         },
 
-        // Anexar listeners aos contatos (EXISTENTE)
         attachContactListeners() {
             document.querySelectorAll('.favorite-btn').forEach(btn => {
                 btn.onclick = async (e) => {
@@ -1398,9 +1512,19 @@
             });
         },
 
-        // Renderizar lista de unidades no admin (EXISTENTE)
         renderUnitsList(units) {
             this.elements.unitsListAdmin.innerHTML = '';
+            
+            if (units.length === 0) {
+                this.elements.unitsListAdmin.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-building"></i>
+                        <h3>Nenhuma unidade cadastrada</h3>
+                        <p>Use a aba "Adicionar Unidade" para cadastrar a primeira unidade</p>
+                    </div>
+                `;
+                return;
+            }
             
             units.forEach(u => {
                 const item = document.createElement('div');
@@ -1408,7 +1532,7 @@
                 item.innerHTML = `
                     <div class="unit-info">
                         <h4>${u.name}</h4>
-                        <p>${this.getTypeLabel(u.type)} - ${u.phone}</p>
+                        <p>${this.getTypeLabel(u.type)} - ${u.phone || 'Sem telefone'}</p>
                     </div>
                     <div class="unit-actions">
                         <button class="btn btn-warning edit-unit" data-id="${u.id}">
@@ -1431,7 +1555,6 @@
             });
         },
 
-        // Funções de UI existentes
         showLogin() {
             this.elements.loginModal.classList.add('active');
             this.elements.loginModal.setAttribute('aria-hidden', 'false');
@@ -1480,17 +1603,11 @@
             this.elements.allCount.textContent = `Mostrando ${all} contatos`;
             this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
             
-            // Contar unidades com telefone para ramais
-            const ramalCount = this.units.filter(u => u.phone && u.phone.trim() !== '').length;
+            const ramalCount = App.units.filter(u => u.phone && u.phone.trim() !== '').length;
             this.elements.ramalCount.textContent = `Mostrando ${ramalCount} ramais`;
         },
 
-        /******************************************************
-         * BIND DE AÇÕES DE UI (ATUALIZADO)
-         ******************************************************/
-        
         bindUIActions() {
-            // Toggle do painel administrativo (EXISTENTE)
             this.elements.adminToggle.onclick = () => {
                 if (AuthService.isLogged()) {
                     this.openAdmin();
@@ -1508,7 +1625,6 @@
                 alert('Desconectado do painel administrativo');
             };
 
-            // Login form (EXISTENTE)
             this.elements.loginForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const username = this.elements.loginUsername.value.trim();
@@ -1524,10 +1640,8 @@
                 }
             };
 
-            // Toggle de tema (EXISTENTE)
             this.elements.themeToggle.onclick = () => this.toggleTheme();
 
-            // Busca e filtros (EXISTENTE)
             this.elements.searchBtn.onclick = () => App.performSearch();
             this.elements.searchInput.onkeypress = (e) => {
                 if (e.key === 'Enter') App.performSearch();
@@ -1541,30 +1655,21 @@
                 };
             });
 
-            // Filtros de serviços (EXISTENTE)
-            document.querySelectorAll('.service-toggle-btn').forEach(btn => {
-                btn.onclick = function() {
-                    this.classList.toggle('active');
-                    const newValue = this.classList.contains('active') ? 'Sim' : '';
-                    this.setAttribute('data-value', newValue);
-                    App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
-                };
-            });
-
-            // Tabs principais (EXISTENTE)
             this.elements.tabs.forEach(tab => {
                 tab.onclick = function() {
                     UI.elements.tabs.forEach(x => x.classList.remove('active'));
                     this.classList.add('active');
-                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-                    document.getElementById(`${this.dataset.tab}-content`).classList.add('active');
                     
-                    // Atualizar filtros quando mudar de aba
+                    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                    const tabId = this.dataset.tab;
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                    
+                    UI.loadDisplayMode();
+                    
                     App.filterContacts(document.querySelector('.filter-btn.active').dataset.filter);
                 };
             });
 
-            // Tabs do admin (EXISTENTE)
             this.elements.adminTabs.forEach(tab => {
                 tab.onclick = function() {
                     UI.elements.adminTabs.forEach(x => x.classList.remove('active'));
@@ -1574,34 +1679,25 @@
                 };
             });
 
-            // Formulário de unidade (EXISTENTE)
             this.elements.formUnit.onsubmit = async (e) => {
                 e.preventDefault();
                 await App.saveUnitFromForm();
             };
             
             this.elements.cancelEditBtn.onclick = () => {
-                this.elements.formUnit.reset();
-                this.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                this.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                this.elements.cancelEditBtn.style.display = 'none';
-                this.elements.formUnit.removeAttribute('data-edit-id');
-                this.setupConditionalFormLogic();
+                App.cancelEdit();
             };
 
-            // Configurações (EXISTENTE)
             this.elements.backupBtn.onclick = () => App.backupData();
             this.elements.restoreInput.onchange = (e) => App.restoreData(e.target.files[0]);
             this.elements.clearAllBtn.onclick = () => App.clearAllData();
 
-            // NOVO: Controles de exibição
             this.elements.displayBtns.forEach(btn => {
                 btn.onclick = function() {
                     UI.toggleDisplayMode(this.dataset.display);
                 };
             });
 
-            // Lógica condicional do formulário (EXISTENTE)
             this.setupConditionalFormLogic();
         }
     };
@@ -1610,25 +1706,22 @@
         units: [],
         favorites: JSON.parse(localStorage.getItem('telefonia_favorites') || '[]'),
         unsubscribe: null,
+        currentStaffFilter: null,
 
         async init() {
             await UI.cache();
             UI.loadTheme();
-            UI.loadDisplayMode(); // NOVO: Carregar modo de exibição
+            UI.loadDisplayMode();
             UI.bindUIActions();
             
             if (AuthService.isLogged()) {
-                UI.openAdmin();
-            } else {
-                UI.elements.logoutBtn.style.display = 'none';
+                UI.elements.logoutBtn.style.display = 'inline-flex';
             }
             
-            // Iniciar escuta em tempo real do Firebase
             this.startRealtimeUpdates();
         },
 
         startRealtimeUpdates() {
-            // Escutar mudanças em tempo real no Firestore
             this.unsubscribe = DataService.subscribeToUnits((units) => {
                 this.units = units;
                 this.refreshUI();
@@ -1636,36 +1729,45 @@
         },
 
         refreshUI() {
-            // Atualizar favoritos
             this.units.forEach(u => {
                 u.favorite = this.favorites.includes(u.id);
             });
             
-            // Renderizar contatos em todas as abas
             UI.renderContacts(this.units, 'all');
             UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
             UI.renderContacts(this.units, 'ramal');
             
             UI.renderUnitsList(this.units);
+            
             UI.setCounts(this.units.length, this.favorites.length);
         },
 
         async toggleFavorite(unitId) {
             const idx = this.favorites.indexOf(unitId);
+            const isNowFavorite = idx === -1;
             
-            if (idx === -1) {
-                // Adicionar aos favoritos
+            this.updateFavoriteUI(unitId, isNowFavorite);
+            
+            if (isNowFavorite) {
                 this.favorites.push(unitId);
             } else {
-                // Remover dos favoritos
                 this.favorites.splice(idx, 1);
             }
             
-            // Salvar favoritos no localStorage
             localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
             
-            // Atualizar UI
             this.refreshUI();
+        },
+
+        updateFavoriteUI(unitId, isFavorite) {
+            const favoriteBtns = document.querySelectorAll(`.favorite-btn[data-id="${unitId}"]`);
+            favoriteBtns.forEach(btn => {
+                btn.classList.toggle('active', isFavorite);
+                btn.classList.add('pulsing');
+                setTimeout(() => {
+                    btn.classList.remove('pulsing');
+                }, 500);
+            });
         },
 
         async filterContacts(filter) {
@@ -1673,23 +1775,22 @@
             
             // Aplicar filtro de tipo
             if (filter && filter !== 'all') {
-                filtered = filtered.filter(u => u.type === filter);
+                if (['vacina', 'odonto', 'farmacia', 'enfermeiro', 'gerente'].includes(filter)) {
+                    // Filtros para serviços e staff
+                    filtered = filtered.filter(u => {
+                        if (filter === 'vacina') return u.vacina === 'Sim';
+                        if (filter === 'odonto') return u.odonto === 'Sim';
+                        if (filter === 'farmacia') return u.farmacia === 'Sim';
+                        if (filter === 'enfermeiro') return u.enfermeiro && u.enfermeiro.trim() !== '';
+                        if (filter === 'gerente') return u.gerente && u.gerente.trim() !== '';
+                        return true;
+                    });
+                } else {
+                    // Filtros de tipo padrão
+                    filtered = filtered.filter(u => u.type === filter);
+                }
             }
             
-            // Aplicar filtros de serviços
-            const vaccineBtn = document.querySelector('.service-toggle-btn[data-service="vaccine"]');
-            const dentalBtn = document.querySelector('.service-toggle-btn[data-service="dental"]');
-            const pharmacyBtn = document.querySelector('.service-toggle-btn[data-service="pharmacy"]');
-            
-            const vaccine = vaccineBtn.getAttribute('data-value');
-            const dental = dentalBtn.getAttribute('data-value');
-            const pharmacy = pharmacyBtn.getAttribute('data-value');
-            
-            if (vaccine) filtered = filtered.filter(u => u.vacina === vaccine);
-            if (dental) filtered = filtered.filter(u => u.odonto === dental);
-            if (pharmacy) filtered = filtered.filter(u => u.farmacia === pharmacy);
-            
-            // Aplicar busca por texto
             const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
             if (term) {
                 filtered = filtered.filter(u => {
@@ -1703,17 +1804,22 @@
                 });
             }
             
-            // Determinar qual aba está ativa
             const activeTab = document.querySelector('.tab.active').dataset.tab;
             
-            // Renderizar resultados na aba apropriada
             if (activeTab === 'favorites') {
                 UI.renderContacts(filtered.filter(u => this.favorites.includes(u.id)), activeTab);
             } else {
                 UI.renderContacts(filtered, activeTab);
             }
             
-            UI.setCounts(filtered.length, this.favorites.length);
+            const countElement = document.getElementById(`${activeTab}-count`);
+            if (countElement) {
+                if (activeTab === 'favorites') {
+                    countElement.textContent = `Seus contatos favoritos (${filtered.filter(u => this.favorites.includes(u.id)).length})`;
+                } else {
+                    countElement.textContent = `Mostrando ${filtered.length} contatos`;
+                }
+            }
         },
 
         async performSearch() {
@@ -1731,12 +1837,11 @@
             const unit = this.units.find(u => u.id === id);
             if (!unit) return;
             
-            // Preencher formulário com dados da unidade
-            document.getElementById('unitName').value = unit.name;
-            document.getElementById('unitType').value = unit.type;
-            document.getElementById('unitAddress').value = unit.address;
-            document.getElementById('unitBairro').value = unit.bairro;
-            document.getElementById('unitPhone').value = unit.phone;
+            document.getElementById('unitName').value = unit.name || '';
+            document.getElementById('unitType').value = unit.type || '';
+            document.getElementById('unitAddress').value = unit.address || '';
+            document.getElementById('unitBairro').value = unit.bairro || '';
+            document.getElementById('unitPhone').value = unit.phone || '';
             document.getElementById('unitEmail').value = unit.email || '';
             document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
             document.getElementById('unitGerente').value = unit.gerente || '';
@@ -1745,24 +1850,28 @@
             document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
             document.getElementById('unitResponsavel').value = unit.responsavel || '';
             
-            // Atualizar UI do formulário
             UI.elements.formTitle.textContent = 'Editar Unidade';
             UI.elements.submitBtn.innerHTML = '<i class="fas fa-save"></i> Salvar Alterações';
             UI.elements.cancelEditBtn.style.display = 'inline-flex';
             UI.elements.formUnit.setAttribute('data-edit-id', id);
             
-            // Atualizar lógica condicional
             setTimeout(() => {
                 UI.setupConditionalFormLogic();
             }, 100);
             
-            // Navegar para a aba de adicionar/editar
             UI.elements.adminTabs.forEach(t => t.classList.remove('active'));
             document.querySelector('.admin-tab[data-tab="add"]').classList.add('active');
             document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
             document.getElementById('add-content').classList.add('active');
-            
-            UI.openAdmin();
+        },
+
+        cancelEdit() {
+            UI.elements.formUnit.reset();
+            UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
+            UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
+            UI.elements.cancelEditBtn.style.display = 'none';
+            UI.elements.formUnit.removeAttribute('data-edit-id');
+            UI.setupConditionalFormLogic();
         },
 
         async deleteUnit(id) {
@@ -1776,7 +1885,6 @@
             try {
                 await DataService.deleteUnit(id);
                 
-                // Remover dos favoritos se estiver lá
                 this.favorites = this.favorites.filter(f => f !== id);
                 localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
                 
@@ -1794,7 +1902,6 @@
             
             const editId = UI.elements.formUnit.getAttribute('data-edit-id');
             
-            // Validar campo responsável se visível
             const responsibleField = document.getElementById('unitResponsavel');
             const isResponsibleVisible = !responsibleField.closest('.form-group').classList.contains('hidden');
             
@@ -1804,7 +1911,6 @@
                 return;
             }
             
-            // Coletar dados do formulário
             const unitData = {
                 name: document.getElementById('unitName').value,
                 type: document.getElementById('unitType').value,
@@ -1820,38 +1926,37 @@
                 responsavel: document.getElementById('unitResponsavel').value
             };
             
-            // Adicionar ID se for edição
             if (editId) {
                 unitData.id = editId;
             }
             
             try {
+                UI.showLoading(editId ? 'Atualizando unidade...' : 'Adicionando unidade...');
                 await DataService.saveUnit(unitData);
                 
-                // Resetar formulário
-                UI.elements.formUnit.reset();
-                UI.elements.formTitle.textContent = 'Adicionar Nova Unidade';
-                UI.elements.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Unidade';
-                UI.elements.cancelEditBtn.style.display = 'none';
-                UI.elements.formUnit.removeAttribute('data-edit-id');
-                
-                UI.setupConditionalFormLogic();
+                this.cancelEdit();
+                UI.hideLoading();
                 
                 alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
             } catch (error) {
+                UI.hideLoading();
                 alert('Erro ao salvar unidade: ' + error.message);
             }
         },
 
         backupData() {
-            const data = { units: this.units };
+            const data = { 
+                units: this.units,
+                favorites: this.favorites,
+                timestamp: new Date().toISOString()
+            };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'backup-telefonia-' + new Date().toISOString().split('T')[0] + '.json';
+            a.download = `backup-telefonia-${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a);
             a.click();
-            a.remove();
+            document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
             
             alert('Backup realizado com sucesso!');
@@ -1865,19 +1970,28 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    if (data.units) {
-                        if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
-                            // Para cada unidade no backup, salvar no Firebase
-                            for (const unit of data.units) {
-                                await DataService.saveUnit(unit);
-                            }
-                            
-                            alert('Dados restaurados com sucesso!');
-                        }
-                    } else {
+                    if (!data.units) {
                         alert('Arquivo de backup inválido!');
+                        return;
+                    }
+                    
+                    if (confirm('Isso substituirá todos os dados atuais. Continuar?')) {
+                        UI.showLoading('Restaurando dados...');
+                        
+                        for (const unit of data.units) {
+                            await DataService.saveUnit(unit);
+                        }
+                        
+                        if (data.favorites) {
+                            this.favorites = data.favorites;
+                            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
+                        }
+                        
+                        UI.hideLoading();
+                        alert('Dados restaurados com sucesso!');
                     }
                 } catch (err) {
+                    UI.hideLoading();
                     alert('Erro ao ler arquivo: ' + err.message);
                 }
             };
@@ -1886,30 +2000,26 @@
         },
 
         clearAllData() {
-            if (!confirm('Isso apagará TODOS os dados. Esta ação não pode ser desfeita. Continuar?')) return;
+            if (!confirm('Isso apagará TODOS os dados locais. Esta ação não pode ser desfeita. Continuar?')) return;
             
-            // Limpar dados locais
             localStorage.removeItem('telefonia_favorites');
             localStorage.removeItem('telefonia_isLogged');
-            localStorage.removeItem('telefonia_displayMode'); // NOVO: Limpar modo de exibição
-            this.favorites = [];
+            localStorage.removeItem('telefonia_displayMode');
+            localStorage.removeItem('telefonia_theme');
+            localStorage.removeItem('telefonia_offline_cache');
             
-            // Limpar dados do Firebase (precisa ser feito manualmente para cada documento)
-            if (confirm('AVISO: Para limpar completamente os dados do Firebase, você precisa fazer isso manualmente no console do Firebase. Deseja apenas limpar os dados locais?')) {
-                this.refreshUI();
-                alert('Dados locais limpos! Os dados do Firebase permanecem intactos.');
-            }
+            this.favorites = [];
+            this.refreshUI();
+            
+            alert('Dados locais limpos! Os dados do Firebase permanecem intactos.');
         }
     };
 
-    // Inicializar aplicação quando o DOM estiver carregado
     document.addEventListener('DOMContentLoaded', () => App.init());
 
-    // Tornar objetos globais para debugging
     window.App = App;
     window.UI = UI;
     window.DataService = DataService;
-    window.AuthService = AuthService;
     </script>
 </body>
 </html>
