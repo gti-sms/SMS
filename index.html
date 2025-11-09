@@ -845,6 +845,13 @@
                             <div class="form-group"><label for="unitAddress">Endereço *</label><input type="text" id="unitAddress" class="form-control" required placeholder="Ex: Rua Exemplo, 123"><small class="form-text">O link do Google Maps será gerado automaticamente</small></div>
                             <div class="form-group"><label for="unitBairro">Bairro *</label><input type="text" id="unitBairro" class="form-control" required placeholder="Ex: Centro"></div>
                             <div class="form-group"><label for="unitPhone">Telefone *</label><input type="text" id="unitPhone" class="form-control" required placeholder="Ex: 3314-1234"><small class="form-text">O link do WhatsApp será gerado automaticamente</small></div>
+                            <div class="form-group">
+                                <label for="unitTemRamal">Tem Ramal?</label>
+                                <select id="unitTemRamal" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
                             <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
                             
                             <!-- Campo Responsável (será exibido condicionalmente) -->
@@ -887,23 +894,23 @@
                     <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
-<div class="filter-options">
-    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
-    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
-    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
-    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
-    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
-    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
-    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
-</div>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="all"><i class="fas fa-th-large"></i> Todos</button>
+                    <button class="filter-btn" data-filter="promocao"><i class="fas fa-heart"></i> Promoção</button>
+                    <button class="filter-btn" data-filter="recuperacao"><i class="fas fa-stethoscope"></i> Recuperação</button>
+                    <button class="filter-btn" data-filter="administrativo"><i class="fas fa-users"></i> Administrativo</button>
+                    <button class="filter-btn" data-filter="vigilancia"><i class="fas fa-shield-alt"></i> Vigilância</button>
+                    <button class="filter-btn" data-filter="capne"><i class="fas fa-baby"></i> Capne</button>
+                    <button class="filter-btn" data-filter="outros"><i class="fas fa-map-marker-alt"></i> Outros</button>
+                </div>
 
-<div class="filter-options" style="margin-top: 10px;">
-    <button class="filter-btn" data-filter="vacina"><i class="fas fa-syringe"></i> Vacina</button>
-    <button class="filter-btn" data-filter="odonto"><i class="fas fa-tooth"></i> Odonto</button>
-    <button class="filter-btn" data-filter="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
-    <button class="filter-btn" data-filter="enfermeiro"><i class="fas fa-user-nurse"></i> Enfermeiro</button>
-    <button class="filter-btn" data-filter="gerente"><i class="fas fa-user-tie"></i> Gerente</button>
-</div>
+                <div class="filter-options" style="margin-top: 10px;">
+                    <button class="filter-btn" data-filter="vacina"><i class="fas fa-syringe"></i> Vacina</button>
+                    <button class="filter-btn" data-filter="odonto"><i class="fas fa-tooth"></i> Odonto</button>
+                    <button class="filter-btn" data-filter="farmacia"><i class="fas fa-pills"></i> Farmácia</button>
+                    <button class="filter-btn" data-filter="enfermeiro"><i class="fas fa-user-nurse"></i> Enfermeiro</button>
+                    <button class="filter-btn" data-filter="gerente"><i class="fas fa-user-tie"></i> Gerente</button>
+                </div>
 
                 <!-- LINKS RÁPIDOS COM ÍCONES -->
                 <div class="quick-links">
@@ -1310,20 +1317,21 @@
         },
 
         renderRamalContent(contacts, isListMode) {
-            const unitsWithPhone = contacts.filter(c => c.phone && c.phone.trim() !== '');
+            // Filtra apenas unidades que têm ramal
+            const unitsWithRamal = contacts.filter(c => c.temRamal === 'Sim' && c.phone && c.phone.trim() !== '');
             
-            if (unitsWithPhone.length === 0) {
+            if (unitsWithRamal.length === 0) {
                 return `
                     <div class="no-results">
                         <i class="fas fa-phone"></i>
                         <h3>Nenhum ramal encontrado</h3>
-                        <p>Nenhuma unidade possui número de telefone cadastrado</p>
+                        <p>Nenhuma unidade possui ramal cadastrado</p>
                     </div>
                 `;
             }
             
             let html = '';
-            unitsWithPhone.forEach(c => {
+            unitsWithRamal.forEach(c => {
                 const ramal = this.getRamalFromPhone(c.phone);
                 
                 if (isListMode) {
@@ -1380,6 +1388,11 @@
                                         <i class="fas fa-phone"></i>
                                         <span>${c.phone || 'Não informado'}</span>
                                     </div>
+                                    ${c.temRamal === 'Sim' ? `
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-phone-volume"></i>
+                                        <span>Ramal: ${this.getRamalFromPhone(c.phone)}</span>
+                                    </div>` : ''}
                                     <div class="contact-row-detail">
                                         <i class="fas fa-map-marker-alt"></i>
                                         <span>${c.bairro || 'Não informado'}</span>
@@ -1435,6 +1448,11 @@
                                     <i class="fas fa-phone"></i>
                                     <span>${c.phone || 'Telefone não informado'}</span>
                                 </div>
+                                ${c.temRamal === 'Sim' ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-phone-volume"></i>
+                                    <span>Ramal: ${this.getRamalFromPhone(c.phone)}</span>
+                                </div>` : ''}
                                 ${c.email ? `
                                 <div class="contact-item">
                                     <i class="fas fa-envelope"></i>
@@ -1532,7 +1550,7 @@
                 item.innerHTML = `
                     <div class="unit-info">
                         <h4>${u.name}</h4>
-                        <p>${this.getTypeLabel(u.type)} - ${u.phone || 'Sem telefone'}</p>
+                        <p>${this.getTypeLabel(u.type)} - ${u.phone || 'Sem telefone'} ${u.temRamal === 'Sim' ? '(Com Ramal)' : ''}</p>
                     </div>
                     <div class="unit-actions">
                         <button class="btn btn-warning edit-unit" data-id="${u.id}">
@@ -1603,7 +1621,7 @@
             this.elements.allCount.textContent = `Mostrando ${all} contatos`;
             this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
             
-            const ramalCount = App.units.filter(u => u.phone && u.phone.trim() !== '').length;
+            const ramalCount = App.units.filter(u => u.temRamal === 'Sim' && u.phone && u.phone.trim() !== '').length;
             this.elements.ramalCount.textContent = `Mostrando ${ramalCount} ramais`;
         },
 
@@ -1842,6 +1860,7 @@
             document.getElementById('unitAddress').value = unit.address || '';
             document.getElementById('unitBairro').value = unit.bairro || '';
             document.getElementById('unitPhone').value = unit.phone || '';
+            document.getElementById('unitTemRamal').value = unit.temRamal || 'Não';
             document.getElementById('unitEmail').value = unit.email || '';
             document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
             document.getElementById('unitGerente').value = unit.gerente || '';
@@ -1917,6 +1936,7 @@
                 address: document.getElementById('unitAddress').value,
                 bairro: document.getElementById('unitBairro').value,
                 phone: document.getElementById('unitPhone').value,
+                temRamal: document.getElementById('unitTemRamal').value,
                 email: document.getElementById('unitEmail').value,
                 enfermeiro: document.getElementById('unitEnfermeiro').value,
                 gerente: document.getElementById('unitGerente').value,
