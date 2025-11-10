@@ -1045,89 +1045,137 @@
     const db = firebase.firestore();
 
     /***********************************************
-     * Firebase Database Services
+     * Firebase Database Services - CUSTO ZERO
      ***********************************************/
     const DataService = {
         _cache: {
             units: null,
             lastFetch: 0,
-            CACHE_DURATION: 5 * 60 * 1000
+            CACHE_DURATION: 24 * 60 * 60 * 1000 // ⚡ 24 HORAS de cache - CUSTO ZERO
         },
         
         async getUnits(forceRefresh = false) {
             const now = Date.now();
-            if (!forceRefresh && 
-                this._cache.units && 
-                (now - this._cache.lastFetch < this._cache.CACHE_DURATION)) {
-                return this._cache.units;
+            
+            // 🔥 ESTRATÉGIA CUSTO ZERO: Sempre usar cache primeiro
+            if (!forceRefresh && this._cache.units) {
+                const cacheAge = now - this._cache.lastFetch;
+                
+                // Se cache tem menos de 24h, NUNCA busca no Firebase
+                if (cacheAge < this._cache.CACHE_DURATION) {
+                    console.log('🔥 CUSTO ZERO: Usando cache local (', Math.round(cacheAge/1000/60), 'minutos)');
+                    return this._cache.units;
+                }
+                
+                // Cache expirado (>24h), mas verifica se tem dados offline
+                const offlineCache = localStorage.getItem('telefonia_offline_cache');
+                if (offlineCache) {
+                    console.log('🔥 CUSTO ZERO: Cache expirado, usando dados offline');
+                    const data = JSON.parse(offlineCache);
+                    this._cache.units = data.units || [];
+                    this._cache.lastFetch = data.timestamp || now;
+                    return this._cache.units;
+                }
             }
             
+            // ⚠️ SÓ BUSCA NO FIREBASE SE ABSOLUTAMENTE NECESSÁRIO
             try {
+                console.log('⚠️  Buscando dados do Firebase (operação rara)');
                 const snapshot = await db.collection('unidades').get();
                 const units = [];
                 snapshot.forEach(doc => {
                     units.push({ id: doc.id, ...doc.data() });
                 });
                 
+                // Atualizar cache por 24 HORAS
                 this._cache.units = units;
                 this._cache.lastFetch = now;
                 
+                // Salvar offline por 7 DIAS
                 localStorage.setItem('telefonia_offline_cache', JSON.stringify({
                     units: units,
-                    timestamp: now
+                    timestamp: now,
+                    expires: now + (7 * 24 * 60 * 60 * 1000) // 7 dias
                 }));
                 
+                console.log(`🔥 Dados carregados: ${units.length} unidades - Cache por 24H`);
                 return units;
             } catch (error) {
-                console.error('Erro ao buscar unidades:', error);
+                console.error('❌ Erro ao buscar unidades:', error);
                 
+                // 🔥 FALLBACK CUSTO ZERO: Sempre retorna dados offline
                 const cached = localStorage.getItem('telefonia_offline_cache');
                 if (cached) {
+                    console.log('🔥 CUSTO ZERO: Usando fallback offline');
                     const data = JSON.parse(cached);
-                    return data.units || [];
+                    
+                    // Verificar se dados offline não expiraram (7 dias)
+                    if (!data.expires || data.expires > now) {
+                        this._cache.units = data.units || [];
+                        this._cache.lastFetch = data.timestamp || now;
+                        return this._cache.units;
+                    }
                 }
+                
                 return [];
             }
         },
 
+        // 🔥 ESCUTA EM TEMPO REAL APENAS PARA ADMIN (usuários comuns = zero custo)
         subscribeToUnits(callback) {
+            // ⚡ Usuários comuns NUNCA ativam escuta em tempo real
+            if (!AuthService.isLogged()) {
+                console.log('🔥 CUSTO ZERO: Usuário comum - sem escuta em tempo real');
+                // Retorna função vazia para não quebrar o código
+                return () => {};
+            }
+            
+            console.log('🔧 Admin logado - ativando escuta em tempo real');
             return db.collection('unidades').onSnapshot(snapshot => {
                 const units = [];
                 snapshot.forEach(doc => {
                     units.push({ id: doc.id, ...doc.data() });
                 });
                 
+                // Atualizar cache
                 this._cache.units = units;
                 this._cache.lastFetch = Date.now();
                 
                 localStorage.setItem('telefonia_offline_cache', JSON.stringify({
                     units: units,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    expires: Date.now() + (7 * 24 * 60 * 60 * 1000)
                 }));
                 
+                console.log('🔧 Admin: Dados atualizados em tempo real');
                 callback(units);
             }, error => {
-                console.error('Erro ao escutar mudanças:', error);
-                const cached = localStorage.getItem('telefonia_offline_cache');
-                if (cached) {
-                    const data = JSON.parse(cached);
-                    callback(data.units || []);
-                }
+                console.error('❌ Erro na escuta em tempo real:', error);
+                // Não faz nada - mantém dados atuais
             });
         },
 
         async saveUnit(unit) {
             try {
+                let result;
                 if (unit.id) {
+                    // Atualização
                     const { id, ...unitData } = unit;
                     await db.collection('unidades').doc(id).update(unitData);
-                    return unit;
+                    result = unit;
                 } else {
+                    // Inserção
                     const docRef = await db.collection('unidades').add(unit);
-                    return { id: docRef.id, ...unit };
+                    result = { id: docRef.id, ...unit };
                 }
+                
+                // 🔥 Invalidar cache para forçar atualização (apenas admin)
+                this._cache.units = null;
+                this._cache.lastFetch = 0;
+                
+                return result;
             } catch (error) {
-                console.error('Erro ao salvar unidade:', error);
+                console.error('❌ Erro ao salvar unidade:', error);
                 throw error;
             }
         },
@@ -1135,8 +1183,13 @@
         async deleteUnit(id) {
             try {
                 await db.collection('unidades').doc(id).delete();
+                
+                // 🔥 Invalidar cache
+                this._cache.units = null;
+                this._cache.lastFetch = 0;
+                
             } catch (error) {
-                console.error('Erro ao excluir unidade:', error);
+                console.error('❌ Erro ao excluir unidade:', error);
                 throw error;
             }
         },
@@ -1146,9 +1199,37 @@
         },
 
         async forceRefresh() {
+            // 🔥 Force refresh apenas para admin
+            if (!AuthService.isLogged()) {
+                console.log('🔥 CUSTO ZERO: Usuário comum - refresh bloqueado');
+                return this._cache.units || [];
+            }
+            
             this._cache.units = null;
             this._cache.lastFetch = 0;
             return await this.getUnits(true);
+        },
+        
+        // 🔥 ESTRATÉGIA CUSTO ZERO: Carregar apenas se necessário
+        async loadIfNeeded() {
+            if (!this._cache.units) {
+                return await this.getUnits();
+            }
+            return this._cache.units;
+        },
+        
+        // 🔥 MÉTODO NOVO: Verificar status do cache
+        getCacheStatus() {
+            if (!this._cache.units) return 'empty';
+            
+            const cacheAge = Date.now() - this._cache.lastFetch;
+            const hours = Math.round(cacheAge / (1000 * 60 * 60));
+            
+            if (cacheAge < this._cache.CACHE_DURATION) {
+                return `fresh_${hours}h`;
+            } else {
+                return `expired_${hours}h`;
+            }
         }
     };
 
@@ -1179,7 +1260,7 @@
     };
 
     /***********************************************
-     * UI & Application Logic
+     * UI & Application Logic - CUSTO ZERO
      ***********************************************/
     const UI = {
         elements: {},
@@ -1246,7 +1327,6 @@
             const unitFarmaciaSelect = this.elements.unitFarmacia;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             
-            // CORREÇÃO: Definir toggleFarmaceuticoField como função separada
             const toggleFarmaceuticoField = () => {
                 if (unitFarmaciaSelect.value === 'Sim') {
                     this.elements.farmaceuticoField.classList.remove('hidden');
@@ -1258,7 +1338,6 @@
             const checkConditionalFields = () => {
                 const selectedType = unitTypeSelect.value;
                 
-                // Lógica para campos condicionais baseados no tipo
                 if (conditionalTypes.includes(selectedType)) {
                     this.elements.enfermeiroField.classList.add('hidden');
                     this.elements.gerenteField.classList.add('hidden');
@@ -1279,7 +1358,6 @@
                     this.elements.responsibleField.classList.add('hidden');
                     document.getElementById('unitResponsavel').required = false;
                     
-                    // CORREÇÃO: Chamar a função diretamente
                     toggleFarmaceuticoField();
                 }
             };
@@ -1311,16 +1389,20 @@
         toggleDisplayMode(mode) {
             const isListMode = mode === 'list';
             
+            // Atualizar botões
             this.elements.displayBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.display === mode);
             });
             
             const activeTab = document.querySelector('.tab.active').dataset.tab;
             
+            // Alternar entre modos de exibição
             if (activeTab === 'ramal') {
+                // Aba Ramal
                 this.elements.ramalContacts.classList.toggle('hidden', isListMode);
                 this.elements.ramalContactsList.classList.toggle('hidden', !isListMode);
             } else {
+                // Aba Todos os Contatos
                 const contactsElement = this.elements.allContacts;
                 const listElement = this.elements.allContactsList;
                 
@@ -1329,6 +1411,9 @@
             }
             
             localStorage.setItem('telefonia_displayMode', mode);
+            
+            // 🔥 CORREÇÃO: Recarregar os dados no modo correto
+            App.filterContacts();
         },
 
         loadDisplayMode() {
@@ -1361,6 +1446,7 @@
                 htmlContent = this.renderRegularContacts(contacts, isListMode);
             }
             
+            // Atualizar o container correto baseado no modo atual
             if (container === 'ramal') {
                 if (isListMode) {
                     this.elements.ramalContactsList.innerHTML = htmlContent;
@@ -1368,19 +1454,15 @@
                     this.elements.ramalContacts.innerHTML = htmlContent;
                 }
             } else {
-                const contactsElement = this.elements.allContacts;
-                const listElement = this.elements.allContactsList;
-                
                 if (isListMode) {
-                    listElement.innerHTML = htmlContent;
+                    this.elements.allContactsList.innerHTML = htmlContent;
                 } else {
-                    contactsElement.innerHTML = htmlContent;
+                    this.elements.allContacts.innerHTML = htmlContent;
                 }
             }
         },
 
         renderRamalContent(contacts, isListMode) {
-            // Filtra apenas unidades que têm ramal
             const unitsWithRamal = contacts.filter(c => c.temRamal === 'Sim' && c.phone && c.phone.trim() !== '');
             
             if (unitsWithRamal.length === 0) {
@@ -1474,6 +1556,11 @@
                                     <div class="contact-row-detail">
                                         <i class="fas fa-user-md"></i>
                                         <span>Farm. ${c.farmaceutico}</span>
+                                    </div>` : ''}
+                                    ${c.responsavel ? `
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-user"></i>
+                                        <span>Responsável: ${c.responsavel}</span>
                                     </div>` : ''}
                                 </div>
                             </div>
@@ -1725,9 +1812,7 @@
             // Filtros principais (seleção única)
             this.elements.filterBtns.forEach(btn => {
                 btn.onclick = function() {
-                    // Remove active de todos os filtros principais
                     UI.elements.filterBtns.forEach(x => x.classList.remove('active'));
-                    // Adiciona active apenas ao clicado
                     this.classList.add('active');
                     App.filterContacts();
                 };
@@ -1736,7 +1821,6 @@
             // Filtros de serviços (múltipla seleção)
             this.elements.serviceFilterBtns.forEach(btn => {
                 btn.onclick = function() {
-                    // Alterna a classe active (múltipla seleção)
                     this.classList.toggle('active');
                     App.filterContacts();
                 };
@@ -1745,13 +1829,10 @@
             // Filtros de staff (TOGGLE - pode deselecionar)
             this.elements.staffFilterBtns.forEach(btn => {
                 btn.onclick = function() {
-                    // Se já está ativo, desativa (toggle)
                     if (this.classList.contains('active')) {
                         this.classList.remove('active');
                     } else {
-                        // Remove active de todos os filtros de staff
                         UI.elements.staffFilterBtns.forEach(x => x.classList.remove('active'));
-                        // Adiciona active apenas ao clicado
                         this.classList.add('active');
                     }
                     App.filterContacts();
@@ -1767,6 +1848,7 @@
                     const tabId = this.dataset.tab;
                     document.getElementById(`${tabId}-content`).classList.add('active');
                     
+                    // Recarregar o modo de exibição quando trocar de aba
                     UI.loadDisplayMode();
                     
                     App.filterContacts();
@@ -1795,9 +1877,11 @@
             this.elements.restoreInput.onchange = (e) => App.restoreData(e.target.files[0]);
             this.elements.clearAllBtn.onclick = () => App.clearAllData();
 
+            // Modos de exibição - função corrigida
             this.elements.displayBtns.forEach(btn => {
                 btn.onclick = function() {
-                    UI.toggleDisplayMode(this.dataset.display);
+                    const mode = this.dataset.display;
+                    UI.toggleDisplayMode(mode);
                 };
             });
 
@@ -1824,67 +1908,74 @@
         },
 
         startRealtimeUpdates() {
-            // CORREÇÃO: Iniciar carregamento dos dados imediatamente
+            // 🔥 CUSTO ZERO: Carregar dados iniciais (apenas 1 leitura por sessão)
             this.loadInitialData();
             
-            // Manter a escuta em tempo real para atualizações
-            this.unsubscribe = DataService.subscribeToUnits((units) => {
-                console.log('Dados recebidos do Firebase:', units.length, 'unidades');
-                this.units = units;
-                this.refreshUI();
-            });
+            // 🔥 CUSTO ZERO: Escuta em tempo real APENAS para admin
+            if (AuthService.isLogged()) {
+                this.unsubscribe = DataService.subscribeToUnits((units) => {
+                    console.log('🔧 Admin: Dados atualizados em tempo real');
+                    this.units = units;
+                    this.refreshUI();
+                });
+            } else {
+                console.log('🔥 CUSTO ZERO: Usuário comum - sem escuta em tempo real');
+            }
         },
 
         async loadInitialData() {
             try {
                 UI.showLoading('Carregando contatos...');
-                const units = await DataService.getUnits(true);
-                console.log('Dados carregados inicialmente:', units.length, 'unidades');
+                
+                // 🔥 CUSTO ZERO: Método otimizado que usa cache agressivo
+                const units = await DataService.getUnits();
+                
+                console.log('🔥 Dados carregados (CUSTO ZERO):', units.length, 'unidades');
+                console.log('🔥 Status do cache:', DataService.getCacheStatus());
+                
                 this.units = units;
                 this.refreshUI();
                 UI.hideLoading();
             } catch (error) {
-                console.error('Erro ao carregar dados iniciais:', error);
+                console.error('❌ Erro ao carregar dados iniciais:', error);
                 UI.hideLoading();
-                // Tentar carregar do cache offline
+                
+                // 🔥 CUSTO ZERO: Fallback para dados offline
                 const cached = localStorage.getItem('telefonia_offline_cache');
                 if (cached) {
                     const data = JSON.parse(cached);
                     this.units = data.units || [];
                     this.refreshUI();
+                    console.log('🔥 Usando fallback offline');
                 }
             }
         },
 
         refreshUI() {
-            console.log('Atualizando UI com', this.units.length, 'unidades');
+            console.log('🔄 Atualizando UI com', this.units.length, 'unidades');
             
-            // Renderizar contatos
-            UI.renderContacts(this.units, 'all');
-            UI.renderContacts(this.units, 'ramal');
+            // Renderizar em ambos os modos
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            UI.renderContacts(this.units, activeTab);
             
-            // Atualizar lista administrativa
             UI.renderUnitsList(this.units);
             
-            // Atualizar contadores
             UI.setCounts(this.units.length);
         },
 
         async filterContacts() {
+            // 🔥 CUSTO ZERO: Filtragem local - zero operações no Firebase
             let filtered = this.units.slice();
             
-            // Aplicar filtro de tipo principal (seleção única)
             const activeMainFilter = document.querySelector('.filter-btn.active');
             if (activeMainFilter && activeMainFilter.dataset.filter !== 'all') {
                 const mainFilter = activeMainFilter.dataset.filter;
                 filtered = filtered.filter(u => u.type === mainFilter);
             }
             
-            // Aplicar filtros de serviços (múltipla seleção)
             const activeServiceFilters = document.querySelectorAll('.service-filter-btn.active');
             if (activeServiceFilters.length > 0) {
                 filtered = filtered.filter(u => {
-                    // Verifica se a unidade possui pelo menos um dos serviços selecionados
                     return Array.from(activeServiceFilters).some(btn => {
                         const service = btn.dataset.service;
                         return u[service] === 'Sim';
@@ -1892,7 +1983,6 @@
                 });
             }
             
-            // Aplicar filtros de staff (seleção única - pode ser deselecionado)
             const activeStaffFilter = document.querySelector('.staff-filter-btn.active');
             if (activeStaffFilter) {
                 const staffFilter = activeStaffFilter.dataset.staff;
@@ -1902,12 +1992,10 @@
                     } else if (staffFilter === 'gerente') {
                         return u.gerente && u.gerente.trim() !== '';
                     }
-                    // FARMACÊUTICO REMOVIDO DO FILTRO
                     return true;
                 });
             }
             
-            // Aplicar busca por termo
             const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
             if (term) {
                 filtered = filtered.filter(u => {
@@ -1933,6 +2021,7 @@
         },
 
         async performSearch() {
+            // 🔥 CUSTO ZERO: Busca local - zero operações no Firebase
             await this.filterContacts();
         },
 
@@ -1994,7 +2083,6 @@
             
             try {
                 await DataService.deleteUnit(id);
-                
                 alert('Unidade excluída com sucesso!');
             } catch (error) {
                 alert('Erro ao excluir unidade: ' + error.message);
@@ -2043,7 +2131,7 @@
                 UI.showLoading(editId ? 'Atualizando unidade...' : 'Adicionando unidade...');
                 await DataService.saveUnit(unitData);
                 
-                // CORREÇÃO: Forçar refresh dos dados
+                // 🔥 Atualizar cache após edição (apenas admin)
                 await DataService.forceRefresh();
                 
                 this.cancelEdit();
@@ -2051,7 +2139,6 @@
                 
                 alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
                 
-                // CORREÇÃO: Atualizar UI imediatamente
                 this.refreshUI();
                 
             } catch (error) {
