@@ -299,14 +299,6 @@
         .contact-card:hover{
             transform:translateY(-5px);box-shadow:0 12px 24px rgba(0,0,0,.15);
         }
-        .favorite-btn{
-            position:absolute;top:20px;right:20px;background:none;border:0;
-            font-size:1.4rem;cursor:pointer;z-index:10;
-            transition:var(--transition);
-            color: var(--primary); /* Azul quando não selecionado */
-        }
-        .favorite-btn:hover{transform:scale(1.2)}
-        .favorite-btn.active{color:var(--secondary)} /* Verde quando selecionado */
         .contact-header{
             display:flex;justify-content:space-between;align-items:flex-start;
             margin-bottom:20px;width:100%;
@@ -684,16 +676,6 @@
             display: flex;
         }
         
-        .favorite-btn.pulsing {
-            animation: pulse 0.5s ease-in-out;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
         /* Enhanced Responsive Design */
         @media (max-width:1200px){
             .contact-grid{grid-template-columns:repeat(auto-fill,minmax(350px,1fr))}
@@ -905,7 +887,19 @@
                             <div class="form-group" id="gerenteField"><label for="unitGerente">Gerente Responsável</label><input type="text" id="unitGerente" class="form-control" placeholder="Nome do gerente responsável"></div>
                             <div class="form-group" id="vacinaField"><label for="unitVacina">Sala de Vacina</label><select id="unitVacina" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
                             <div class="form-group" id="odontoField"><label for="unitOdonto">Consultório Odontológico</label><select id="unitOdonto" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
-                            <div class="form-group" id="farmaciaField"><label for="unitFarmacia">Farmácia</label><select id="unitFarmacia" class="form-control"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
+                            <div class="form-group" id="farmaciaField">
+                                <label for="unitFarmacia">Farmácia</label>
+                                <select id="unitFarmacia" class="form-control">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Campo Farmacêutico (aparece apenas quando Farmácia = Sim) -->
+                            <div class="form-group hidden" id="farmaceuticoFieldContainer">
+                                <label for="unitFarmaceutico">Farmacêutico Responsável</label>
+                                <input type="text" id="unitFarmaceutico" class="form-control" placeholder="Nome do farmacêutico responsável">
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" id="cancelEdit" style="display:none;"><i class="fas fa-times"></i> Cancelar</button>
@@ -931,7 +925,7 @@
         <main class="container" style="padding-bottom:120px;">
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro ou gerente...">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome, telefone, endereço, enfermeiro, gerente ou farmacêutico...">
                     <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
@@ -958,7 +952,7 @@
                     </button>
                 </div>
 
-                <!-- FILTROS DE STAFF (SELEÇÃO ÚNICA) -->
+                <!-- FILTROS DE STAFF (SELEÇÃO ÚNICA) - FARMACÊUTICO REMOVIDO -->
                 <div class="staff-filters">
                     <button class="staff-filter-btn" data-staff="enfermeiro">
                         <i class="fas fa-user-nurse"></i> Enfermeiro
@@ -966,6 +960,7 @@
                     <button class="staff-filter-btn" data-staff="gerente">
                         <i class="fas fa-user-tie"></i> Gerente
                     </button>
+                    <!-- FARMACÊUTICO REMOVIDO DA TELA INICIAL -->
                 </div>
 
                 <!-- LINKS RÁPIDOS COM ÍCONES -->
@@ -1004,9 +999,9 @@
                 </button>
             </div>
 
+            <!-- REMOVIDA ABA DE FAVORITOS -->
             <div class="tabs" role="tablist">
                 <div class="tab active" data-tab="all" role="tab">Todos os Contatos</div>
-                <div class="tab" data-tab="favorites" role="tab">Favoritos</div>
                 <div class="tab" data-tab="ramal" role="tab">Ramal</div>
             </div>
 
@@ -1016,12 +1011,7 @@
                 <div class="contact-list hidden" id="all-contacts-list"></div>
             </div>
 
-            <div class="content" id="favorites-content">
-                <div class="results-count" id="favorites-count">Seus contatos favoritos</div>
-                <div class="contact-grid" id="favorites-contacts"></div>
-                <div class="contact-list hidden" id="favorites-contacts-list"></div>
-            </div>
-
+            <!-- REMOVIDA ABA DE FAVORITOS -->
             <div class="content" id="ramal-content">
                 <div class="results-count" id="ramal-count">Lista de ramais</div>
                 <div class="ramal-grid" id="ramal-contacts"></div>
@@ -1213,10 +1203,8 @@
                 tabs: document.querySelectorAll('.tab'),
                 adminTabs: document.querySelectorAll('.admin-tab'),
                 allContacts: document.getElementById('all-contacts'),
-                favoritesContacts: document.getElementById('favorites-contacts'),
                 ramalContacts: document.getElementById('ramal-contacts'),
                 allContactsList: document.getElementById('all-contacts-list'),
-                favoritesContactsList: document.getElementById('favorites-contacts-list'),
                 ramalContactsList: document.getElementById('ramal-contacts-list'),
                 unitsListAdmin: document.getElementById('unitsList'),
                 formUnit: document.getElementById('unitForm'),
@@ -1224,12 +1212,14 @@
                 cancelEditBtn: document.getElementById('cancelEdit'),
                 formTitle: document.getElementById('formTitle'),
                 allCount: document.getElementById('all-count'),
-                favoritesCount: document.getElementById('favorites-count'),
                 ramalCount: document.getElementById('ramal-count'),
                 backupBtn: document.getElementById('backupData'),
                 restoreInput: document.getElementById('restoreData'),
                 clearAllBtn: document.getElementById('clearAll'),
                 unitType: document.getElementById('unitType'),
+                unitFarmacia: document.getElementById('unitFarmacia'),
+                farmaceuticoField: document.getElementById('farmaceuticoFieldContainer'),
+                unitFarmaceutico: document.getElementById('unitFarmaceutico'),
                 responsibleField: document.getElementById('responsibleFieldContainer'),
                 enfermeiroField: document.getElementById('enfermeiroField'),
                 gerenteField: document.getElementById('gerenteField'),
@@ -1253,17 +1243,29 @@
 
         setupConditionalFormLogic() {
             const unitTypeSelect = this.elements.unitType;
+            const unitFarmaciaSelect = this.elements.unitFarmacia;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
+            
+            // CORREÇÃO: Definir toggleFarmaceuticoField como função separada
+            const toggleFarmaceuticoField = () => {
+                if (unitFarmaciaSelect.value === 'Sim') {
+                    this.elements.farmaceuticoField.classList.remove('hidden');
+                } else {
+                    this.elements.farmaceuticoField.classList.add('hidden');
+                }
+            };
             
             const checkConditionalFields = () => {
                 const selectedType = unitTypeSelect.value;
                 
+                // Lógica para campos condicionais baseados no tipo
                 if (conditionalTypes.includes(selectedType)) {
                     this.elements.enfermeiroField.classList.add('hidden');
                     this.elements.gerenteField.classList.add('hidden');
                     this.elements.vacinaField.classList.add('hidden');
                     this.elements.odontoField.classList.add('hidden');
                     this.elements.farmaciaField.classList.add('hidden');
+                    this.elements.farmaceuticoField.classList.add('hidden');
                     
                     this.elements.responsibleField.classList.remove('hidden');
                     document.getElementById('unitResponsavel').required = true;
@@ -1276,11 +1278,17 @@
                     
                     this.elements.responsibleField.classList.add('hidden');
                     document.getElementById('unitResponsavel').required = false;
+                    
+                    // CORREÇÃO: Chamar a função diretamente
+                    toggleFarmaceuticoField();
                 }
             };
             
             unitTypeSelect.addEventListener('change', checkConditionalFields);
+            unitFarmaciaSelect.addEventListener('change', toggleFarmaceuticoField);
+            
             checkConditionalFields();
+            toggleFarmaceuticoField();
         },
 
         getTypeLabel(type) {
@@ -1313,8 +1321,8 @@
                 this.elements.ramalContacts.classList.toggle('hidden', isListMode);
                 this.elements.ramalContactsList.classList.toggle('hidden', !isListMode);
             } else {
-                const contactsElement = activeTab === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
-                const listElement = activeTab === 'all' ? this.elements.allContactsList : this.elements.favoritesContactsList;
+                const contactsElement = this.elements.allContacts;
+                const listElement = this.elements.allContactsList;
                 
                 contactsElement.classList.toggle('hidden', isListMode);
                 listElement.classList.toggle('hidden', !isListMode);
@@ -1360,8 +1368,8 @@
                     this.elements.ramalContacts.innerHTML = htmlContent;
                 }
             } else {
-                const contactsElement = container === 'all' ? this.elements.allContacts : this.elements.favoritesContacts;
-                const listElement = container === 'all' ? this.elements.allContactsList : this.elements.favoritesContactsList;
+                const contactsElement = this.elements.allContacts;
+                const listElement = this.elements.allContactsList;
                 
                 if (isListMode) {
                     listElement.innerHTML = htmlContent;
@@ -1369,8 +1377,6 @@
                     contactsElement.innerHTML = htmlContent;
                 }
             }
-            
-            this.attachContactListeners();
         },
 
         renderRamalContent(contacts, isListMode) {
@@ -1464,12 +1470,14 @@
                                         <i class="fas fa-user-tie"></i>
                                         <span>Gerente: ${c.gerente}</span>
                                     </div>` : ''}
+                                    ${c.farmaceutico ? `
+                                    <div class="contact-row-detail">
+                                        <i class="fas fa-user-md"></i>
+                                        <span>Farm. ${c.farmaceutico}</span>
+                                    </div>` : ''}
                                 </div>
                             </div>
                             <div class="contact-row-actions">
-                                <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
-                                    <i class="fas fa-star"></i>
-                                </button>
                                 ${phoneClean ? `
                                 <button class="btn btn-primary" onclick="window.open('${telLink}', '_self')">
                                     <i class="fas fa-phone"></i>
@@ -1487,9 +1495,6 @@
                 } else {
                     html += `
                         <div class="contact-card">
-                            <button class="favorite-btn ${c.favorite ? 'active' : ''}" data-id="${c.id}" title="Favoritar">
-                                <i class="fas fa-star"></i>
-                            </button>
                             <div class="contact-header">
                                 <div>
                                     <h3 class="contact-name">${c.name}</h3>
@@ -1524,6 +1529,11 @@
                                 <div class="contact-item">
                                     <i class="fas fa-user-tie"></i>
                                     <span>Gerente: ${c.gerente}</span>
+                                </div>` : ''}
+                                ${c.farmaceutico ? `
+                                <div class="contact-item">
+                                    <i class="fas fa-user-md"></i>
+                                    <span>Farm. ${c.farmaceutico}</span>
                                 </div>` : ''}
                                 ${c.responsavel ? `
                                 <div class="contact-item">
@@ -1576,15 +1586,6 @@
             });
             
             return html;
-        },
-
-        attachContactListeners() {
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
-                btn.onclick = async (e) => {
-                    const id = btn.getAttribute('data-id');
-                    await App.toggleFavorite(id);
-                };
-            });
         },
 
         renderUnitsList(units) {
@@ -1674,9 +1675,8 @@
             }
         },
 
-        setCounts(all, favorites) {
+        setCounts(all) {
             this.elements.allCount.textContent = `Mostrando ${all} contatos`;
-            this.elements.favoritesCount.textContent = `Seus contatos favoritos (${favorites})`;
             
             const ramalCount = App.units.filter(u => u.temRamal === 'Sim' && u.phone && u.phone.trim() !== '').length;
             this.elements.ramalCount.textContent = `Mostrando ${ramalCount} ramais`;
@@ -1742,13 +1742,18 @@
                 };
             });
 
-            // Filtros de staff (seleção única)
+            // Filtros de staff (TOGGLE - pode deselecionar)
             this.elements.staffFilterBtns.forEach(btn => {
                 btn.onclick = function() {
-                    // Remove active de todos os filtros de staff
-                    UI.elements.staffFilterBtns.forEach(x => x.classList.remove('active'));
-                    // Adiciona active apenas ao clicado
-                    this.classList.add('active');
+                    // Se já está ativo, desativa (toggle)
+                    if (this.classList.contains('active')) {
+                        this.classList.remove('active');
+                    } else {
+                        // Remove active de todos os filtros de staff
+                        UI.elements.staffFilterBtns.forEach(x => x.classList.remove('active'));
+                        // Adiciona active apenas ao clicado
+                        this.classList.add('active');
+                    }
                     App.filterContacts();
                 };
             });
@@ -1802,7 +1807,6 @@
 
     const App = {
         units: [],
-        favorites: JSON.parse(localStorage.getItem('telefonia_favorites') || '[]'),
         unsubscribe: null,
         currentStaffFilter: null,
 
@@ -1820,52 +1824,50 @@
         },
 
         startRealtimeUpdates() {
+            // CORREÇÃO: Iniciar carregamento dos dados imediatamente
+            this.loadInitialData();
+            
+            // Manter a escuta em tempo real para atualizações
             this.unsubscribe = DataService.subscribeToUnits((units) => {
+                console.log('Dados recebidos do Firebase:', units.length, 'unidades');
                 this.units = units;
                 this.refreshUI();
             });
         },
 
+        async loadInitialData() {
+            try {
+                UI.showLoading('Carregando contatos...');
+                const units = await DataService.getUnits(true);
+                console.log('Dados carregados inicialmente:', units.length, 'unidades');
+                this.units = units;
+                this.refreshUI();
+                UI.hideLoading();
+            } catch (error) {
+                console.error('Erro ao carregar dados iniciais:', error);
+                UI.hideLoading();
+                // Tentar carregar do cache offline
+                const cached = localStorage.getItem('telefonia_offline_cache');
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    this.units = data.units || [];
+                    this.refreshUI();
+                }
+            }
+        },
+
         refreshUI() {
-            this.units.forEach(u => {
-                u.favorite = this.favorites.includes(u.id);
-            });
+            console.log('Atualizando UI com', this.units.length, 'unidades');
             
+            // Renderizar contatos
             UI.renderContacts(this.units, 'all');
-            UI.renderContacts(this.units.filter(u => this.favorites.includes(u.id)), 'favorites');
             UI.renderContacts(this.units, 'ramal');
             
+            // Atualizar lista administrativa
             UI.renderUnitsList(this.units);
             
-            UI.setCounts(this.units.length, this.favorites.length);
-        },
-
-        async toggleFavorite(unitId) {
-            const idx = this.favorites.indexOf(unitId);
-            const isNowFavorite = idx === -1;
-            
-            this.updateFavoriteUI(unitId, isNowFavorite);
-            
-            if (isNowFavorite) {
-                this.favorites.push(unitId);
-            } else {
-                this.favorites.splice(idx, 1);
-            }
-            
-            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-            
-            this.refreshUI();
-        },
-
-        updateFavoriteUI(unitId, isFavorite) {
-            const favoriteBtns = document.querySelectorAll(`.favorite-btn[data-id="${unitId}"]`);
-            favoriteBtns.forEach(btn => {
-                btn.classList.toggle('active', isFavorite);
-                btn.classList.add('pulsing');
-                setTimeout(() => {
-                    btn.classList.remove('pulsing');
-                }, 500);
-            });
+            // Atualizar contadores
+            UI.setCounts(this.units.length);
         },
 
         async filterContacts() {
@@ -1890,7 +1892,7 @@
                 });
             }
             
-            // Aplicar filtros de staff (seleção única)
+            // Aplicar filtros de staff (seleção única - pode ser deselecionado)
             const activeStaffFilter = document.querySelector('.staff-filter-btn.active');
             if (activeStaffFilter) {
                 const staffFilter = activeStaffFilter.dataset.staff;
@@ -1900,6 +1902,7 @@
                     } else if (staffFilter === 'gerente') {
                         return u.gerente && u.gerente.trim() !== '';
                     }
+                    // FARMACÊUTICO REMOVIDO DO FILTRO
                     return true;
                 });
             }
@@ -1914,25 +1917,18 @@
                            (u.bairro || '').toLowerCase().includes(term) ||
                            (u.enfermeiro || '').toLowerCase().includes(term) ||
                            (u.gerente || '').toLowerCase().includes(term) ||
+                           (u.farmaceutico || '').toLowerCase().includes(term) ||
                            (u.responsavel || '').toLowerCase().includes(term);
                 });
             }
             
             const activeTab = document.querySelector('.tab.active').dataset.tab;
             
-            if (activeTab === 'favorites') {
-                UI.renderContacts(filtered.filter(u => this.favorites.includes(u.id)), activeTab);
-            } else {
-                UI.renderContacts(filtered, activeTab);
-            }
+            UI.renderContacts(filtered, activeTab);
             
             const countElement = document.getElementById(`${activeTab}-count`);
             if (countElement) {
-                if (activeTab === 'favorites') {
-                    countElement.textContent = `Seus contatos favoritos (${filtered.filter(u => this.favorites.includes(u.id)).length})`;
-                } else {
-                    countElement.textContent = `Mostrando ${filtered.length} contatos`;
-                }
+                countElement.textContent = `Mostrando ${filtered.length} contatos`;
             }
         },
 
@@ -1961,6 +1957,7 @@
             document.getElementById('unitVacina').value = unit.vacina || 'Não';
             document.getElementById('unitOdonto').value = unit.odonto || 'Não';
             document.getElementById('unitFarmacia').value = unit.farmacia || 'Não';
+            document.getElementById('unitFarmaceutico').value = unit.farmaceutico || '';
             document.getElementById('unitResponsavel').value = unit.responsavel || '';
             
             UI.elements.formTitle.textContent = 'Editar Unidade';
@@ -1998,9 +1995,6 @@
             try {
                 await DataService.deleteUnit(id);
                 
-                this.favorites = this.favorites.filter(f => f !== id);
-                localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-                
                 alert('Unidade excluída com sucesso!');
             } catch (error) {
                 alert('Erro ao excluir unidade: ' + error.message);
@@ -2037,6 +2031,7 @@
                 vacina: document.getElementById('unitVacina').value,
                 odonto: document.getElementById('unitOdonto').value,
                 farmacia: document.getElementById('unitFarmacia').value,
+                farmaceutico: document.getElementById('unitFarmaceutico').value,
                 responsavel: document.getElementById('unitResponsavel').value
             };
             
@@ -2048,10 +2043,17 @@
                 UI.showLoading(editId ? 'Atualizando unidade...' : 'Adicionando unidade...');
                 await DataService.saveUnit(unitData);
                 
+                // CORREÇÃO: Forçar refresh dos dados
+                await DataService.forceRefresh();
+                
                 this.cancelEdit();
                 UI.hideLoading();
                 
                 alert(editId ? 'Unidade atualizada com sucesso!' : 'Unidade adicionada com sucesso!');
+                
+                // CORREÇÃO: Atualizar UI imediatamente
+                this.refreshUI();
+                
             } catch (error) {
                 UI.hideLoading();
                 alert('Erro ao salvar unidade: ' + error.message);
@@ -2061,7 +2063,6 @@
         backupData() {
             const data = { 
                 units: this.units,
-                favorites: this.favorites,
                 timestamp: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2096,11 +2097,6 @@
                             await DataService.saveUnit(unit);
                         }
                         
-                        if (data.favorites) {
-                            this.favorites = data.favorites;
-                            localStorage.setItem('telefonia_favorites', JSON.stringify(this.favorites));
-                        }
-                        
                         UI.hideLoading();
                         alert('Dados restaurados com sucesso!');
                     }
@@ -2116,13 +2112,11 @@
         clearAllData() {
             if (!confirm('Isso apagará TODOS os dados locais. Esta ação não pode ser desfeita. Continuar?')) return;
             
-            localStorage.removeItem('telefonia_favorites');
             localStorage.removeItem('telefonia_isLogged');
             localStorage.removeItem('telefonia_displayMode');
             localStorage.removeItem('telefonia_theme');
             localStorage.removeItem('telefonia_offline_cache');
             
-            this.favorites = [];
             this.refreshUI();
             
             alert('Dados locais limpos! Os dados do Firebase permanecem intactos.');
