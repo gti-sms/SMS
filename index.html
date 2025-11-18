@@ -875,6 +875,17 @@
                                     <option value="Sim">Sim</option>
                                 </select>
                             </div>
+                            <!-- NOVO CAMPO RAMAL -->
+                            <div class="form-group hidden" id="ramalFieldContainer">
+                                <label for="unitRamal">Ramal *</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" id="unitRamal" class="form-control" placeholder="Ex: 1234" maxlength="4" style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" id="autoRamalBtn" style="white-space: nowrap;">
+                                        <i class="fas fa-magic"></i> Auto
+                                    </button>
+                                </div>
+                                <small class="form-text">Digite o ramal manualmente ou use o botão "Auto" para preencher com os últimos 4 dígitos do telefone</small>
+                            </div>
                             <div class="form-group"><label for="unitEmail">E-mail</label><input type="email" id="unitEmail" class="form-control" placeholder="exemplo@pmpf.rs.gov.br"></div>
                             
                             <!-- Campo Responsável (será exibido condicionalmente) -->
@@ -1309,7 +1320,12 @@
                 farmaciaField: document.getElementById('farmaciaField'),
                 displayBtns: document.querySelectorAll('.display-btn'),
                 loadingOverlay: document.getElementById('loadingOverlay'),
-                loadingText: document.getElementById('loadingText')
+                loadingText: document.getElementById('loadingText'),
+                // NOVOS ELEMENTOS PARA O CAMPO RAMAL
+                unitTemRamal: document.getElementById('unitTemRamal'),
+                ramalField: document.getElementById('ramalFieldContainer'),
+                unitRamal: document.getElementById('unitRamal'),
+                autoRamalBtn: document.getElementById('autoRamalBtn')
             };
         },
 
@@ -1325,6 +1341,7 @@
         setupConditionalFormLogic() {
             const unitTypeSelect = this.elements.unitType;
             const unitFarmaciaSelect = this.elements.unitFarmacia;
+            const unitTemRamalSelect = this.elements.unitTemRamal;
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             
             const toggleFarmaceuticoField = () => {
@@ -1332,6 +1349,17 @@
                     this.elements.farmaceuticoField.classList.remove('hidden');
                 } else {
                     this.elements.farmaceuticoField.classList.add('hidden');
+                }
+            };
+            
+            // NOVA FUNÇÃO: Mostrar/ocultar campo de ramal
+            const toggleRamalField = () => {
+                if (unitTemRamalSelect.value === 'Sim') {
+                    this.elements.ramalField.classList.remove('hidden');
+                    this.elements.unitRamal.required = true;
+                } else {
+                    this.elements.ramalField.classList.add('hidden');
+                    this.elements.unitRamal.required = false;
                 }
             };
             
@@ -1360,13 +1388,30 @@
                     
                     toggleFarmaceuticoField();
                 }
+                
+                // Sempre verificar se deve mostrar o campo de ramal
+                toggleRamalField();
             };
             
             unitTypeSelect.addEventListener('change', checkConditionalFields);
             unitFarmaciaSelect.addEventListener('change', toggleFarmaceuticoField);
+            unitTemRamalSelect.addEventListener('change', toggleRamalField);
+            
+            // NOVO: Botão para preenchimento automático do ramal
+            this.elements.autoRamalBtn.addEventListener('click', () => {
+                const phone = this.elements.unitPhone.value;
+                if (phone) {
+                    const digits = phone.replace(/\D/g, '');
+                    const lastFour = digits.slice(-4);
+                    this.elements.unitRamal.value = lastFour;
+                } else {
+                    alert('Digite um telefone primeiro para usar o preenchimento automático');
+                }
+            });
             
             checkConditionalFields();
             toggleFarmaceuticoField();
+            toggleRamalField();
         },
 
         getTypeLabel(type) {
@@ -1421,10 +1466,20 @@
             this.toggleDisplayMode(savedMode);
         },
 
-        getRamalFromPhone(phone) {
-            if (!phone) return '';
-            const digits = phone.replace(/\D/g, '');
-            return digits.slice(-4);
+        // FUNÇÃO ATUALIZADA: Agora verifica se existe um ramal específico cadastrado
+        getRamalFromUnit(unit) {
+            // Se existe um ramal específico cadastrado, use-o
+            if (unit.ramal && unit.ramal.trim() !== '') {
+                return unit.ramal;
+            }
+            
+            // Caso contrário, use os últimos 4 dígitos do telefone
+            if (unit.phone) {
+                const digits = unit.phone.replace(/\D/g, '');
+                return digits.slice(-4);
+            }
+            
+            return '';
         },
 
         renderContacts(contacts, container) {
@@ -1477,7 +1532,7 @@
             
             let html = '';
             unitsWithRamal.forEach(c => {
-                const ramal = this.getRamalFromPhone(c.phone);
+                const ramal = this.getRamalFromUnit(c);
                 
                 if (isListMode) {
                     html += `
@@ -1519,6 +1574,7 @@
                 const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((c.address || '') + ', ' + (c.bairro || '') + ', Passo Fundo, RS')}`;
                 
                 const showServices = this.shouldShowServices(c.type);
+                const ramal = this.getRamalFromUnit(c);
                 
                 if (isListMode) {
                     html += `
@@ -1536,7 +1592,7 @@
                                     ${c.temRamal === 'Sim' ? `
                                     <div class="contact-row-detail">
                                         <i class="fas fa-phone-volume"></i>
-                                        <span>Ramal: ${this.getRamalFromPhone(c.phone)}</span>
+                                        <span>Ramal: ${ramal}</span>
                                     </div>` : ''}
                                     <div class="contact-row-detail">
                                         <i class="fas fa-map-marker-alt"></i>
@@ -1600,7 +1656,7 @@
                                 ${c.temRamal === 'Sim' ? `
                                 <div class="contact-item">
                                     <i class="fas fa-phone-volume"></i>
-                                    <span>Ramal: ${this.getRamalFromPhone(c.phone)}</span>
+                                    <span>Ramal: ${ramal}</span>
                                 </div>` : ''}
                                 ${c.email ? `
                                 <div class="contact-item">
@@ -2006,7 +2062,8 @@
                            (u.enfermeiro || '').toLowerCase().includes(term) ||
                            (u.gerente || '').toLowerCase().includes(term) ||
                            (u.farmaceutico || '').toLowerCase().includes(term) ||
-                           (u.responsavel || '').toLowerCase().includes(term);
+                           (u.responsavel || '').toLowerCase().includes(term) ||
+                           (u.ramal || '').includes(term); // NOVO: Buscar também por ramal
                 });
             }
             
@@ -2040,6 +2097,7 @@
             document.getElementById('unitBairro').value = unit.bairro || '';
             document.getElementById('unitPhone').value = unit.phone || '';
             document.getElementById('unitTemRamal').value = unit.temRamal || 'Não';
+            document.getElementById('unitRamal').value = unit.ramal || ''; // NOVO: Campo ramal
             document.getElementById('unitEmail').value = unit.email || '';
             document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
             document.getElementById('unitGerente').value = unit.gerente || '';
@@ -2106,13 +2164,24 @@
                 return;
             }
             
+            // NOVO: Validar campo ramal se "Tem Ramal" for "Sim"
+            const ramalField = document.getElementById('unitRamal');
+            const temRamal = document.getElementById('unitTemRamal').value;
+            
+            if (temRamal === 'Sim' && !ramalField.value.trim()) {
+                alert('Por favor, preencha o campo Ramal ou use o botão "Auto" para preenchimento automático!');
+                ramalField.focus();
+                return;
+            }
+            
             const unitData = {
                 name: document.getElementById('unitName').value,
                 type: document.getElementById('unitType').value,
                 address: document.getElementById('unitAddress').value,
                 bairro: document.getElementById('unitBairro').value,
                 phone: document.getElementById('unitPhone').value,
-                temRamal: document.getElementById('unitTemRamal').value,
+                temRamal: temRamal,
+                ramal: ramalField.value, // NOVO: Campo ramal
                 email: document.getElementById('unitEmail').value,
                 enfermeiro: document.getElementById('unitEnfermeiro').value,
                 gerente: document.getElementById('unitGerente').value,
