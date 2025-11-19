@@ -10,6 +10,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
+    <!-- jsPDF para exportação -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         /* ====== VARS & RESET ====== */
         :root{
@@ -85,6 +89,7 @@
         .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(76,175,80,.3)}
         .btn-danger{background:var(--danger);color:#fff}
         .btn-warning{background:var(--warning);color:#fff}
+        .btn-info{background:#17a2b8;color:#fff}
         
         /* Admin Panel Improvements */
         .admin-panel{
@@ -125,6 +130,33 @@
         }
         .unit-item:hover{transform:translateX(5px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
         .unit-actions{display:flex;gap:10px}
+        
+        /* NOVO: Campo de busca em Gerenciar Unidades */
+        .admin-search-container {
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .admin-search-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .admin-search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .admin-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(44,106,160,.15);
+        }
         
         /* Search & Cards Improvements */
         .search-container{
@@ -394,7 +426,8 @@
         body.dark-mode .quick-link-btn,
         body.dark-mode .admin-panel,
         body.dark-mode .unit-item,
-        body.dark-mode .login-form{
+        body.dark-mode .login-form,
+        body.dark-mode .admin-search-container{
             background:#2d3239;color:#e9ecef;border-color:#3d434b;
         }
         body.dark-mode .search-input,
@@ -402,11 +435,13 @@
         body.dark-mode .service-filter-btn,
         body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn,
-        body.dark-mode .form-control{
+        body.dark-mode .form-control,
+        body.dark-mode .admin-search-input{
             background:#343a40;border-color:#495057;color:#e9ecef;
         }
         body.dark-mode .search-input:focus,
-        body.dark-mode .form-control:focus{
+        body.dark-mode .form-control:focus,
+        body.dark-mode .admin-search-input:focus{
             border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
         }
         body.dark-mode .service-filter-btn,
@@ -724,6 +759,9 @@
                 gap: 5px;
             }
             .ramal-card{padding:20px}
+            .admin-search-box {
+                flex-direction: column;
+            }
         }
         
         @media (max-width:480px){
@@ -775,6 +813,32 @@
         ::selection {
             background: rgba(44,106,160,.2);
             color: var(--primary-dark);
+        }
+        
+        /* Estilos para impressão */
+        @media print {
+            header, .search-container, .tabs, .display-controls, .footer, .admin-panel {
+                display: none !important;
+            }
+            
+            .container {
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .contact-card, .ramal-card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+                margin-bottom: 15px;
+            }
+            
+            body {
+                background: white;
+                color: black;
+                font-size: 12pt;
+            }
         }
     </style>
 </head>
@@ -845,6 +909,15 @@
                 <!-- UNITS -->
                 <div class="admin-content active" id="units-content">
                     <h3>Unidades Cadastradas</h3>
+                    
+                    <!-- NOVO: Campo de busca para Gerenciar Unidades -->
+                    <div class="admin-search-container">
+                        <div class="admin-search-box">
+                            <input type="text" class="admin-search-input" id="adminSearchInput" placeholder="Buscar unidades por nome, telefone, tipo...">
+                            <button class="btn btn-info" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+                        </div>
+                    </div>
+                    
                     <div class="units-list" id="unitsList"></div>
                 </div>
 
@@ -875,7 +948,7 @@
                                     <option value="Sim">Sim</option>
                                 </select>
                             </div>
-                            <!-- NOVO CAMPO RAMAL -->
+                            <!-- NOVO CAMPO RAMAL CORRIGIDO -->
                             <div class="form-group hidden" id="ramalFieldContainer">
                                 <label for="unitRamal">Ramal *</label>
                                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -1325,7 +1398,10 @@
                 unitTemRamal: document.getElementById('unitTemRamal'),
                 ramalField: document.getElementById('ramalFieldContainer'),
                 unitRamal: document.getElementById('unitRamal'),
-                autoRamalBtn: document.getElementById('autoRamalBtn')
+                autoRamalBtn: document.getElementById('autoRamalBtn'),
+                // NOVOS ELEMENTOS PARA AS MELHORIAS
+                adminSearchInput: document.getElementById('adminSearchInput'),
+                exportPdfBtn: document.getElementById('exportPdfBtn')
             };
         },
 
@@ -1342,6 +1418,7 @@
             const unitTypeSelect = this.elements.unitType;
             const unitFarmaciaSelect = this.elements.unitFarmacia;
             const unitTemRamalSelect = this.elements.unitTemRamal;
+            const unitPhoneInput = document.getElementById('unitPhone');
             const conditionalTypes = ['administrativo', 'vigilancia', 'capne', 'outros'];
             
             const toggleFarmaceuticoField = () => {
@@ -1361,6 +1438,47 @@
                     this.elements.ramalField.classList.add('hidden');
                     this.elements.unitRamal.required = false;
                 }
+            };
+            
+            // CORREÇÃO: Função para preenchimento automático do ramal
+            const setupAutoRamal = () => {
+                // Evento para o botão Auto
+                this.elements.autoRamalBtn.addEventListener('click', () => {
+                    const phone = unitPhoneInput.value;
+                    if (phone) {
+                        const digits = phone.replace(/\D/g, '');
+                        const lastFour = digits.slice(-4);
+                        this.elements.unitRamal.value = lastFour;
+                        
+                        // Feedback visual melhorado
+                        const originalText = this.elements.autoRamalBtn.innerHTML;
+                        const originalBackground = this.elements.autoRamalBtn.style.backgroundColor;
+                        
+                        this.elements.autoRamalBtn.innerHTML = '<i class="fas fa-check"></i> OK';
+                        this.elements.autoRamalBtn.style.backgroundColor = '#4caf50';
+                        this.elements.autoRamalBtn.style.color = 'white';
+                        
+                        setTimeout(() => {
+                            this.elements.autoRamalBtn.innerHTML = originalText;
+                            this.elements.autoRamalBtn.style.backgroundColor = originalBackground;
+                            this.elements.autoRamalBtn.style.color = '';
+                        }, 1500);
+                    } else {
+                        alert('Digite um telefone primeiro para usar o preenchimento automático');
+                        unitPhoneInput.focus();
+                    }
+                });
+                
+                // Evento para preenchimento automático quando o telefone é alterado
+                unitPhoneInput.addEventListener('input', () => {
+                    if (this.elements.unitRamal.value === '' && unitPhoneInput.value) {
+                        const digits = unitPhoneInput.value.replace(/\D/g, '');
+                        const lastFour = digits.slice(-4);
+                        if (lastFour.length === 4) {
+                            this.elements.unitRamal.value = lastFour;
+                        }
+                    }
+                });
             };
             
             const checkConditionalFields = () => {
@@ -1397,17 +1515,8 @@
             unitFarmaciaSelect.addEventListener('change', toggleFarmaceuticoField);
             unitTemRamalSelect.addEventListener('change', toggleRamalField);
             
-            // NOVO: Botão para preenchimento automático do ramal
-            this.elements.autoRamalBtn.addEventListener('click', () => {
-                const phone = this.elements.unitPhone.value;
-                if (phone) {
-                    const digits = phone.replace(/\D/g, '');
-                    const lastFour = digits.slice(-4);
-                    this.elements.unitRamal.value = lastFour;
-                } else {
-                    alert('Digite um telefone primeiro para usar o preenchimento automático');
-                }
-            });
+            // Configurar o preenchimento automático do ramal
+            setupAutoRamal();
             
             checkConditionalFields();
             toggleFarmaceuticoField();
@@ -1731,27 +1840,44 @@
             return html;
         },
 
-        renderUnitsList(units) {
+        renderUnitsList(units, searchTerm = '') {
             this.elements.unitsListAdmin.innerHTML = '';
             
-            if (units.length === 0) {
+            let filteredUnits = units;
+            
+            // Aplicar filtro de busca se houver termo
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filteredUnits = units.filter(u => 
+                    (u.name || '').toLowerCase().includes(term) ||
+                    (u.phone || '').includes(term) ||
+                    (u.type || '').toLowerCase().includes(term) ||
+                    (u.bairro || '').toLowerCase().includes(term) ||
+                    (u.enfermeiro || '').toLowerCase().includes(term) ||
+                    (u.gerente || '').toLowerCase().includes(term) ||
+                    (u.ramal || '').includes(term)
+                );
+            }
+            
+            if (filteredUnits.length === 0) {
                 this.elements.unitsListAdmin.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-building"></i>
-                        <h3>Nenhuma unidade cadastrada</h3>
-                        <p>Use a aba "Adicionar Unidade" para cadastrar a primeira unidade</p>
+                        <h3>Nenhuma unidade encontrada</h3>
+                        <p>${searchTerm ? 'Tente ajustar seus termos de busca' : 'Use a aba "Adicionar Unidade" para cadastrar a primeira unidade'}</p>
                     </div>
                 `;
                 return;
             }
             
-            units.forEach(u => {
+            filteredUnits.forEach(u => {
                 const item = document.createElement('div');
                 item.className = 'unit-item';
                 item.innerHTML = `
                     <div class="unit-info">
                         <h4>${u.name}</h4>
-                        <p>${this.getTypeLabel(u.type)} - ${u.phone || 'Sem telefone'} ${u.temRamal === 'Sim' ? '(Com Ramal)' : ''}</p>
+                        <p>${this.getTypeLabel(u.type)} - ${u.phone || 'Sem telefone'} ${u.temRamal === 'Sim' ? `(Ramal: ${u.ramal || this.getRamalFromUnit(u)})` : ''}</p>
+                        <small>${u.bairro || 'Sem bairro'}</small>
                     </div>
                     <div class="unit-actions">
                         <button class="btn btn-warning edit-unit" data-id="${u.id}">
@@ -1941,6 +2067,16 @@
                 };
             });
 
+            // NOVO: Busca em Gerenciar Unidades
+            this.elements.adminSearchInput.addEventListener('input', (e) => {
+                App.filterAdminUnits(e.target.value);
+            });
+
+            // NOVO: Exportar PDF
+            this.elements.exportPdfBtn.addEventListener('click', () => {
+                App.exportToPdf();
+            });
+
             this.setupConditionalFormLogic();
         }
     };
@@ -2075,6 +2211,11 @@
             if (countElement) {
                 countElement.textContent = `Mostrando ${filtered.length} contatos`;
             }
+        },
+
+        // NOVO: Filtro para a seção de Gerenciar Unidades
+        filterAdminUnits(searchTerm) {
+            UI.renderUnitsList(this.units, searchTerm);
         },
 
         async performSearch() {
@@ -2276,6 +2417,116 @@
             this.refreshUI();
             
             alert('Dados locais limpos! Os dados do Firebase permanecem intactos.');
+        },
+
+        // NOVO: Função para exportar PDF
+        exportToPdf() {
+            try {
+                UI.showLoading('Gerando PDF...');
+                
+                // Usar jsPDF se disponível, caso contrário usar impressão nativa
+                if (window.jspdf && window.jspdf.jsPDF) {
+                    this.generatePdfWithJsPdf();
+                } else {
+                    this.printNative();
+                }
+                
+                UI.hideLoading();
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                UI.hideLoading();
+                alert('Erro ao gerar PDF. Usando impressão nativa...');
+                this.printNative();
+            }
+        },
+
+        generatePdfWithJsPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Título
+            doc.setFontSize(20);
+            doc.text('Lista de Unidades - Secretaria Municipal de Saúde', 20, 20);
+            
+            // Data de geração
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 30);
+            
+            // Preparar dados da tabela
+            const tableData = this.units.map(unit => [
+                unit.name || '',
+                UI.getTypeLabel(unit.type) || '',
+                unit.phone || '',
+                unit.temRamal === 'Sim' ? (unit.ramal || UI.getRamalFromUnit(unit)) : '',
+                unit.bairro || '',
+                unit.enfermeiro || unit.gerente || unit.responsavel || ''
+            ]);
+            
+            // Adicionar tabela
+            doc.autoTable({
+                head: [['Nome', 'Tipo', 'Telefone', 'Ramal', 'Bairro', 'Responsável']],
+                body: tableData,
+                startY: 40,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [44, 106, 160] }
+            });
+            
+            // Salvar PDF
+            doc.save(`unidades-sms-${new Date().toISOString().split('T')[0]}.pdf`);
+        },
+
+        printNative() {
+            // Criar uma nova janela para impressão
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Lista de Unidades - SMS</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            h1 { color: #2c6aa0; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #2c6aa0; color: white; }
+                            tr:nth-child(even) { background-color: #f2f2f2; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .timestamp { color: #666; font-size: 12px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>Lista de Unidades - Secretaria Municipal de Saúde</h1>
+                            <p class="timestamp">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Telefone</th>
+                                    <th>Ramal</th>
+                                    <th>Bairro</th>
+                                    <th>Responsável</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.units.map(unit => `
+                                    <tr>
+                                        <td>${unit.name || ''}</td>
+                                        <td>${UI.getTypeLabel(unit.type) || ''}</td>
+                                        <td>${unit.phone || ''}</td>
+                                        <td>${unit.temRamal === 'Sim' ? (unit.ramal || UI.getRamalFromUnit(unit)) : ''}</td>
+                                        <td>${unit.bairro || ''}</td>
+                                        <td>${unit.enfermeiro || unit.gerente || unit.responsavel || ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
         }
     };
 
