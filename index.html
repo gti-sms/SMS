@@ -228,43 +228,6 @@
             transform: translateY(-1px);
         }
 
-        /* Novos filtros para gerentes e enfermeiros */
-        .staff-filters {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-            width: 100%;
-        }
-        
-        .staff-filter-btn {
-            background: #fff;
-            border: 2px solid var(--border);
-            border-radius: 25px;
-            padding: 10px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-            font-size: 0.9rem;
-            color: var(--gray);
-            font-weight: 500;
-        }
-        
-        .staff-filter-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(44,106,160,.2);
-        }
-        
-        .staff-filter-btn:hover:not(.active) {
-            border-color: var(--primary);
-            transform: translateY(-1px);
-        }
-
         /* Links rápidos */
         .quick-links {
             display: flex;
@@ -276,19 +239,21 @@
         }
         
         .quick-link-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
             background: #fff;
             border: 2px solid var(--border);
             border-radius: 25px;
-            padding: 12px 20px;
+            padding: 12px 15px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             transition: var(--transition);
             font-size: 0.9rem;
             color: var(--gray);
             font-weight: 500;
             text-decoration: none;
+            min-width: 80px;
         }
         
         .quick-link-btn:hover {
@@ -298,6 +263,14 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(44,106,160,.2);
             text-decoration: none;
+        }
+        
+        .quick-link-text {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: inherit;
+            text-align: center;
+            white-space: nowrap;
         }
         
         /* Tabs & Content */
@@ -422,7 +395,6 @@
         body.dark-mode .contact-card,
         body.dark-mode .filter-btn,
         body.dark-mode .service-filter-btn,
-        body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn,
         body.dark-mode .admin-panel,
         body.dark-mode .unit-item,
@@ -433,7 +405,6 @@
         body.dark-mode .search-input,
         body.dark-mode .filter-btn,
         body.dark-mode .service-filter-btn,
-        body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn,
         body.dark-mode .form-control,
         body.dark-mode .admin-search-input{
@@ -445,17 +416,14 @@
             border-color:var(--primary);box-shadow:0 0 0 3px rgba(44,106,160,.3);
         }
         body.dark-mode .service-filter-btn,
-        body.dark-mode .staff-filter-btn,
         body.dark-mode .quick-link-btn{
             background:#343a40;border-color:#495057;color:#e9ecef;
         }
         body.dark-mode .service-filter-btn.active,
-        body.dark-mode .staff-filter-btn.active,
         body.dark-mode .quick-link-btn:hover{
             background:var(--primary);color:#fff;border-color:var(--primary);
         }
-        body.dark-mode .service-filter-btn:hover:not(.active),
-        body.dark-mode .staff-filter-btn:hover:not(.active){
+        body.dark-mode .service-filter-btn:hover:not(.active){
             border-color:var(--primary);
         }
         
@@ -739,7 +707,7 @@
             .header-content{flex-direction:column;gap:15px;text-align:center}
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .search-box{flex-direction:column}
-            .filter-options,.service-filters,.staff-filters,.quick-links{justify-content:center}
+            .filter-options,.service-filters,.quick-links{justify-content:center}
             .tabs{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
             .form-grid{grid-template-columns:1fr}
             .unit-item{flex-direction:column;align-items:flex-start;gap:15px}
@@ -762,13 +730,20 @@
             .admin-search-box {
                 flex-direction: column;
             }
+            .quick-link-btn {
+                padding: 10px 12px;
+                min-width: 70px;
+            }
+            .quick-link-text {
+                font-size: 0.7rem;
+            }
         }
         
         @media (max-width:480px){
             .logo h1{font-size:1.5rem}
             .logo i{font-size:1.8rem}
             .tab{padding:10px 12px;font-size:.85rem}
-            .service-filter-btn,.staff-filter-btn,.quick-link-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
+            .service-filter-btn,.quick-link-btn{padding:10px 15px;font-size:0.8rem;gap:6px}
             .filter-btn{padding:8px 15px;font-size:0.8rem}
             .display-btn{padding:8px 12px;font-size:0.8rem}
             .search-input{padding:14px 16px}
@@ -781,13 +756,23 @@
             .contact-services{margin-top:15px;padding-top:15px}
             .ramal-card{padding:18px}
             .ramal-number{font-size:1.5rem;padding:12px}
+            .quick-links {
+                gap: 8px;
+            }
+            .quick-link-btn {
+                padding: 8px 10px;
+                min-width: 60px;
+            }
+            .quick-link-text {
+                font-size: 0.65rem;
+            }
         }
         
         @media (max-width:360px){
             .contact-grid,.ramal-grid{grid-template-columns:1fr}
             .admin-tab,.tab{flex:1 1 100%;min-width:100%}
-            .filter-options,.service-filters,.staff-filters,.quick-links{gap:8px}
-            .filter-btn,.service-filter-btn,.staff-filter-btn,.quick-link-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
+            .filter-options,.service-filters,.quick-links{gap:8px}
+            .filter-btn,.service-filter-btn,.quick-link-btn,.display-btn{padding:8px 12px;font-size:0.75rem}
         }
         
         /* Loading Animation */
@@ -1036,39 +1021,54 @@
                     </button>
                 </div>
 
-                <!-- FILTROS DE STAFF (SELEÇÃO ÚNICA) - FARMACÊUTICO REMOVIDO -->
-                <div class="staff-filters">
-                    <button class="staff-filter-btn" data-staff="enfermeiro">
-                        <i class="fas fa-user-nurse"></i> Enfermeiro
-                    </button>
-                    <button class="staff-filter-btn" data-staff="gerente">
-                        <i class="fas fa-user-tie"></i> Gerente
-                    </button>
-                    <!-- FARMACÊUTICO REMOVIDO DA TELA INICIAL -->
-                </div>
-
-                <!-- LINKS RÁPIDOS COM ÍCONES -->
+                <!-- LINKS RÁPIDOS COM ÍCONES E NOMES -->
                 <div class="quick-links">
                     <a href="https://esus.pmpf.rs.gov.br/" target="_blank" class="quick-link-btn" title="eSUS">
                         <i class="fas fa-laptop-medical"></i>
+                        <span class="quick-link-text">eSUS</span>
                     </a>
                     <a href="https://gercon.procempa.com.br/gerconweb/" target="_blank" class="quick-link-btn" title="Gercon">
                         <i class="fas fa-desktop"></i>
+                        <span class="quick-link-text">Gercon</span>
                     </a>
                     <a href="http://172.26.72.72:5001" target="_blank" class="quick-link-btn" title="Dashboard">
                         <i class="fas fa-chart-line"></i>
+                        <span class="quick-link-text">Dashboard</span>
                     </a>
                     <a href="https://www.google.com/maps/d/viewer?mid=10udieuwsQmwLO8cJeLQidRpRNjBUB0ah&ll=-28.256605790662608%2C-52.406028030716925&z=12" 
                        target="_blank" class="quick-link-btn" title="Mapa">
                         <i class="fas fa-map-marked-alt"></i>
+                        <span class="quick-link-text">Mapa</span>
                     </a>
-                    <!-- NOVO LINK SOLICITADO -->
                     <a href="https://cadastro.saude.gov.br/operador/" target="_blank" class="quick-link-btn" title="Cadastro SUS">
                         <i class="fas fa-user-md"></i>
+                        <span class="quick-link-text">Cadastro SUS</span>
                     </a>
-                    <!-- NOVO LINK GRP -->
                     <a href="https://grp.pmpf.rs.gov.br/grp/" target="_blank" class="quick-link-btn" title="GRP">
                         <i class="fas fa-file-alt"></i>
+                        <span class="quick-link-text">GRP</span>
+                    </a>
+                    
+                    <!-- NOVOS LINKS SOLICITADOS -->
+                    <a href="http://172.16.92.20/glpi/" target="_blank" class="quick-link-btn" title="GLPI">
+                        <i class="fas fa-tools"></i>
+                        <span class="quick-link-text">GLPI</span>
+                    </a>
+                    <a href="http://172.26.72.72:8080" target="_blank" class="quick-link-btn" title="eSUS Teste">
+                        <i class="fas fa-laptop-code"></i>
+                        <span class="quick-link-text">eSUS Teste</span>
+                    </a>
+                    <a href="http://172.26.72.72:5555/" target="_blank" class="quick-link-btn" title="BI Delta">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="quick-link-text">BI Delta</span>
+                    </a>
+                    <a href="https://sisab.saude.gov.br/" target="_blank" class="quick-link-btn" title="Sisab">
+                        <i class="fas fa-globe-americas"></i>
+                        <span class="quick-link-text">Sisab</span>
+                    </a>
+                    <a href="https://cnes.datasus.gov.br" target="_blank" class="quick-link-btn" title="CNES">
+                        <i class="fas fa-file-medical"></i>
+                        <span class="quick-link-text">CNES</span>
                     </a>
                 </div>
             </div>
@@ -1364,7 +1364,6 @@
                 searchBtn: document.getElementById('searchBtn'),
                 filterBtns: document.querySelectorAll('.filter-btn'),
                 serviceFilterBtns: document.querySelectorAll('.service-filter-btn'),
-                staffFilterBtns: document.querySelectorAll('.staff-filter-btn'),
                 tabs: document.querySelectorAll('.tab'),
                 adminTabs: document.querySelectorAll('.admin-tab'),
                 allContacts: document.getElementById('all-contacts'),
@@ -2008,19 +2007,6 @@
                 };
             });
 
-            // Filtros de staff (TOGGLE - pode deselecionar)
-            this.elements.staffFilterBtns.forEach(btn => {
-                btn.onclick = function() {
-                    if (this.classList.contains('active')) {
-                        this.classList.remove('active');
-                    } else {
-                        UI.elements.staffFilterBtns.forEach(x => x.classList.remove('active'));
-                        this.classList.add('active');
-                    }
-                    App.filterContacts();
-                };
-            });
-
             this.elements.tabs.forEach(tab => {
                 tab.onclick = function() {
                     UI.elements.tabs.forEach(x => x.classList.remove('active'));
@@ -2084,7 +2070,6 @@
     const App = {
         units: [],
         unsubscribe: null,
-        currentStaffFilter: null,
 
         async init() {
             await UI.cache();
@@ -2175,19 +2160,6 @@
                 });
             }
             
-            const activeStaffFilter = document.querySelector('.staff-filter-btn.active');
-            if (activeStaffFilter) {
-                const staffFilter = activeStaffFilter.dataset.staff;
-                filtered = filtered.filter(u => {
-                    if (staffFilter === 'enfermeiro') {
-                        return u.enfermeiro && u.enfermeiro.trim() !== '';
-                    } else if (staffFilter === 'gerente') {
-                        return u.gerente && u.gerente.trim() !== '';
-                    }
-                    return true;
-                });
-            }
-            
             const term = (UI.elements.searchInput.value || '').trim().toLowerCase();
             if (term) {
                 filtered = filtered.filter(u => {
@@ -2199,7 +2171,7 @@
                            (u.gerente || '').toLowerCase().includes(term) ||
                            (u.farmaceutico || '').toLowerCase().includes(term) ||
                            (u.responsavel || '').toLowerCase().includes(term) ||
-                           (u.ramal || '').includes(term); // NOVO: Buscar também por ramal
+                           (u.ramal || '').includes(term);
                 });
             }
             
@@ -2238,7 +2210,7 @@
             document.getElementById('unitBairro').value = unit.bairro || '';
             document.getElementById('unitPhone').value = unit.phone || '';
             document.getElementById('unitTemRamal').value = unit.temRamal || 'Não';
-            document.getElementById('unitRamal').value = unit.ramal || ''; // NOVO: Campo ramal
+            document.getElementById('unitRamal').value = unit.ramal || '';
             document.getElementById('unitEmail').value = unit.email || '';
             document.getElementById('unitEnfermeiro').value = unit.enfermeiro || '';
             document.getElementById('unitGerente').value = unit.gerente || '';
@@ -2322,7 +2294,7 @@
                 bairro: document.getElementById('unitBairro').value,
                 phone: document.getElementById('unitPhone').value,
                 temRamal: temRamal,
-                ramal: ramalField.value, // NOVO: Campo ramal
+                ramal: ramalField.value,
                 email: document.getElementById('unitEmail').value,
                 enfermeiro: document.getElementById('unitEnfermeiro').value,
                 gerente: document.getElementById('unitGerente').value,
